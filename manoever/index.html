@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Manöver-Trainer</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --feed:#0B1113; --hud:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 18px 48px}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0}
+h2{font-size:1.45rem;font-weight:600;letter-spacing:.005em}
+h3{font-size:1.25rem;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* home */
+.hero{padding:28px 0 20px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.board{margin:8px 0 24px}
+.board-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cells{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.board h3{font-size:1.05rem;color:var(--muted);margin:14px 0 6px;letter-spacing:.04em;text-transform:uppercase}
+@media (min-width:600px){.cells{grid-template-columns:repeat(8,minmax(0,1fr))}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px 12px;min-height:66px;overflow:hidden}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1}
+.cell span{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.cell[data-s="none"]{border-style:dashed}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.legend em{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.legend em::before{content:"";width:12px;height:5px;background:var(--c)}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:22px;border-top:1px solid var(--line)}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px}
+.mode .mi{flex:1}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot{margin-top:28px;font-size:.82rem;color:var(--muted);max-width:40em}
+
+/* feed */
+.feed{position:relative;margin:0;background:var(--feed);border-radius:10px;overflow:hidden;aspect-ratio:4/3;cursor:zoom-in}
+.feed img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.feed .hud{position:absolute;font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.06em;color:var(--hud);opacity:.85;text-shadow:0 1px 2px #000}
+.feed .hud.tl{top:10px;left:14px} .feed .hud.tr{top:10px;right:14px} .feed .hud.bl{bottom:10px;left:14px}
+.feed .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+.feed .nav.l{left:8px} .feed .nav.r{right:8px}
+
+/* quiz */
+.qmeta{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 10px;font-size:.9rem;color:var(--muted)}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:14px 0 14px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.profile{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.profile h3 small{font-family:var(--font-b);font-size:.85rem;font-weight:500;color:var(--muted);margin-left:6px}
+.kv{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;margin:10px 0 0;font-size:.94rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.chips li{font-size:.82rem;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--surface2);border:1px solid var(--line)}
+.chips li[data-v="1"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.chips li[data-v="0"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.chips li[data-v="?"]{background:var(--unk-bg);border-color:var(--unk);color:var(--unk)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 14px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* end */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:24px 0 4px}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+
+/* cards list */
+.group{margin-top:24px}
+.group h2{margin-bottom:6px}
+.fam{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px}
+.fam .code{font-family:var(--font-d);font-weight:700;font-size:1.1rem;width:3em;color:var(--muted)}
+.fam .nm{flex:1;font-weight:600}
+.fam .pct{font-family:var(--font-d);font-size:1.05rem;color:var(--muted)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet[hidden]{display:none}
+.sec{margin-top:18px}
+.sec h3{font-size:1.1rem;margin-bottom:4px}
+.sec ul{margin:4px 0 0;padding-left:1.15em}
+.sec li{margin:2px 0}
+.desig{font-size:.95rem;color:var(--muted);margin-top:4px}
+.bw{margin-top:12px;border-left:4px solid var(--cta);background:var(--surface);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.95rem}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* stats */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1}
+.srow{display:grid;grid-template-columns:8.5em 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.sync{font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.annobox{margin-top:12px}
+.annobox #annoarea{margin-top:12px}
+.anno{position:relative;margin:0;max-width:100%;border-radius:10px;overflow:hidden;background:var(--feed);cursor:zoom-in}
+.anno img{display:block;width:100%;height:100%;object-fit:cover}
+.anno .pin{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.95rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.legendlist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.legendlist li{display:flex;gap:10px;align-items:flex-start;font-size:.94rem;line-height:1.35}
+.legendlist b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;font-family:var(--font-d);font-size:.85rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.unitrow{margin-top:10px}
+.unitrow strong{font-family:var(--font-d);font-size:1.08rem;font-weight:600}
+.unitrow .chips{margin-top:4px}
+.vbox{margin-top:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.vbox h4{margin:0;font-family:var(--font-d);font-size:1.2rem;font-weight:600}
+.vbox .kv{grid-template-columns:6.8em 1fr}
+.sec h3 + .vbox{margin-top:6px}
+.imgcap{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+.vlabel{font-family:var(--font-d);font-weight:700;font-size:1.25rem;background:var(--ink);color:var(--bg);border-radius:6px;padding:2px 10px}
+.vlabel.none{background:var(--surface2);color:var(--muted);font-weight:600;font-size:1rem}
+.capbtns{display:flex;gap:6px;flex-wrap:wrap}
+.btn.sm{padding:6px 10px;font-size:.88rem}
+.pinwrap{margin-top:10px}
+.fam.sub{padding-left:18px;background:var(--surface)}
+.fam.sub .nm{font-weight:600}
+.unitrow.cur{border-left:4px solid var(--cta);padding-left:8px}
+.tag{font-family:var(--font-b);font-size:.75rem;font-weight:600;background:var(--cta);color:var(--cta-ink);border-radius:999px;padding:1px 8px;vertical-align:middle}
+.guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+</style>
+<style>
+.cmpwrap{margin-top:8px}
+.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cmpfig{margin:0;min-width:0}
+.cmpfig>.ctag{display:inline-block;margin-bottom:4px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;padding:1px 8px;border-radius:5px}
+.cmpbox{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;max-width:100%;background:var(--feed);border-radius:8px;overflow:hidden;cursor:zoom-in}
+.cmpin{position:relative;max-height:100%}
+.cmpin img{display:block;width:100%;height:100%;object-fit:cover}
+.cmpin .pin{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.85rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.czoom{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-height:100%}
+.czoom .cmpin{max-width:100%}
+.czoom .pin{width:28px;height:28px;font-size:1rem}
+.czcap{margin:0;color:#eee;font-size:.92rem;line-height:1.35;display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;max-width:720px}
+.czcap b{width:100%;text-align:center;font-family:var(--font-d);font-size:1.05rem}
+.czcap i{font-style:normal;font-weight:700;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--hud);color:#111;margin-right:6px;font-size:.8rem}
+.cmpfig figcaption{margin-top:6px;font-size:.88rem;line-height:1.3}
+.cmpfig figcaption>b{font-family:var(--font-d);font-size:1.02rem;font-weight:600}
+.cmpfig .legendlist{margin-top:4px;gap:4px}
+.cmpfig .legendlist li{font-size:.84rem;gap:6px}
+.cmpfig .legendlist b{width:19px;height:19px;font-size:.78rem}
+.vbox h4 .nato{display:inline-block;vertical-align:middle;margin-left:4px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.02em;padding:1px 7px;border-radius:5px}
+.cmpkey{margin:10px 0 0;padding:8px 12px;border-left:4px solid var(--cta);background:var(--surface);border-radius:0 8px 8px 0;font-size:.95rem}
+.confint{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.vbox .cmpwrap{margin-top:6px}
+</style>
+</head>
+<body>
+<header class="bar" id="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></div>
+<script>
+const DATA = {"cats": {"kpz": {"label": "Kampfpanzer", "cap": "Schwer gepanzert, große Kanone – braucht panzerbrechende Präzisionswaffen; Kanonen-LFK gefährden Hubschrauber"}, "ust": {"label": "Panzerunterstützungsfahrzeug", "cap": "KPz-Fahrgestell ohne Hauptkanone; Maschinenkanonen und LFK gegen Infanterie, Panzerabwehr und Hubschrauber"}, "spz": {"label": "Schützenpanzer (Kette)", "cap": "Transportiert Infanterie, Turm mit Kanone – mittel gepanzert"}, "ll": {"label": "Luftlande-Schützenpanzer", "cap": "Klein, leicht und luftverlastbar, Aluminiumpanzerung – Fallschirmjäger (VDV)"}, "tpzr": {"label": "Radschützenpanzer (8×8)", "cap": "Transportiert Infanterie auf Rädern, leicht gepanzert"}, "tpzk": {"label": "Transportpanzer auf Ketten, ohne Turmkanone", "cap": "Leicht gepanzert, nur MG – Transport, Zugmittel, Basis für Sonderaufbauten"}, "rad": {"label": "Spähwagen bzw. geschütztes Radfahrzeug", "cap": "Aufklärung, Führung, Transport – leicht geschützt"}, "pzj": {"label": "Panzerjäger (LFK-Träger)", "cap": "Lenkflugkörper auf leichtem Fahrgestell – Gefahr für KPz und Hubschrauber auf große Entfernung"}}, "catOrder": ["kpz", "ust", "spz", "ll", "tpzr", "tpzk", "rad", "pzj"], "catExcl": {"ll": ["spz"], "spz": [], "ust": []}, "catX": {"kornet": ["rad"], "shturm": ["tpzk"]}, "lwr": {"lwr": "Ja – Laserwarner erkennt die Bestrahlung und löst automatisch Nebel bzw. Aerosol aus", "no": "Nein – kein Laserwarner, mit Bordmitteln bemerkt die Besatzung den Laser in der Regel nicht", "x1": "Nur den Designator – Entfernungsmesser sind dafür zu schwach", "x2": "Ja – im Wärmebildvisier ist der Laserstrahl sichtbar"}, "lwrOrder": ["lwr", "no", "x1", "x2"], "lwrNo": "Kein Laserwarnempfänger. Laser-Entfernungsmesser (meist ca. 1,5 µm) und Designatoren (1,06 µm) sind für das Auge und für Wärmebildgeräte unsichtbar. Sehen können sie nur Spezialsensoren (SWIR-Kameras) und – bei 1,06 µm – teils digitale Nachtsichtgeräte.", "tis": {"tis": "Wärmebildvisier – sieht Wärmequellen auf mehrere Kilometer, auch durch normalen Rauch, aber nicht durch feste Deckung", "ii": "Restlichtverstärker bzw. aktiver IR-Scheinwerfer – kein Wärmebild, nachts nur kurze Reichweite", "mix": "Je nach Baulos oder Modernisierung – teils Wärmebild, teils nur Restlichtverstärker", "day": "Nur Tagoptik bzw. einfache Fahrer-Nachtsicht – nachts auf Handgeräte der Besatzung angewiesen"}, "tisOrder": ["tis", "mix", "ii", "day"], "wcls": {"mbt": "Schwer gepanzert: LFK mit Tandem-Hohlladung (Hellfire/JAGM, Brimstone), Maverick oder Volltreffer mit Lenkbombe (GBU-12/-54) – Bordkanone (GAU-8) nur von Seite, Heck oder oben", "ifv": "Mittel gepanzert: 30-mm-Bordkanone (GAU-8, M230), Hellfire, Maverick oder kleine Lenkbombe – 20-mm-Kanone und APKWS nur eingeschränkt", "apc": "Leicht gepanzert: jede Bordkanone, APKWS bzw. Hydra und kleine Bomben genügen – die Panzerung hält nur Handwaffen und Splitter ab", "soft": "Ungepanzert: Splitterwirkung genügt – Airburst, ungelenkte Raketen, Bordkanone"}, "wOrder": ["mbt", "ifv", "apc", "soft"], "wlab": {"mbt": "schwer", "ifv": "mittel", "apc": "leicht", "soft": "ungepanzert"}, "fj": "Für Fast Jets mit ausreichend Höhe (grob über 3 km über Grund) sind die Bordwaffen kaum eine Gefahr – gefährlich sind dann MANPADS der abgesessenen Infanterie (Verba bis ca. 4,5 km Höhe) und die begleitende Flugabwehr (Flugabwehr-Trainer).", "airNotes": ["Draufsicht auf einen KPz mit Kontakt-1-Kacheln in Bogenform auf dem Turm; das lange Rohr ragt weit über die Wanne hinaus.", "Schräg von oben: links ein zerstörter KPz (Turm abgesprengt, Laufwerk erkennbar), rechts ein KPz mit Drohnenschutz.", "Drohnenbild mit Anzeige: KPz mit großem Turm und langem Rohr neben einem Busch, Besatzung daneben markiert.", "Schräg von oben: KPz in einer Grabenlinie – Turm in der Mitte, langes Rohr, Laufwerk mit großen Rollen.", "Draufsicht: KPz mit Reaktivpanzerung auf dem Turm, das Rohr ragt weit nach vorn – deutlich länger als bei jedem SPz.", "FPV-Drohne kurz vor dem Einschlag: großer, runder Turm mit Reaktivkacheln und Drohnenschutz, Motordeck mit Lüftungsgittern.", "Schräg von oben: KPz mit glattem Turm (T-72A) – großer, runder Turm in der Mitte, langes Rohr über die Wanne hinaus.", "Von oben: zwei KPz (T-90A) – kantige Türme, lange Rohre, breite Ketten."], "airTip": "Aus der Luft erkennst du einen KPz am langen Rohr, das weit über die Wanne ragt, und am großen Turm in der Mitte; ein SPz hat einen kleinen Turm und einen langen, flachen Kampfraum mit Dachluken. In der Zielbeschreibung reicht „KPz“ mit Anzahl und Lage.", "families": [{"id": "t62", "name": "T-62", "short": "62", "cat": "kpz", "wcls": "mbt", "designation": "T-62 – sowjetischer Kampfpanzer der 1960er; im Einsatz vor allem T-62M (Zusatzpanzerung „Augenbrauen“, Feuerleitanlage Wolna) und T-62MV (Kontakt-1)", "users": "Russland (seit 2022 aus Depots reaktiviert), dazu u. a. Syrien und Nordkorea", "weapons": ["115-mm-Glattrohrkanone U-5TS; T-62M auch Kanonen-LFK 9M117 Scheksna (bis ca. 4 km)", "12,7-mm-Fla-MG DShKM am Ladeschützenluk", "7,62-mm-MG koaxial"], "protection": "Gussturm und Stahlwanne; T-62M mit kastenförmiger Zusatzpanzerung an Turm und Bug, T-62MV mit Kontakt-1. Gegen moderne Panzerabwehr schwach, seit 2022 oft mit Käfig.", "weak": "Alte Panzerung: Seite und Heck sind auch für Hellfire, Maverick und die GAU-8 verwundbar. Munition im Kampfraum – Durchschläge führen oft zur Totalzerstörung.", "recog": "Fünf große Laufrollen ohne Stützrollen, die Abstände werden nach hinten größer; flacher, runder Kuppelturm; langes 115-mm-Rohr. T-62M: kastenförmige Zusatzpanzerung an der Turmfront („Augenbrauen“) und eine Zusatzplatte auf dem Bug.", "confuse": ["t64", "t72"], "jtac": ["Wird oft als Feuerunterstützung eingesetzt, auch indirekt aus Stellungen hinter Deckung.", "Das Fla-MG wird von außen bedient – Gefahr für Hubschrauber im Nahbereich bis ca. 1,5–2 km.", "Kein Laserwarner, nachts meist nur Restlichtverstärker – deutlich geringere Aufklärungsreichweite als T-72B3 oder T-90."], "vars": [{"v": null, "name": "T-62", "tis": "ii", "lwr": "no", "heli": "mittel", "sight": "Restlichtverstärker TPN-1 mit IR-Scheinwerfer Luna; einzelne modernisierte Fahrzeuge mit nachgerüstetem Wärmebildvisier.", "aa": "12,7-mm-Fla-MG DShKM für den Nahbereich; der T-62M kann zusätzlich Kanonen-LFK 9M117 verschießen, gegen Hubschrauber aber nur eingeschränkt.", "aaQ": ["12,7-mm-Fla-MG DShKM (Nahbereich) – T-62M zusätzlich Kanonen-LFK 9M117", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "t64", "name": "T-64", "short": "64", "cat": "kpz", "wcls": "mbt", "designation": "T-64BV – sowjetischer Kampfpanzer mit Kontakt-1; heute fast nur bei der Ukraine im Einsatz", "users": "Ukraine (Hauptnutzer); in Russland nur Einzelstücke bzw. Beutefahrzeuge", "weapons": ["125-mm-Glattrohrkanone 2A46M-1; Kanonen-LFK 9M112 Kobra (bis ca. 4 km)", "12,7-mm-Fla-MG NSVT", "7,62-mm-MG koaxial"], "protection": "Verbundpanzerung in Turm und Bug, Kontakt-1 an Turm und Bug, Gummischürzen.", "weak": "Seite, Heck und Dach; Munitionskarussell unter dem Turm.", "recog": "Sechs kleine Laufrollen mit vier Stützrollen (T-72 und T-90: große Laufrollen); Kontakt-1-Kacheln an Turm und Bug; flacher Turm.", "confuse": ["t72", "t80"], "jtac": ["Freund-Feind: Den T-64 nutzt fast nur die Ukraine. Er sieht aus wie Rot – Kennzeichnung (z. B. weißes Kreuz) und Lage prüfen.", "Das Laufwerk mit kleinen Laufrollen ist das sicherste Unterscheidungsmerkmal zu T-72 und T-80.", "Die Kobra-LFK können auch schwebende Hubschrauber treffen."], "vars": [{"v": null, "name": "T-64BV", "tis": "mix", "lwr": "no", "heli": "hoch", "sight": "Ursprünglich Restlichtverstärker mit IR-Scheinwerfer; ukrainische Modernisierungen (z. B. T-64BV Mod. 2017) mit neuen Visieren, teils Wärmebild.", "aa": "Kanonen-LFK 9M112 Kobra (Funkkommandolenkung, bis ca. 4 km) – auch gegen Hubschrauber im Schwebeflug; dazu 12,7-mm-Fla-MG.", "aaQ": ["Kanonen-LFK 9M112 Kobra (bis ca. 4 km) und 12,7-mm-Fla-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}]}, {"id": "t72", "name": "T-72", "short": "72", "cat": "kpz", "wcls": "mbt", "designation": "T-72 – Rückgrat der russischen Panzertruppe. Versionen: T-72A/B (Altbestand), T-72B3 (ab 2012, Feuerleitanlage Sosna-U), T-72B3M (obr. 2016, Relikt)", "users": "Russland, Belarus und viele weitere – auch NATO-Partner (z. B. Polen als PT-91, Tschechien, Bulgarien) und die Ukraine", "weapons": ["125-mm-Glattrohrkanone 2A46 (B3M: 2A46M-5); ab T-72B Kanonen-LFK über Laserleitstrahl (Swir, Refleks, Invar – 4 bis 5 km)", "12,7-mm-Fla-MG NSVT bzw. Kord", "7,62-mm-MG koaxial"], "protection": "Verbundpanzerung in Turm und Bug; Reaktivpanzerung je nach Version Kontakt-1, Kontakt-5 oder Relikt. Seit 2022 häufig Käfige und Drohnenschutz.", "weak": "Munitionskarussell unter dem Turm – ein Durchschlag führt oft zur Explosion (Turm fliegt ab). Dach, Heck und Motordeck sind schwächer als die Front; die Reaktivpanzerung schützt vor allem die Front.", "recog": "Sechs große Laufrollen, drei Stützrollen; flacher, runder Turm; 125-mm-Rohr mit Rauchabsauger etwa in der Mitte; Motordeck hinten, oft zwei Zusatztanks am Heck.", "confuse": ["t90", "t80", "t64"], "jtac": ["Häufigster russischer KPz – im Zweifel als „T-72-Typ“ bzw. KPz melden.", "T-72B3 und B3M sehen mit Sosna-U auch nachts weit (Wärmebild), T-72A/B nur mit Restlichtverstärker.", "Kein Laserwarner: Lasern bemerkt die Besatzung mit Bordmitteln in der Regel nicht.", "Kanonen-LFK treffen auch schwebende Hubschrauber bis ca. 4–5 km – Kampfhubschrauber nicht im Schwebeflug in Sicht halten."], "vars": [{"v": "ab", "name": "T-72A/B", "tis": "ii", "lwr": "no", "heli": "hoch", "recog": "Kein Visierkasten auf dem Turmdach. T-72B: Kontakt-1-Kacheln („Ziegelsteine“) an Turm und Bug, späte B mit Kontakt-5; T-72A: glatter Turm.", "sight": "Restlichtverstärker TPN-3-49 mit IR-Scheinwerfer Luna – nachts nur kurze Reichweite (unter ca. 1 km).", "aa": "T-72B: Kanonen-LFK 9M119 Swir (bis ca. 4 km), auch gegen Hubschrauber; T-72A ohne LFK. Dazu 12,7-mm-Fla-MG NSVT.", "aaQ": ["Kanonen-LFK 9M119 Swir (nur T-72B, bis ca. 4 km) und 12,7-mm-Fla-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}, {"v": "b3", "name": "T-72B3", "tis": "tis", "lwr": "no", "heli": "hoch", "recog": "Kastenförmiges Sosna-U-Visier auf dem Turmdach, Kontakt-5-Keile an Turm und Bug, glatte Seitenschürzen.", "sight": "Sosna-U: Richtschützenvisier mit Wärmebild und Laser-Entfernungsmesser – sieht nachts auf mehrere Kilometer.", "aa": "Kanonen-LFK 9M119M Refleks bzw. Invar (Laserleitstrahl, bis ca. 5 km), auch gegen Hubschrauber; dazu 12,7-mm-Fla-MG.", "aaQ": ["Kanonen-LFK Refleks bzw. Invar (bis ca. 5 km) und 12,7-mm-Fla-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}, {"v": "b3m", "name": "T-72B3M", "tis": "tis", "lwr": "no", "heli": "hoch", "recog": "Wie B3, dazu Relikt-Module in den Gummiseitenschürzen, Gitterschutz am Heck und ein Panoramavisier für den Kommandanten.", "sight": "Sosna-U mit Wärmebild für den Richtschützen, dazu Panoramavisier für den Kommandanten – Jäger-Schütze-Prinzip, auch nachts.", "aa": "Kanonen-LFK Refleks bzw. Invar (bis ca. 5 km), auch gegen Hubschrauber; 12,7-mm-MG auf dem Turm.", "aaQ": ["Kanonen-LFK Refleks bzw. Invar (bis ca. 5 km) und 12,7-mm-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Zwillings-30-mm-Kanonen mit Radarfeuerleitung", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}]}, {"id": "t80", "name": "T-80", "short": "80", "cat": "kpz", "wcls": "mbt", "designation": "T-80 – sowjetischer Kampfpanzer mit Gasturbine. Versionen: T-80B/BV (Kontakt-1), T-80U (Kontakt-5), T-80BVM (ab 2017, Relikt und Sosna-U)", "users": "Russland; dazu u. a. Ukraine (Beute- und Altbestand)", "weapons": ["125-mm-Glattrohrkanone 2A46M-1 bzw. -4; Kanonen-LFK Kobra (BV) bzw. Refleks (U, BVM)", "12,7-mm-Fla-MG NSVT bzw. Kord (T-80U fernbedient)", "7,62-mm-MG koaxial"], "protection": "Verbundpanzerung, Reaktivpanzerung je nach Version Kontakt-1, Kontakt-5 oder Relikt.", "weak": "Munitionskarussell unter dem Turm; hoher Kraftstoffverbrauch der Gasturbine; Heck mit großem Turbinenauslass.", "recog": "Sechs gummibereifte Laufrollen, fünf Stützrollen; flaches Heck mit großem Auslassgitter statt seitlichem Auspuff (Gasturbine).", "confuse": ["t72", "t90", "t64"], "jtac": ["Gasturbine: sehr heißer Abgasstrahl am Heck – im Wärmebild besonders auffällig.", "T-80BVM mit Sosna-U sieht nachts so weit wie ein T-72B3; T-80BV und T-80U nur mit Restlichtverstärker.", "Kein Laserwarner (Ausnahme: einzelne Führungsversionen mit Shtora)."], "vars": [{"v": "bv", "name": "T-80BV", "tis": "ii", "lwr": "no", "heli": "hoch", "recog": "Kontakt-1-Kacheln an Turm und Bug, kein Visierkasten auf dem Turm, Turm ähnlich dem T-72A.", "sight": "Restlichtverstärker mit IR-Scheinwerfer – nachts nur kurze Reichweite.", "aa": "Kanonen-LFK 9M112 Kobra (bis ca. 4 km), auch gegen Hubschrauber; dazu 12,7-mm-Fla-MG.", "aaQ": ["Kanonen-LFK 9M112 Kobra (bis ca. 4 km) und 12,7-mm-Fla-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}, {"v": "u", "name": "T-80U", "tis": "ii", "lwr": "no", "heli": "hoch", "recog": "Kontakt-5-Keile in Hufeisenform um die Turmfront, großer Staukasten am Turmheck, Kommandantenkuppel mit fernbedientem 12,7-mm-MG.", "sight": "Restlichtverstärker Buran-PA für den Richtschützen, IR-Scheinwerfer Luna; Wärmebild nur bei einzelnen Ausführungen.", "aa": "Kanonen-LFK 9M119 Refleks (bis ca. 5 km), auch gegen Hubschrauber; fernbedientes 12,7-mm-MG.", "aaQ": ["Kanonen-LFK 9M119 Refleks (bis ca. 5 km) und fernbedientes 12,7-mm-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}, {"v": "bvm", "name": "T-80BVM", "tis": "tis", "lwr": "no", "heli": "hoch", "recog": "Relikt-Module an Turmfront und Seitenschürzen, Sosna-U-Kasten auf dem Turm, oft Käfig oder Drohnendach.", "sight": "Sosna-U mit Wärmebild und Laser-Entfernungsmesser – nachts auf mehrere Kilometer.", "aa": "Kanonen-LFK Refleks-M (bis ca. 5 km), auch gegen Hubschrauber; 12,7-mm-Fla-MG.", "aaQ": ["Kanonen-LFK Refleks-M (bis ca. 5 km) und 12,7-mm-Fla-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Zwillings-30-mm-Kanonen mit Radarfeuerleitung", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}]}, {"id": "t90", "name": "T-90", "short": "90", "cat": "kpz", "wcls": "mbt", "designation": "T-90 – Weiterentwicklung des T-72. Versionen: T-90A (ab 2004, geschweißter Turm, Shtora-1), T-90M Proryv (ab 2020, Relikt, neuer Turm)", "users": "Russland; Export als T-90S/MS (u. a. Indien, Algerien)", "weapons": ["125-mm-Glattrohrkanone 2A46M-5; Kanonen-LFK Refleks bzw. Invar-M (bis ca. 5 km)", "12,7-mm-MG fernbedient (NSVT bzw. Kord)", "7,62-mm-MG koaxial"], "protection": "Verbundpanzerung; T-90A Kontakt-5 und Shtora-1, T-90M Relikt, Laserwarner mit automatischem Nebel, oft Gitter und Drohnendach.", "weak": "Munitionskarussell unter dem Turm; Dach und Heck schwächer als die Front.", "recog": "Laufwerk wie T-72 (sechs große Laufrollen, drei Stützrollen), aber kantiger geschweißter Turm. T-90A: Shtora-Strahler („rote Augen“) neben der Kanone; T-90M: Relikt und großer Staukorb am Turmheck.", "confuse": ["t72", "t80", "t14"], "jtac": ["Laserwarner: Lasert ihn jemand, merkt er es – Nebel bzw. Aerosol in deine Richtung. Der T-90A richtet laut Hersteller sogar den Turm zur Laserquelle aus.", "Laserzeit kurz halten: Designator erst in der Endphase einschalten, Entfernungen möglichst anders bestimmen (Pod, Karte, Koordinaten).", "Wärmebild bei beiden Versionen – nachts volle Aufklärungsreichweite.", "Kanonen-LFK treffen auch schwebende Hubschrauber bis ca. 5 km."], "vars": [{"v": "a", "name": "T-90A", "tis": "tis", "lwr": "lwr", "heli": "hoch", "recog": "Zwei Shtora-Störstrahler („rote Augen“) beiderseits der Kanone, Kontakt-5-Keile am Turm, kantiger geschweißter Turm.", "sight": "Wärmebildvisier (ESSA) bei den neueren Baulosen, frühe T-90A mit Restlichtverstärker.", "lwrx": "Shtora-1: Laserwarnsensoren erkennen die Bestrahlung, schießen Aerosolgranaten in die Bedrohungsrichtung und richten den Turm aus; die Störstrahler stören LFK mit Kommandolenkung.", "aa": "Kanonen-LFK 9M119M Refleks (bis ca. 5 km), auch gegen Hubschrauber; fernbedientes 12,7-mm-MG.", "aaQ": ["Kanonen-LFK 9M119M Refleks (bis ca. 5 km) und fernbedientes 12,7-mm-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}, {"v": "m", "name": "T-90M", "tis": "tis", "lwr": "lwr", "heli": "hoch", "recog": "Relikt-Module an Turmfront und -seiten, großer Staukorb am Turmheck, keine Shtora-Strahler, Panoramavisier des Kommandanten; oft Gitter am Bug und Drohnendach.", "sight": "Sosna-U mit Wärmebild für den Richtschützen und Panoramavisier mit Wärmebild für den Kommandanten.", "lwrx": "Laserwarnsensoren lösen bei Bestrahlung durch Entfernungsmesser oder Designatoren automatisch Nebel- bzw. Aerosolgranaten in deine Richtung aus.", "aa": "Kanonen-LFK Invar-M (bis ca. 5 km), auch gegen Hubschrauber; fernbedientes 12,7-mm-MG Kord.", "aaQ": ["Kanonen-LFK Invar-M (bis ca. 5 km) und fernbedientes 12,7-mm-MG", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Zwillings-30-mm-Kanonen mit Radarfeuerleitung", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}]}, {"id": "t14", "name": "T-14 Armata", "short": "T14", "cat": "kpz", "wcls": "mbt", "designation": "T-14 Armata – Kampfpanzer mit unbemanntem Turm und Besatzungskapsel in der Wanne; nur in kleiner Stückzahl vorhanden, kaum an der Front", "users": "Russland (wenige Fahrzeuge)", "weapons": ["125-mm-Glattrohrkanone 2A82-1M mit Selbstlader, auch Kanonen-LFK", "Fernbediente Waffenstation mit MG"], "protection": "Malachit-Reaktivpanzerung, Schutzsystem Afganit mit Radar, Laserwarnern, Nebelwerfern und Abfangmunition (Hard-Kill).", "weak": "Turm unbemannt – ein Treffer im Turm tötet die Besatzung oft nicht. Selten, Wirksamkeit von Afganit im Gefecht unbekannt.", "recog": "Sieben Laufrollen, lange Wanne, sehr flacher, kantiger Turm ohne Luken, Abwurfbecher des Afganit-Systems am Turm.", "confuse": ["t90", "bmpt"], "jtac": ["Exot: Eine Sichtung ist ungewöhnlich – sorgfältig bestätigen.", "Afganit erkennt Laser und schießt Nebel; die Hard-Kill-Abwehr kann anfliegende LFK angreifen – mehrere Waffen oder Bombe einplanen."], "vars": [{"v": null, "name": "T-14", "tis": "tis", "lwr": "lwr", "heli": "hoch", "sight": "Wärmebild- und Panoramavisiere, dazu Kamerasystem rundum.", "lwrx": "Afganit hat Laserwarner, schießt bei Bestrahlung Nebel bzw. Aerosol und kann Abwehrmunition auslösen.", "aa": "Kanonen-LFK durch die 125-mm-Kanone, auch gegen Hubschrauber; fernbediente Waffenstation.", "aaQ": ["Kanonen-LFK durch die 125-mm-Kanone und fernbediente Waffenstation", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}]}, {"id": "bmpt", "name": "BMPT", "short": "BMPT", "cat": "ust", "wcls": "mbt", "designation": "BMPT „Terminator“ – Panzerunterstützungsfahrzeug auf T-72/T-90-Fahrgestell; soll Kampfpanzer gegen Infanterie mit Panzerabwehr schützen. Nur wenige Fahrzeuge (seit 2022 in der Ukraine)", "users": "Russland (wenige), Kasachstan, Algerien", "weapons": ["Zwei 30-mm-Maschinenkanonen 2A42 (Rohrerhöhung bis 45°)", "Vier LFK Ataka (bis ca. 6 km; Fla-Version 9M220O gegen Luftziele bis ca. 7 km)", "Zwei 30-mm-Granatmaschinenwaffen, 7,62-mm-MG"], "protection": "KPz-Panzerung mit Relikt an Front und Seiten; Laserwarner mit automatischem Nebelwurf.", "weak": "Panzerung wie ein KPz – Seite, Heck und Dach am schwächsten. Waffen und LFK-Behälter liegen außen am Turm.", "recog": "KPz-Fahrgestell, aber Turm ohne Hauptkanone: zwei dünne 30-mm-Rohre und je zwei LFK-Behälter links und rechts am Turm.", "confuse": ["t72", "t90", "t14"], "jtac": ["Hohe Gefahr für Hubschrauber: Ataka gibt es mit Annäherungszünder ausdrücklich gegen Luftziele.", "Fährt zusammen mit Kampfpanzern – wo ein BMPT ist, sind KPz in der Nähe.", "Laserwarner mit automatischem Nebel – Laserzeit kurz halten."], "vars": [{"v": null, "name": "BMPT", "tis": "tis", "lwr": "lwr", "heli": "hoch", "sight": "Richtschützenvisier mit Wärmebild und Laser-Entfernungsmesser, Panoramavisier für den Kommandanten.", "lwrx": "Laserwarner: Bei Laserbestrahlung schießt das Fahrzeug automatisch Nebelgranaten.", "aa": "LFK Ataka (Fla-Version mit Annäherungszünder bis ca. 7 km) und zwei 30-mm-Maschinenkanonen – hohe Gefahr für Hubschrauber.", "aaQ": ["LFK Ataka (Fla-Version bis ca. 7 km) und zwei 30-mm-Maschinenkanonen", ["Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Nur 7,62-mm-MG – keine weiter reichende Bordwaffe"]]}]}, {"id": "bmp1", "name": "BMP-1", "short": "BMP1", "cat": "spz", "wcls": "ifv", "designation": "BMP-1 – erster sowjetischer Schützenpanzer (1966). Versionen: BMP-1 (73-mm-Kanone und LFK), BMP-1AM „Basurmanin“ (Turm des BTR-82A mit 30-mm-Kanone)", "users": "Russland (Reserve, seit 2022 wieder im Einsatz), sehr viele Staaten, auch die Ukraine", "weapons": ["BMP-1: 73-mm-Kanone 2A28 Grom, LFK Maljutka bzw. Fagot", "BMP-1AM: 30-mm-Maschinenkanone 2A72", "7,62-mm-MG koaxial"], "protection": "Stahl, Front gegen 12,7 mm, Seiten nur gegen Gewehrmunition und Splitter.", "weak": "Die Hecktüren sind Kraftstofftanks – Treffer am Heck führen oft zum Brand. Dünne Seiten und Dach.", "recog": "Spitzer, flacher Bug mit Rippen, sechs Laufrollen, kleiner Kegelturm vorne-mittig, lange flache Wanne mit Dachluken und zwei Hecktüren.", "confuse": ["bmp2", "bmd2", "bmp3"], "jtac": ["BMP-1 mit 73-mm-Kanone ist für Lfz kaum gefährlich, der BMP-1AM mit 30 mm schon.", "Abgesessene Motschützen können MANPADS mitführen."], "vars": [{"v": "std", "name": "BMP-1", "tis": "ii", "lwr": "no", "heli": "gering", "recog": "Flacher Kegelturm mit kurzem, dickem 73-mm-Rohr und LFK-Schiene bzw. Fagot-Starter darüber.", "sight": "Restlichtverstärker mit IR-Scheinwerfer – nachts nur kurze Reichweite.", "aa": "Praktisch nur das 7,62-mm-MG – Kanone und LFK sind nicht gegen Luftziele ausgelegt. Gefahr durch MANPADS der Infanterie.", "aaQ": ["Nur 7,62-mm-MG – Kanone und LFK sind nicht gegen Luftziele ausgelegt", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}, {"v": "am", "name": "BMP-1AM", "tis": "ii", "lwr": "no", "heli": "mittel", "recog": "BMP-1-Wanne mit kleinem, rundem Turm des BTR-82A: langes, dünnes 30-mm-Rohr, keine LFK.", "sight": "Kombiniertes Tag-/Nachtvisier mit Restlichtverstärker (wie BTR-82A) – kein Wärmebild.", "aa": "30-mm-Maschinenkanone 2A72 mit großer Rohrerhöhung – Gefahr für Hubschrauber und tief fliegende Lfz.", "aaQ": ["30-mm-Maschinenkanone 2A72 mit großer Rohrerhöhung", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}]}, {"id": "bmp2", "name": "BMP-2", "short": "BMP2", "cat": "spz", "wcls": "ifv", "designation": "BMP-2 – Standard-Schützenpanzer der russischen Motschützen. Versionen: BMP-2 (30-mm-Kanone 2A42, LFK Konkurs), BMP-2M „Berezhok“ (zusätzlich vier Kornet und Wärmebild)", "users": "Russland, Belarus, Ukraine und viele weitere – auch NATO-Partner (z. B. Tschechien und die Slowakei als BVP-2)", "weapons": ["30-mm-Maschinenkanone 2A42 (Rohrerhöhung 74°, gegen Luftziele bis ca. 2,5 km)", "LFK Konkurs bzw. Fagot; BMP-2M: 4× Kornet", "7,62-mm-MG koaxial; BMP-2M zusätzlich 30-mm-Granatmaschinenwaffe"], "protection": "Stahl, max. ca. 33 mm; Front gegen 12,7 mm, Seiten nur gegen Gewehrmunition und Splitter.", "weak": "Hecktüren sind Kraftstofftanks, Munition im Kampfraum; dünne Seiten und Dach.", "recog": "Wie BMP-1 (spitzer Bug, sechs Laufrollen), aber größerer Turm etwas weiter hinten mit langem, dünnem 30-mm-Rohr.", "confuse": ["bmp1", "bmd2", "bmd3"], "jtac": ["30 mm mit 74° Rohrerhöhung: echte Gefahr für Hubschrauber bis ca. 2,5 km.", "BMP-2M mit Kornet und Wärmebild ist deutlich gefährlicher als der Altbestand.", "Abgesessene Motschützen führen MANPADS mit."], "vars": [{"v": "std", "name": "BMP-2", "tis": "ii", "lwr": "no", "heli": "mittel", "recog": "Zwei-Mann-Turm mit langem, dünnem 30-mm-Rohr, Konkurs-Starter auf dem Turmdach.", "sight": "Richtschützenvisier BPK-1-42 bzw. BPK-2-42 mit Restlichtverstärker – nachts nur einige hundert Meter.", "aa": "30-mm-Maschinenkanone 2A42 mit 74° Rohrerhöhung – gegen Luftziele bis ca. 2,5 km.", "aaQ": ["30-mm-Maschinenkanone 2A42 (74° Rohrerhöhung, gegen Luftziele bis ca. 2,5 km)", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}, {"v": "m", "name": "BMP-2M", "tis": "tis", "lwr": "no", "heli": "hoch", "recog": "Berezhok-Modul: je zwei Kornet-Rohre an beiden Turmseiten, 30-mm-Granatmaschinenwaffe am Turm, neuer Visierkasten.", "sight": "Neue Visiere mit Wärmebild – nachts deutlich weiter als der BMP-2.", "aa": "30-mm-Maschinenkanone 2A42 und Kornet-LFK, die auch schwebende Hubschrauber treffen können.", "aaQ": ["30-mm-Maschinenkanone 2A42 und Kornet-LFK (auch gegen schwebende Hubschrauber)", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Raketen Strela-10 auf dem Fahrzeug"]]}]}, {"id": "bmp3", "name": "BMP-3", "short": "BMP3", "cat": "spz", "wcls": "ifv", "designation": "BMP-3 – Schützenpanzer mit 100-mm-Kanone und 30-mm-Maschinenkanone; Motor hinten, Ausstieg über Hecktüren unter dem Motordeck", "users": "Russland; Export u. a. VAE, Kuwait, Venezuela", "weapons": ["100-mm-Kanone 2A70, auch LFK 9M117 Arkan (bis ca. 5,5 km)", "30-mm-Maschinenkanone 2A72 koaxial (Rohrerhöhung bis 60°)", "Drei 7,62-mm-MG (davon zwei im Bug)"], "protection": "Aluminium mit Stahl-Zusatzplatte vorn; Seiten und Heck nur gegen Gewehrmunition und Splitter.", "weak": "Aluminiumpanzerung; viel Munition und Kraftstoff im Fahrzeug – brennt leicht.", "recog": "Breite, hohe Wanne mit sechs Laufrollen (Leit- und Antriebsrad nicht mitgezählt); Turm in der Mitte mit dickem 100-mm-Rohr und dünnem 30-mm-Rohr daneben; flaches Motordeck hinten.", "confuse": ["bmd4", "bmp2", "bmp1"], "jtac": ["Arkan-LFK durch die 100-mm-Kanone: auch gegen Hubschrauber bis ca. 5 km.", "Gleiche Waffenanlage wie BMD-4M – aus der Luft kaum zu unterscheiden."], "vars": [{"v": null, "name": "BMP-3", "tis": "mix", "lwr": "no", "heli": "hoch", "sight": "Frühe Fahrzeuge mit Restlichtverstärker und IR-Scheinwerfer, modernisierte mit Wärmebild-Visieren für Richtschütze und Kommandant.", "lwrx": "Kein Laserwarnempfänger. Laser-Entfernungsmesser (meist ca. 1,5 µm) und Designatoren (1,06 µm) sind für das Auge und für Wärmebildgeräte unsichtbar. Sehen können sie nur Spezialsensoren (SWIR-Kameras) und – bei 1,06 µm – teils digitale Nachtsichtgeräte. Exportversionen (BMP-3M) teils mit Shtora.", "aa": "LFK 9M117 Arkan durch die 100-mm-Kanone (bis ca. 5,5 km) und 30-mm-Maschinenkanone mit bis zu 60° Rohrerhöhung.", "aaQ": ["LFK Arkan durch die 100-mm-Kanone (bis ca. 5,5 km) und 30-mm-Maschinenkanone", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Fla-Raketen Strela-10 auf dem Fahrzeug", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "bmd2", "name": "BMD-2", "short": "BMD2", "cat": "ll", "wcls": "apc", "designation": "BMD-2 – Luftlande-Schützenpanzer der VDV; BMD-1-Wanne mit Turm und 30-mm-Kanone, luftverlastbar und absetzbar", "users": "Russland (VDV), weitere GUS-Staaten", "weapons": ["30-mm-Maschinenkanone 2A42 (sehr große Rohrerhöhung)", "LFK Konkurs bzw. Fagot", "7,62-mm-MG koaxial und im Bug"], "protection": "Aluminium, 10–15 mm – nur gegen Gewehrmunition und Splitter.", "weak": "Sehr dünne Aluminiumpanzerung – schon 12,7 mm durchschlagen die Seiten.", "recog": "Sehr klein und flach: tiefe, spitze Bugkante, von der das Deck flach zum Turm ansteigt – die Wanne wirkt wie ein flacher Keil; Wannenseiten über den Ketten nach innen geneigt; fünf kleine Laufrollen; kleiner Ein-Mann-Turm vorne-mittig mit langem, dünnem 30-mm-Rohr; ein Bug-MG rechts.", "confuse": ["bmd3", "bmp2", "btrd"], "jtac": ["VDV-Einheiten operieren oft weit vorne und schnell.", "Die 30-mm-Kanone gefährdet Hubschrauber; die Panzerung hält kaum etwas aus."], "vars": [{"v": null, "name": "BMD-2", "tis": "ii", "lwr": "no", "heli": "mittel", "sight": "Visier wie BMP-2 mit Restlichtverstärker, dazu ein Fla-Visier.", "aa": "30-mm-Maschinenkanone 2A42 mit sehr großer Rohrerhöhung und eigenem Fla-Visier – gegen Hubschrauber bis ca. 2,5 km.", "aaQ": ["30-mm-Maschinenkanone 2A42 mit sehr großer Rohrerhöhung", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "bmd3", "name": "BMD-3", "short": "BMD3", "cat": "ll", "wcls": "apc", "designation": "BMD-3 – größerer Luftlande-Schützenpanzer (ab 1990), kann mit Besatzung abgesetzt werden; neue Wanne mit dem Zwei-Mann-Turm des BMP-2", "users": "Russland (VDV, kleine Stückzahl)", "weapons": ["30-mm-Maschinenkanone 2A42", "LFK Konkurs bzw. Fagot", "30-mm-Granatmaschinenwaffe und 5,45-mm-MG im Bug, 7,62-mm-MG"], "protection": "Aluminium – nur gegen Gewehrmunition und Splitter.", "weak": "Dünne Aluminiumpanzerung.", "recog": "Deutlich größer und kastiger als der BMD-2: hohe, breite, steile Bugplatte, fast waagerechtes Dach, senkrechte Wannenseiten; fünf Laufrollen mit großen Abständen; Zwei-Mann-Turm wie beim BMP-2 (30-mm-Rohr, LFK-Starter auf dem Dach); zwei Bugwaffen links und rechts vom Fahrer.", "confuse": ["bmd2", "bmd4", "btrmdm"], "jtac": ["Bewaffnung und Bedrohung wie BMD-2.", "Selten – meist BMD-2 oder BMD-4M."], "vars": [{"v": null, "name": "BMD-3", "tis": "ii", "lwr": "no", "heli": "mittel", "sight": "Visiere mit Restlichtverstärker wie BMD-2.", "aa": "30-mm-Maschinenkanone 2A42 mit großer Rohrerhöhung – gegen Hubschrauber bis ca. 2,5 km.", "aaQ": ["30-mm-Maschinenkanone 2A42 mit großer Rohrerhöhung", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}]}, {"id": "bmd4", "name": "BMD-4M", "short": "BMD4", "cat": "ll", "wcls": "ifv", "designation": "BMD-4M – moderner Luftlande-Schützenpanzer der VDV mit der Waffenanlage Bachtscha-U (wie BMP-3)", "users": "Russland (VDV)", "weapons": ["100-mm-Kanone 2A70, auch LFK 9M117M1 Arkan (bis ca. 5,5 km)", "30-mm-Maschinenkanone 2A72 koaxial", "7,62-mm-MG"], "protection": "Aluminium; Front gegen 30 mm, Seiten nur gegen Gewehrmunition und Splitter.", "weak": "Seiten und Dach dünn; viel Munition an Bord.", "recog": "Klein und flach wie ein BMD, aber großer Turm mit dickem 100-mm-Rohr und dünnem 30-mm-Rohr daneben. Fünf kleine Laufrollen; vorn sitzt zusätzlich das erhöhte Leitrad, hinten das Antriebsrad – beide nicht mitzählen.", "confuse": ["bmp3", "bmd3", "btrmdm"], "jtac": ["Waffen wie BMP-3: Arkan-LFK auch gegen Hubschrauber bis ca. 5 km.", "Wärmebild für Richtschütze und Kommandant."], "vars": [{"v": null, "name": "BMD-4M", "tis": "tis", "lwr": "no", "heli": "hoch", "sight": "Richtschützenvisier für Tag und Nacht mit Wärmebild, Panoramavisier mit Wärmebild für den Kommandanten.", "aa": "LFK Arkan durch die 100-mm-Kanone (bis ca. 5,5 km) und 30-mm-Maschinenkanone.", "aaQ": ["LFK Arkan durch die 100-mm-Kanone (bis ca. 5,5 km) und 30-mm-Maschinenkanone", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "Fla-Raketen Strela-10 auf dem Fahrzeug", "14,5-mm-MG KPWT mit 60° Rohrerhöhung"]]}]}, {"id": "btr", "name": "BTR-80/82A", "short": "BTR", "cat": "tpzr", "wcls": "apc", "designation": "BTR-80 bzw. BTR-82A – Radschützenpanzer 8×8 der Motschützen. Versionen: BTR-80 (14,5-mm-MG), BTR-82A (ab 2013, 30-mm-Kanone 2A72); BTR-80A ebenfalls 30 mm", "users": "Russland, Belarus und viele weitere; auch die Ukraine", "weapons": ["BTR-80: 14,5-mm-MG KPWT (Rohrerhöhung 60°)", "BTR-82A/80A: 30-mm-Maschinenkanone 2A72", "7,62-mm-MG koaxial"], "protection": "Stahl, ca. 7–10 mm – nur gegen Gewehrmunition und Splitter.", "weak": "Dünne Panzerung, Motor und Kraftstoff im Heck, Reifen.", "recog": "Acht große Räder mit Lücke zwischen 2. und 3. Achse (dort die Seitentür), bootsförmige Wanne, Turm über der 2. Achse.", "confuse": ["brdm2", "typhoon"], "jtac": ["BTR-82A: 30 mm gefährdet Hubschrauber und tief fliegende Lfz – beim BTR-80 nur das 14,5-mm-MG.", "Jede Bordkanone und APKWS reichen – keine teuren Panzerabwehrwaffen verschwenden.", "Abgesessene Motschützen führen MANPADS mit."], "vars": [{"v": "80", "name": "BTR-80", "tis": "ii", "lwr": "no", "heli": "gering", "recog": "Kleiner, kegelförmiger Turm mit dickem 14,5-mm-MG.", "sight": "Tagvisier, Nachtsicht mit aktivem IR-Scheinwerfer (TKN-3) – nachts nur kurze Reichweite.", "aa": "14,5-mm-MG KPWT mit bis zu 60° Rohrerhöhung – Gefahr im Nahbereich bis ca. 2 km.", "aaQ": ["14,5-mm-MG KPWT mit 60° Rohrerhöhung (Nahbereich bis ca. 2 km)", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}, {"v": "82", "name": "BTR-82A", "tis": "ii", "lwr": "no", "heli": "mittel", "recog": "Größerer, runder Turm mit langem, dünnem 30-mm-Rohr; beim BTR-80A liegt das 30-mm-Rohr frei außen am Turm.", "sight": "Kombiniertes Tag-/Nachtvisier mit Restlichtverstärker (TKN-4GA) – kein Wärmebild in der Grundausführung.", "aa": "30-mm-Maschinenkanone 2A72 mit großer Rohrerhöhung – Gefahr für Hubschrauber und tief fliegende Lfz.", "aaQ": ["30-mm-Maschinenkanone 2A72 mit großer Rohrerhöhung", ["14,5-mm-MG KPWT mit 60° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "mtlb", "name": "MT-LB", "short": "MTLB", "cat": "tpzk", "wcls": "apc", "designation": "MT-LB – leicht gepanzertes Mehrzweck-Kettenfahrzeug: Zugmittel, Transport, Sanität; Fahrgestell u. a. für Shturm-S, Strela-10 und 2S1", "users": "Russland und viele weitere; auch die Ukraine und NATO-Partner (z. B. Polen, Bulgarien)", "weapons": ["7,62-mm-MG im kleinen Turm", "Im Krieg oft improvisiert mit 23-mm-Zwillingsflak ZU-23-2, 14,5-mm-MG oder Granatmaschinenwaffe"], "protection": "Stahl, 7–14 mm – nur gegen Gewehrmunition und Splitter.", "weak": "Sehr dünn gepanzert; 12,7 mm durchschlagen die Seiten.", "recog": "Flache, lange Kastenwanne, sechs Laufrollen ohne Stützrollen, kleiner MG-Turm vorn, Fahrer- und Kommandantenluken vorn.", "confuse": ["shturm", "btrd", "bmp1"], "jtac": ["Verwechslung: Shturm-S und Strela-10 nutzen dasselbe Fahrgestell – Aufbau prüfen.", "Häufig Zugmittel für Artillerie und Panzerabwehrkanonen – Hinweis auf Artillerie in der Nähe.", "Mit improvisierter ZU-23-2 eine echte Gefahr für Hubschrauber im Nahbereich."], "vars": [{"v": null, "name": "MT-LB", "tis": "day", "lwr": "no", "heli": "gering", "sight": "Tagoptik, Fahrer mit einfacher Nachtsicht – kein Wärmebild.", "aa": "Meist nur das 7,62-mm-MG; improvisierte Versionen tragen aber auch die 23-mm-Zwillingsflak ZU-23-2.", "aaQ": ["Meist nur 7,62-mm-MG – improvisiert aber auch 23-mm-Zwillingsflak ZU-23-2", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}]}, {"id": "btrd", "name": "BTR-D", "short": "BTRD", "cat": "tpzk", "wcls": "apc", "designation": "BTR-D – Luftlande-Transportpanzer der VDV (verlängerte BMD-1-Wanne ohne Turm); Basis u. a. für BTR-RD (Panzerabwehr) und 2S9", "users": "Russland (VDV), weitere GUS-Staaten", "weapons": ["Zwei 7,62-mm-MG im Bug", "30-mm-Granatmaschinenwaffe", "BTR-RD: LFK Konkurs bzw. Fagot"], "protection": "Aluminium – nur gegen Gewehrmunition und Splitter.", "weak": "Sehr dünne Aluminiumpanzerung.", "recog": "Klein und flach, sechs kleine Laufrollen, kein Turm, flaches Dach mit Luken, spitzer Keilbug wie beim BMD.", "confuse": ["bmd2", "btrmdm", "mtlb"], "jtac": ["Transportiert Fallschirmjäger – mit MANPADS rechnen (im Bild: Start einer Fla-Rakete vom Dach).", "Bordwaffen sind für Lfz kaum gefährlich."], "vars": [{"v": null, "name": "BTR-D", "tis": "day", "lwr": "no", "heli": "gering", "sight": "Tagoptik, einfache Fahrer-Nachtsicht – kein Wärmebild.", "aa": "Nur 7,62-mm-MG und Granatmaschinenwaffe – die Gefahr für Lfz kommt von den abgesessenen Fallschirmjägern mit MANPADS.", "aaQ": ["Nur MG und Granatmaschinenwaffe – Gefahr durch MANPADS der Fallschirmjäger", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "btrmdm", "name": "BTR-MDM", "short": "MDM", "cat": "tpzk", "wcls": "apc", "designation": "BTR-MDM „Rakuschka“ – moderner Luftlande-Transportpanzer der VDV (ab 2015), Fahrgestell wie BMD-4M", "users": "Russland (VDV)", "weapons": ["7,62-mm-MG in Lafette bzw. im Bug"], "protection": "Aluminium – nur gegen Gewehrmunition und Splitter.", "weak": "Dünne Aluminiumpanzerung.", "recog": "Hohe, glatte Kastenwanne ohne Turm, steiler, flacher Bug, MG-Lafette vorn; höher und kantiger als der BTR-D.", "confuse": ["btrd", "bmd4", "bmd3"], "jtac": ["Transportiert Fallschirmjäger – mit MANPADS rechnen.", "Taucht zusammen mit BMD-4M auf."], "vars": [{"v": null, "name": "BTR-MDM", "tis": "day", "lwr": "no", "heli": "gering", "sight": "Tagoptik, Fahrer-Nachtsicht – keine Wärmebildoptik bekannt.", "aa": "Nur 7,62-mm-MG – die Gefahr für Lfz kommt von den abgesessenen Fallschirmjägern mit MANPADS.", "aaQ": ["Nur 7,62-mm-MG – Gefahr durch MANPADS der Fallschirmjäger", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "brdm2", "name": "BRDM-2", "short": "BRDM", "cat": "rad", "wcls": "apc", "designation": "BRDM-2 – amphibischer Spähwagen 4×4 (1962), modernisiert als BRDM-2M/MS; auch Basis für Panzerjäger und Fla-Fahrzeuge (Strela-1)", "users": "Russland und sehr viele weitere Staaten, auch die Ukraine", "weapons": ["14,5-mm-MG KPWT im Kegelturm (Rohrerhöhung nur ca. 30°)", "7,62-mm-MG koaxial"], "protection": "Stahl, ca. 7–10 mm – nur gegen Gewehrmunition und Splitter.", "weak": "Dünne Panzerung, Reifen.", "recog": "Vier große Räder, spitzer Bootsbug, Kegelturm in der Mitte wie beim BTR-80; zwischen den Achsen absenkbare Zusatzräder.", "confuse": ["btr", "tigr"], "jtac": ["Aufklärer: kann Hinweis auf nachfolgende Kräfte sein.", "Turm wie BTR-80, aber mit geringer Rohrerhöhung – für Lfz wenig gefährlich."], "vars": [{"v": null, "name": "BRDM-2", "tis": "day", "lwr": "no", "heli": "gering", "sight": "Tagoptik, Fahrer mit einfacher Nachtsicht; modernisierte BRDM-2M teils mit besseren Visieren.", "aa": "14,5-mm-MG, aber nur ca. 30° Rohrerhöhung – geringe Gefahr für Lfz.", "aaQ": ["14,5-mm-MG mit nur ca. 30° Rohrerhöhung – geringe Gefahr", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}]}, {"id": "tigr", "name": "Tigr", "short": "TIGR", "cat": "rad", "wcls": "apc", "designation": "GAZ Tigr bzw. Tigr-M – geschützter Geländewagen 4×4 für Aufklärung, Speznas und Militärpolizei; Basis u. a. für Kornet-D", "users": "Russland, weitere Staaten", "weapons": ["Lafette mit 7,62-mm-MG, 12,7-mm-MG Kord oder 30-mm-Granatmaschinenwaffe; Versionen mit fernbedienter Waffenstation"], "protection": "Schutz gegen Gewehrmunition (je nach Ausführung) und Splitter.", "weak": "Leicht geschützt, Reifen, Scheiben.", "recog": "Kastiger Geländewagen etwa in Humvee-Größe, hohe gerade Seiten mit kleinen Fenstern, großer Frontschutzbügel.", "confuse": ["typhoon", "kornet", "brdm2"], "jtac": ["Aufklärung und Speznas: oft Hinweis auf Beobachter, die dich suchen.", "Mit Startern auf dem Dach ist es ein Kornet-D – hohe Gefahr für Hubschrauber."], "vars": [{"v": null, "name": "Tigr", "tis": "day", "lwr": "no", "heli": "gering", "sight": "Keine Bordvisiere; Besatzung mit Handgeräten (oft Wärmebild), einzelne Waffenstationen mit Wärmebild.", "aa": "Lafetten-MG bis 12,7 mm (Kord) – Gefahr für Hubschrauber im Nahbereich bis ca. 1,5 km.", "aaQ": ["Lafetten-MG bis 12,7 mm – Nahbereich bis ca. 1,5 km", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Lenkflugkörper Kornet-EM mit Annäherungszünder (bis ca. 10 km)"]]}]}, {"id": "typhoon", "name": "Typhoon", "short": "TYPH", "cat": "rad", "wcls": "apc", "designation": "KamAZ Typhoon – geschützte Fahrzeuge (MRAP): Typhoon-K (6×6, KamAZ-63968) und Typhoon-VDV (4×4, K-4386)", "users": "Russland", "weapons": ["Meist MG-Lafette oder fernbediente Waffenstation bis 12,7 mm; Einzelstücke mit 30-mm-Modul"], "protection": "V-förmiger Unterboden gegen Minen, Panzerung gegen Gewehrmunition und Splitter.", "weak": "Gegen Bordkanonen und Raketen kaum geschützt; Reifen, Panzerglas.", "recog": "Großer, kantiger, LKW-artiger Aufbau mit Panzerglas; Typhoon-K mit drei Achsen, Typhoon-VDV mit zwei Achsen und gedrungener Form.", "confuse": ["tigr", "btr"], "jtac": ["Transportfahrzeug für Infanterie und Führung – abgesessene Kräfte mit MANPADS möglich."], "vars": [{"v": null, "name": "Typhoon", "tis": "mix", "lwr": "no", "heli": "gering", "sight": "Waffenstationen teils mit Wärmebild, sonst Handgeräte der Besatzung.", "aa": "Meist MG bis 12,7 mm in Lafette oder Waffenstation – Nahbereich.", "aaQ": ["Meist MG bis 12,7 mm in Lafette oder Waffenstation", ["30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone", "Fla-Lenkflugkörper Ataka mit Annäherungszünder (bis ca. 7 km)"]]}]}, {"id": "shturm", "name": "Shturm-S", "short": "SHT", "cat": "pzj", "wcls": "apc", "designation": "9P149 Shturm-S – Panzerjäger auf MT-LB-Fahrgestell; der Starter für 9M114 Kokon bzw. 9M120 Ataka fährt aus dem Dach aus", "users": "Russland und weitere Staaten", "weapons": ["LFK 9M114 Kokon (bis ca. 5 km) bzw. 9M120 Ataka (bis ca. 6 km)", "Fla-Version 9M220O mit Annäherungszünder gegen Hubschrauber (bis ca. 7 km)"], "protection": "Wie MT-LB, 7–14 mm Stahl – nur gegen Gewehrmunition und Splitter.", "weak": "Dünne Panzerung, LFK im Fahrzeug.", "recog": "MT-LB-Wanne ohne MG-Turm; der Starter mit LFK-Rohr fährt aus dem Dach aus. Eingefahren sieht er aus wie ein normaler MT-LB.", "confuse": ["mtlb", "kornet"], "jtac": ["Harmloses Aussehen, hohe Gefahr: LFK auch gegen tief fliegende Hubschrauber.", "Priorisiertes Ziel – bedroht eigene KPz und Hubschrauber auf große Entfernung.", "Shturm-S hat nur eine Tagoptik; die Modernisierung Shturm-SM hat Wärmebild und Radar."], "vars": [{"v": null, "name": "Shturm-S", "tis": "day", "lwr": "no", "heli": "hoch", "sight": "Shturm-S: Tagvisier mit Laser-Entfernungsmesser, keine Nachtsicht. Shturm-SM: Fernseh- und Wärmebildkanal sowie Radar.", "aa": "LFK Kokon bzw. Ataka – auch gegen Hubschrauber; die Fla-Version 9M220O mit Annäherungszünder reicht bis ca. 7 km.", "aaQ": ["LFK Kokon bzw. Ataka – auch gegen Hubschrauber (Fla-Version bis ca. 7 km)", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Kanonen-Lenkflugkörper durch eine 125-mm-Kanone"]]}]}, {"id": "kornet", "name": "Kornet-D", "short": "KOR", "cat": "pzj", "wcls": "apc", "designation": "Kornet-D bzw. Kornet-EM – Panzerjäger auf Tigr mit zwei ausfahrbaren Startern für je vier LFK", "users": "Russland", "weapons": ["8 LFK startbereit (Kornet-EM): gegen Bodenziele bis ca. 8–10 km", "Gegen Luftziele (Hubschrauber, Drohnen) mit Annäherungszünder bis ca. 8–10 km"], "protection": "Wie Tigr – nur gegen Gewehrmunition und Splitter.", "weak": "Leicht geschützt; in Feuerstellung mit ausgefahrenen Startern gut zu sehen.", "recog": "Tigr mit Klappdach; zwei Starter mit je vier LFK-Rohren fahren nach oben aus. Eingefahren sieht er aus wie ein normaler Tigr.", "confuse": ["tigr", "shturm"], "jtac": ["Größte Gefahr für Hubschrauber in dieser App: LFK mit Annäherungszünder bis ca. 10 km.", "Wärmebild und automatische Zielverfolgung – auch nachts voll einsatzfähig.", "Priorisiertes Ziel; leicht zu bekämpfen, wenn er erkannt ist."], "vars": [{"v": null, "name": "Kornet-D", "tis": "tis", "lwr": "no", "heli": "hoch", "sight": "Fernseh- und Wärmebildvisier mit automatischer Zielverfolgung.", "aa": "Kornet-EM-LFK mit Annäherungszünder gegen Hubschrauber und Drohnen bis ca. 8–10 km.", "aaQ": ["Kornet-EM-LFK mit Annäherungszünder gegen Hubschrauber bis ca. 8–10 km", ["Nur 7,62-mm-MG – keine weiter reichende Bordwaffe", "30-mm-Maschinenkanone mit 74° Rohrerhöhung", "Fla-Raketen Strela-10 auf dem Fahrzeug"]]}]}], "curated": [["l-1", "t72", "Du lasert einen T-72B3 mit dem Laser-Entfernungsmesser. Merkt die Besatzung das?", ["In der Regel nicht – der T-72B3 hat keinen Laserwarner", "Ja – der Laserwarner löst automatisch Nebel aus", "Ja – im Wärmebildvisier ist der Strahl sichtbar", "Nur wenn der Laser länger als 10 Sekunden strahlt"], "Der T-72B3 hat keinen Laserwarnempfänger. Laser-Entfernungsmesser (meist ca. 1,5 µm) und Designatoren (1,06 µm) sind für das Auge und für Wärmebildgeräte unsichtbar."], ["l-2", "gen", "Was sieht ein Gegner mit Restlichtverstärker (NVG) von deinen Lasergeräten?", ["Den IR-Pointer bzw. IR-Marker deutlich – den Designator in der Regel nicht", "Den Designator, aber nicht den IR-Pointer", "Beides gleich gut", "Nichts – Laser sind für NVG grundsätzlich unsichtbar"], "IR-Pointer und -Marker (ca. 0,8–0,9 µm) liegen im Empfindlichkeitsbereich der Restlichtverstärker und sind gut sichtbar – auch für den Gegner. Designatoren (1,06 µm) liegen am Rand bzw. außerhalb, augensichere Entfernungsmesser (ca. 1,5 µm) ganz außerhalb. SWIR-Kameras und teils digitale Nachtsichtgeräte können 1,06 µm dagegen sehen."], ["l-3", "t90", "Du beleuchtest einen T-90M für eine GBU-12. Was musst du erwarten?", ["Laserwarner erkennt die Bestrahlung, Nebel bzw. Aerosol wird in deine Richtung geschossen", "Nichts – der T-90M hat keinen Laserwarner", "Die Relikt-Panzerung reflektiert den Laser und blendet dich", "Er erkennt nur den Entfernungsmesser, nicht den Designator"], "Der T-90M hat Laserwarnsensoren, die automatisch Nebel- bzw. Aerosolgranaten in Richtung der Bedrohung auslösen. Aerosol kann den Laserpunkt abschirmen – die Bombe verliert dann die Führung. Laserzeit kurz halten oder eine Koordinaten- bzw. Dual-Mode-Waffe wählen."], ["l-4", "gen", "Welche Fahrzeuge dieser App haben einen Laserwarner, der automatisch Nebel auslöst?", ["T-90A, T-90M, BMPT und T-14", "Alle Kampfpanzer ab T-72B", "Nur der T-14 Armata", "T-72B3M und T-80BVM"], "T-90A (Shtora-1), T-90M, BMPT und T-14 (Afganit) haben Laserwarner mit automatischem Nebel. T-72B3, T-72B3M und T-80BVM haben trotz Modernisierung keinen."], ["l-5", "gen", "Wie verringerst du das Risiko, dass ein Fahrzeug mit Laserwarner deinen Laser erkennt und reagiert?", ["Laser erst in der Endphase einschalten und nur so kurz wie nötig lasern", "Mit dem IR-Pointer statt dem Designator markieren", "Nur nachts lasern, dann ist der Laserwarner abgeschaltet", "Aus großer Entfernung lasern – Laserwarner erfassen nur bis 1 km"], "Laserwarner reagieren auf die Bestrahlung, unabhängig von der Entfernung. Je kürzer gelasert wird, desto weniger Zeit hat die Besatzung. Bei LGBs muss der Laser nur in der Endphase leuchten (Laser-on-Zeit im Briefing festlegen); Entfernungen besser mit Pod, Karte oder Koordinaten bestimmen."], ["l-6", "gen", "Kannst du einen Laserstrahl im Wärmebildgerät sehen?", ["Nein – 1,06 und 1,5 µm liegen außerhalb des Wärmebildbereichs", "Ja, als hellen Strahl", "Nur den Laserpunkt auf dem Ziel", "Nur bei Designatoren mit hoher Leistung"], "Wärmebildgeräte arbeiten im mittleren bzw. langwelligen Infrarot (3–5 bzw. 8–12 µm). Laser-Entfernungsmesser und Designatoren strahlen bei 1,06 bzw. 1,5 µm – unsichtbar für das WBG. Das WBG sieht aber dich und dein warmes Gerät."], ["l-7", "t90", "Was macht die Shtora-1 des T-90A, wenn sie Laserbestrahlung erkennt?", ["Sie schießt Aerosolgranaten in die Bedrohungsrichtung und richtet den Turm dorthin aus", "Sie schaltet die Störstrahler auf den Laser und blendet dich", "Sie meldet es nur der Besatzung", "Nichts – Shtora erkennt nur Radar"], "Shtora-1: Laserwarnsensoren erkennen die Bestrahlung, 3D17-Aerosolgranaten bilden in wenigen Sekunden eine Wolke, der Turm wird auf die Bedrohung ausgerichtet. Die „roten Augen“ stören LFK mit Kommandolenkung – nicht deinen Laser."], ["t-1", "gen", "Du liegst hinter einem Erdwall, nur Kopf und Optik ragen darüber. Was sieht das Wärmebildvisier eines T-72B3?", ["Nur, was über die Deckung ragt – Gesicht, Kopf, warme Optik", "Dich vollständig – Wärmebild sieht durch Erde", "Nichts, solange du dich nicht bewegst", "Nur dein Lasergerät, weil es heiß wird"], "Wärmebild sieht nicht durch feste Deckung wie Erde, Beton oder Mauern. Alles, was herausragt, ist sichtbar – besonders Gesicht und Hände. Stillhalten senkt die Auffälligkeit, nicht den Wärmekontrast."], ["t-2", "gen", "Hilft ein normales Tarnnetz gegen Wärmebild?", ["Kaum – Wärme ist durch die Maschen sichtbar; nur Multispektralnetze dämpfen die Signatur", "Ja, jedes Tarnnetz blockiert Wärmebild vollständig", "Ja, aber nur nachts", "Nein, im Wärmebild macht es dich sogar heller"], "Normale Netze tarnen im sichtbaren Bereich. Körper- und Motorwärme bleibt durch die Maschen und am erwärmten Netz sichtbar. Multispektral-Netze und -Ponchos dämpfen die Wärmesignatur, ersetzen aber keine feste Deckung."], ["t-3", "gen", "Kann ein Wärmebildgerät dich hinter einer Glasscheibe (Fenster, Fahrzeugscheibe) sehen?", ["Nein – Glas blockiert langwelliges Infrarot, das WBG sieht nur die Scheibe", "Ja, Glas ist für Wärmebild durchsichtig", "Nur bei Einfachglas", "Nur wenn es dunkel ist"], "Glas lässt Wärmestrahlung (8–12 µm) kaum durch. Umgekehrt kannst du mit deinem WBG auch nicht hinaus, und eine erwärmte Scheibe kann selbst auffallen."], ["t-4", "gen", "Schützt dich normaler Rauch vor einem Wärmebildvisier?", ["Kaum – Wärmebild sieht durch normalen Rauch; nur Mehrspektral-Nebel bzw. Aerosol blockiert es", "Ja, vollständig", "Nur wenn der Rauch heiß ist", "Nur bei Wind unter 5 m/s"], "Herkömmlicher Rauch verdeckt im sichtbaren Bereich und für Restlichtverstärker. Wärmebild sieht weitgehend hindurch. Erst Mehrspektral-Nebel (auch das Aerosol von Shtora und Co.) dämpft das Infrarot."], ["t-5", "t72", "Welches Fahrzeug sieht dich nachts schlechter: T-72B oder T-72B3?", ["T-72B – nur Restlichtverstärker mit kurzer Reichweite, der B3 hat ein Wärmebildvisier", "T-72B3 – Sosna-U ist nur ein Tagvisier", "Beide gleich", "T-72B – er hat gar keine Nachtsicht"], "Der T-72B hat den Restlichtverstärker TPN-3-49 mit IR-Scheinwerfer (nachts unter ca. 1 km). Der T-72B3 hat Sosna-U mit Wärmebild – Aufklärung auf mehrere Kilometer."], ["t-6", "gen", "Ein BMP-2 ohne Wärmebild steht vor deiner Stellung. Bist du nachts sicher vor Aufklärung?", ["Nein – Infanterie hat Wärmebild-Handgeräte, Drohnen fliegen mit Wärmebildkameras", "Ja, ohne WBG sieht die Besatzung nichts", "Ja, solange du keinen Laser einsetzt", "Nur bei Neumond"], "Fehlendes Bord-WBG heißt nicht, dass dich niemand sieht: Russische Infanterie nutzt Wärmebild-Handgeräte und -Zielfernrohre, Drohnen (Orlan-10, Supercam, FPV) haben Wärmebildkameras."], ["t-7", "t80", "Warum ist ein T-80 im Wärmebild meist besonders auffällig?", ["Gasturbine: sehr heißer Abgasstrahl am Heck", "Wegen der Kontakt-1-Kacheln", "Wegen des Kommandantenvisiers", "Er fährt immer mit IR-Scheinwerfer"], "Die Gasturbine des T-80 erzeugt einen sehr heißen Abgasstrahl am Heck – auch im Leerlauf. Im Wärmebild verrät ihn das auf große Entfernung."], ["t-8", "gen", "Was verrät dich im Wärmebild auch nach dem Stellungswechsel?", ["Warme Spuren am Boden und an der Deckung, wo du gelegen hast", "Nichts – Wärmespuren verschwinden sofort", "Nur der Geruch", "Die Funkantenne"], "Boden und Deckung bleiben eine Weile warm (Wärmeabdruck). Dazu verraten Akkus, Funkgeräte, Optiken und Fahrzeugmotoren die Position."], ["a-1", "gen", "Ab wann bist du als Fast Jet vor den Bordwaffen dieser Fahrzeuge weitgehend sicher?", ["Mit ausreichend Höhe (grob über 3 km über Grund) – dann bleiben MANPADS (bis ca. 4,5 km) und die Fla-Systeme", "Ab 500 m über Grund", "Erst ab 10 km", "Nie – 30-mm-Kanonen reichen bis 8 km Höhe"], "MG, Maschinenkanonen und Panzer-LFK wirken gegen tief fliegende, langsame Ziele. Mit Höhe und Abstand werden sie praktisch wirkungslos. Gefährlich bleiben MANPADS der Infanterie (Verba bis ca. 4,5 km Höhe) und die begleitende Flugabwehr."], ["a-2", "t90", "Warum ist der Schwebeflug eines Kampfhubschraubers in Sicht eines T-90 gefährlich?", ["Kanonen-LFK (Refleks, Invar) können schwebende Hubschrauber bis ca. 5 km treffen", "Das 12,7-mm-MG reicht bis 6 km", "Der Laserwarner stört die Hubschraubersensoren", "Der T-90 hat Fla-Raketen am Turm"], "Russische Kanonen-LFK sind laut Hersteller auch gegen langsame, tief fliegende Ziele wie Hubschrauber ausgelegt (Laserleitstrahl, bis ca. 5 km). Deckung und Bewegung nutzen, nicht im Schwebeflug in Sicht bleiben."], ["a-3", "gen", "Welche Fahrzeuge dieser App sind für Hubschrauber am gefährlichsten?", ["Kornet-D, Shturm-S und BMPT – LFK mit Annäherungszünder bzw. Fla-Fähigkeit", "BTR-80 und BRDM-2 wegen des 14,5-mm-MG", "MT-LB und BTR-D", "Tigr und Typhoon"], "Kornet-EM (bis ca. 10 km) und Ataka 9M220O (bis ca. 7 km) haben Annäherungszünder gegen Luftziele. Dazu kommen die Kanonen-LFK der Kampfpanzer, BMP-3 und BMD-4M."], ["a-4", "gen", "Motschützen sitzen aus ihren BTR-82A ab. Was bedeutet das für dein Lfz?", ["Mit MANPADS (Igla, Verba) in der Infanterie rechnen – Höhe und Anflug danach planen", "Nichts – abgesessene Infanterie ist für Lfz ungefährlich", "Nur die 30-mm-Kanone bleibt gefährlich", "Die Infanterie hat nur Handwaffen bis 300 m"], "Russische Motschützen- und Luftlandeeinheiten führen MANPADS mit. Das Fahrzeug selbst ist dann nur ein Teil der Bedrohung."], ["a-5", "btr", "Was unterscheidet BTR-80 und BTR-82A in der Gefahr für Hubschrauber?", ["BTR-82A: 30-mm-Kanone mit deutlich mehr Reichweite und Wirkung statt 14,5-mm-MG", "Kein Unterschied", "Der BTR-82A hat zusätzlich Fla-Raketen", "Der BTR-80 ist wegen der höheren Rohrerhöhung gefährlicher"], "Der BTR-80 trägt ein 14,5-mm-MG (Nahbereich bis ca. 2 km), der BTR-82A eine 30-mm-Maschinenkanone 2A72 – mehr Reichweite, Spreng- und Panzerbrechmunition."], ["a-6", "gen", "Wie weit reicht grob die Gefahr durch ein 12,7- bzw. 14,5-mm-MG gegen Hubschrauber?", ["Etwa 1,5 bis 2 km", "Etwa 500 m", "Etwa 5 km", "Etwa 8 km"], "Überschwere MG wirken gegen Luftziele etwa bis 1,5–2 km, 30-mm-Maschinenkanonen bis ca. 2,5 km und mehr, Kanonen-LFK und Ataka bzw. Kornet bis 4–10 km."], ["w-1", "t72", "Eine A-10C mit GAU-8 soll einen T-72B3 bekämpfen, der frontal auf sie zukommt. Was empfiehlst du?", ["Nicht frontal: Angriff auf Seite, Heck oder Dach – besser Maverick oder Lenkbombe", "Frontal, dort ist der KPz am größten", "Gar nicht – 30 mm wirkt gegen KPz überhaupt nicht", "Nur mit Airburst-Munition"], "Die GAU-8 durchschlägt die Front moderner KPz nicht, wohl aber Seite, Heck und Dach. Gegen die Front sind Maverick, Hellfire/JAGM oder ein Volltreffer mit einer Lenkbombe die bessere Wahl."], ["w-2", "btr", "Gegen einen BTR-82A stehen dir verschiedene Waffen zur Verfügung. Was ist angemessen?", ["Bordkanone oder APKWS – teure Panzerabwehrwaffen sind nicht nötig", "Nur eine GBU-31 – leichtere Waffen wirken nicht", "Nur Maverick oder Hellfire", "Ausschließlich Streumunition"], "Die 7–10 mm Stahl des BTR halten nur Handwaffen und Splitter ab. Bordkanone (20–30 mm), APKWS, Hydra oder kleine Bomben genügen."], ["w-3", "gen", "Was bewirkt Reaktivpanzerung (Kontakt-5, Relikt) gegen deine Lenkflugkörper?", ["Sie stört Hohlladungen – Tandem-Gefechtsköpfe (Hellfire II, JAGM, Brimstone) und Treffer auf Seite, Heck oder Dach helfen", "Sie macht den KPz gegen alle Luft-Boden-Waffen immun", "Nichts – sie wirkt nur gegen Panzergranaten", "Sie reflektiert den Laser, LGBs treffen nicht"], "Reaktivpanzerung zündet beim Auftreffen und stört den Hohlladungsstrahl. Tandem-Gefechtsköpfe lösen sie mit der Vorladung aus. Dach, Heck und Unterseite sind meist nicht oder kaum geschützt."], ["w-4", "gen", "Wozu dienen die Käfige („Cope Cages“) auf russischen Fahrzeugen vor allem?", ["Gegen FPV-Drohnen und kleine Top-Attack-Munition – gegen Lenkbomben oder Maverick kaum Schutz", "Gegen Wärmebild-Aufklärung", "Gegen Laserbeleuchtung", "Als Halterung für Tarnnetze"], "Käfige und Gitter sollen Drohnen und leichte Hohlladungen vorzeitig auslösen oder abhalten. Gegen schwere Luft-Boden-Waffen bieten sie kaum Schutz."], ["w-5", "gen", "Warum ist ein Durchschlag im Turmbereich von T-72, T-80 und T-90 oft katastrophal?", ["Munitionskarussell unter dem Turm – die Munition detoniert oft", "Der Kraftstoff liegt im Turm", "Der Turm ist aus Aluminium", "Die Reaktivpanzerung detoniert nach innen"], "Der Ladeautomat lagert die Munition im Karussell unter dem Turm, weitere Munition liegt im Kampfraum. Ein Durchschlag führt oft zur Detonation – der Turm fliegt ab."], ["w-6", "bmp2", "BMP-1 und BMP-2: Was ist bei einem Treffer am Heck besonders?", ["Die Hecktüren sind Kraftstofftanks – hohe Brandgefahr", "Dort liegt die gesamte Munition", "Dort ist die Panzerung am stärksten", "Dort sitzt der Motor"], "Bei BMP-1 und BMP-2 sind die Hecktüren als Kraftstofftanks ausgelegt. Treffer am Heck führen häufig zum Brand."], ["w-7", "gen", "Welche Waffe nimmst du gegen einen fahrenden KPz, wenn das Wetter einen Laser zulässt?", ["GBU-54 (Laser-JDAM), Hellfire/JAGM, Maverick oder Brimstone", "GBU-31 auf die letzte bekannte Koordinate", "GBU-38 (reine JDAM)", "Ungelenkte Mk 82"], "Gegen fahrende Ziele brauchst du Lenkung bis zum Einschlag: Laser (GBU-54, Hellfire), Bildsuchkopf (Maverick) oder Radar (JAGM, Brimstone). Reine GPS-Waffen treffen nur stehende Ziele."], ["w-8", "kornet", "Du entdeckst einen Kornet-D und einen BTR-82A. Welches Ziel priorisierst du für die Sicherheit eigener Hubschrauber?", ["Kornet-D – LFK mit Annäherungszünder bis ca. 10 km", "BTR-82A – die 30-mm-Kanone reicht weiter", "Beide gleich", "Keins – beide sind für Hubschrauber ungefährlich"], "Der Kornet-D bekämpft Hubschrauber bis ca. 10 km, der BTR-82A nur bis ca. 2,5–3 km. Der Kornet-D ist zudem leicht geschützt – schnell zu bekämpfen, wenn erkannt."], ["r-1", "gen", "Woran unterscheidest du T-64, T-72 und T-80 am Laufwerk?", ["T-64: kleine Laufrollen; T-72: große Laufrollen, 3 Stützrollen; T-80: gummibereifte Laufrollen, 5 Stützrollen", "Alle haben das gleiche Laufwerk", "T-72 hat sieben Laufrollen", "T-80 hat keine Stützrollen"], "Das Laufwerk ist das sicherste Merkmal: T-64 mit kleinen Laufrollen, T-72 und T-90 mit großen Laufrollen und drei Stützrollen, T-80 mit gummibereiften Laufrollen und fünf Stützrollen."], ["r-2", "gen", "Du erkennst bei einem KPz die genaue Version nicht. Wie meldest du ihn in der Zielbeschreibung?", ["Als KPz bzw. „T-72-Typ“ mit Anzahl, Lage und Tätigkeit", "Gar nicht, bis die Version feststeht", "Immer als T-90M, sicherheitshalber", "Als Schützenpanzer, damit kein Overkill entsteht"], "Für die Bekämpfung reicht die Fahrzeugart: KPz, SPz, Radfahrzeug. Wichtiger als die Version sind Anzahl, Lage, Bewegung und Bedrohung."], ["r-3", "gen", "Bedeutet ein T-72 oder BMP-2 automatisch „Feind“?", ["Nein – auch NATO-Partner (z. B. Polen, Tschechien, Bulgarien) und die Ukraine nutzen sie; Identifikation braucht Lage und Kennzeichnung", "Ja, nur Russland und Belarus nutzen sie", "Ja, sofern sie Reaktivpanzerung tragen", "Nur bei Fahrzeugen mit Käfig"], "Sowjetische Technik ist weit verbreitet – auch bei NATO-Partnern und der Ukraine. Der Fahrzeugtyp allein ist keine Feindidentifikation."], ["r-4", "gen", "Woran erkennst du aus der Luft einen KPz gegenüber einem SPz?", ["Langes Rohr, das weit über die Wanne ragt, großer Turm in der Mitte – SPz: kleiner Turm, langer flacher Kampfraum mit Luken", "Am Funkgerät", "KPz sind immer breiter als lang", "An der Anzahl der Antennen"], "Aus der Luft ist das lange Rohr das auffälligste Merkmal eines KPz. SPz haben kleine Türme und lange, flache Mannschaftsräume mit Dachluken."], ["r-5", "t90", "Woran unterscheidest du T-90A und T-90M am schnellsten?", ["T-90A: Shtora-Strahler („rote Augen“) und Kontakt-5; T-90M: Relikt und großer Staukorb am Turmheck", "Am Laufwerk", "An der Anzahl der Räder", "T-90M hat keine Kanone mehr"], "Die „roten Augen“ der Shtora gibt es nur beim T-90A. Der T-90M hat Relikt-Module und einen großen Staukorb am Turmheck."], ["r-6", "gen", "Was bedeutet ein MT-LB, der eine Haubitze oder Pak zieht?", ["Hinweis auf Artillerie bzw. Panzerabwehr in der Nähe – Feuerstellungen suchen", "Nichts Besonderes", "Ein Bergefahrzeug im Einsatz", "Ein Hinweis auf Luftlandekräfte"], "Der MT-LB ist ein typisches Zugmittel für D-30-Haubitzen und MT-12-Panzerabwehrkanonen. Wo er zieht, sind Feuerstellungen nicht weit."]], "merk": [["Laser – wer sieht was?", ["Auge und Wärmebildgerät sehen weder den Designator (1,06 µm) noch den augensicheren Entfernungsmesser (ca. 1,5 µm).", "Restlichtverstärker (NVG) sehen IR-Pointer und IR-Marker (ca. 0,8–0,9 µm) deutlich – auch der Gegner. Den Designator in der Regel nicht oder kaum, 1,5 µm gar nicht.", "SWIR-Kameras sehen beide Laser, digitale Nachtsichtgeräte teils 1,06 µm.", "Laserwarner (T-90A, T-90M, BMPT, T-14) erkennen die Bestrahlung und schießen automatisch Nebel bzw. Aerosol, der T-90A richtet zusätzlich den Turm aus.", "Lasern kurz halten: Designator erst in der Endphase, Entfernungen möglichst mit Pod, Karte oder Koordinaten bestimmen."]], ["Wärmebild und Deckung", ["Kein Durchblick durch Erde, Mauern, Beton, Glas und dichte Vegetation.", "Durchblick bei Dunkelheit, normalem Rauch, durch Lücken in leichter Vegetation und durch die Maschen normaler Tarnnetze.", "Verrät dich: Gesicht, Hände, Akkus, Funk- und Lasergeräte, Motoren, warme Spuren an Boden und Deckung.", "Multispektral-Netze und -Ponchos dämpfen die Signatur, feste Deckung ersetzen sie nicht.", "Kein Bord-WBG heißt nicht unbeobachtet: Infanterie mit Handgeräten, Drohnen mit Wärmebild."]], ["Bedrohung für dein Lfz", ["7,62 mm: Nahbereich. 12,7 und 14,5 mm: bis ca. 1,5–2 km.", "30-mm-Maschinenkanonen (BMP-2, BMD, BTR-82A, BMPT): gegen Hubschrauber bis ca. 2,5 km und mehr.", "Kanonen-LFK (KPz ab T-72B, BMP-3, BMD-4M): auch gegen schwebende Hubschrauber bis ca. 4–5,5 km.", "Ataka 9M220O (Shturm-S, BMPT) bis ca. 7 km und Kornet-EM bis ca. 10 km mit Annäherungszünder – gezielt gegen Luftziele.", "Mit ausreichend Höhe bleiben MANPADS der Infanterie (Verba bis ca. 4,5 km Höhe) und die Fla-Systeme (Flugabwehr-Trainer)."]], ["Wirkmittel", ["KPz: Hellfire/JAGM, Brimstone, Maverick oder Volltreffer mit Lenkbombe; GBU-54 gegen fahrende KPz. GAU-8 nur auf Seite, Heck oder Dach.", "SPz und BMD-4M: 30-mm-Kanone, Hellfire, Maverick, kleine Lenkbomben.", "BTR, MT-LB, BMD-2/3, Radfahrzeuge: jede Bordkanone, APKWS bzw. Hydra, kleine Bomben.", "Panzerjäger (Kornet-D, Shturm-S) priorisieren – Gefahr für Hubschrauber und KPz, aber leicht verwundbar."]]]};
+const IMG = {
+"t62": ["img/t62-0.webp", "img/t62-1.webp", "img/t62-2.webp", "img/t62-3.webp", "img/t62-4.webp", "img/t62-5.webp", "img/t62-6.webp", "img/t62-7.webp", "img/t62-8.webp"],
+"t64": ["img/t64-0.webp", "img/t64-1.webp", "img/t64-2.webp", "img/t64-3.webp", "img/t64-4.webp", "img/t64-5.webp"],
+"t72": ["img/t72-0.webp", "img/t72-1.webp", "img/t72-2.webp", "img/t72-3.webp", "img/t72-4.webp", "img/t72-5.webp", "img/t72-6.webp", "img/t72-7.webp", "img/t72-8.webp", "img/t72-9.webp", "img/t72-10.webp", "img/t72-11.webp", "img/t72-12.webp", "img/t72-13.webp", "img/t72-14.webp", "img/t72-15.webp", "img/t72-16.webp", "img/t72-17.webp", "img/t72-18.webp", "img/t72-19.webp", "img/t72-20.webp", "img/t72-21.webp", "img/t72-22.webp", "img/t72-23.webp", "img/t72-24.webp", "img/t72-25.webp", "img/t72-26.webp", "img/t72-27.webp", "img/t72-28.webp"],
+"t80": ["img/t80-0.webp", "img/t80-1.webp", "img/t80-2.webp", "img/t80-3.webp", "img/t80-4.webp", "img/t80-5.webp", "img/t80-6.webp", "img/t80-7.webp", "img/t80-8.webp", "img/t80-9.webp", "img/t80-10.webp", "img/t80-11.webp", "img/t80-12.webp", "img/t80-13.webp", "img/t80-14.webp", "img/t80-15.webp", "img/t80-16.webp", "img/t80-17.webp", "img/t80-18.webp", "img/t80-19.webp", "img/t80-20.webp", "img/t80-21.webp", "img/t80-22.webp", "img/t80-23.webp"],
+"t90": ["img/t90-0.webp", "img/t90-1.webp", "img/t90-2.webp", "img/t90-3.webp", "img/t90-4.webp", "img/t90-5.webp", "img/t90-6.webp", "img/t90-7.webp", "img/t90-8.webp", "img/t90-9.webp", "img/t90-10.webp", "img/t90-11.webp", "img/t90-12.webp", "img/t90-13.webp", "img/t90-14.webp", "img/t90-15.webp", "img/t90-16.webp", "img/t90-17.webp"],
+"t14": ["img/t14-0.webp", "img/t14-1.webp", "img/t14-2.webp", "img/t14-3.webp", "img/t14-4.webp", "img/t14-5.webp", "img/t14-6.webp", "img/t14-7.webp", "img/t14-8.webp"],
+"bmpt": ["img/bmpt-0.webp", "img/bmpt-1.webp", "img/bmpt-2.webp", "img/bmpt-3.webp", "img/bmpt-4.webp", "img/bmpt-5.webp", "img/bmpt-6.webp", "img/bmpt-7.webp", "img/bmpt-8.webp", "img/bmpt-9.webp", "img/bmpt-10.webp"],
+"bmp1": ["img/bmp1-0.webp", "img/bmp1-1.webp", "img/bmp1-2.webp", "img/bmp1-3.webp", "img/bmp1-4.webp", "img/bmp1-5.webp", "img/bmp1-6.webp", "img/bmp1-7.webp", "img/bmp1-8.webp", "img/bmp1-9.webp", "img/bmp1-10.webp"],
+"bmp2": ["img/bmp2-0.webp", "img/bmp2-1.webp", "img/bmp2-2.webp", "img/bmp2-3.webp", "img/bmp2-4.webp", "img/bmp2-5.webp", "img/bmp2-6.webp", "img/bmp2-7.webp", "img/bmp2-8.webp", "img/bmp2-9.webp", "img/bmp2-10.webp", "img/bmp2-11.webp", "img/bmp2-12.webp", "img/bmp2-13.webp", "img/bmp2-14.webp", "img/bmp2-15.webp", "img/bmp2-16.webp"],
+"bmp3": ["img/bmp3-0.webp", "img/bmp3-1.webp", "img/bmp3-2.webp", "img/bmp3-3.webp", "img/bmp3-4.webp", "img/bmp3-5.webp", "img/bmp3-6.webp"],
+"bmd2": ["img/bmd2-0.webp", "img/bmd2-1.webp", "img/bmd2-2.webp", "img/bmd2-3.webp", "img/bmd2-4.webp", "img/bmd2-5.webp", "img/bmd2-6.webp", "img/bmd2-7.webp", "img/bmd2-8.webp", "img/bmd2-9.webp", "img/bmd2-10.webp"],
+"bmd3": ["img/bmd3-0.webp", "img/bmd3-1.webp", "img/bmd3-2.webp"],
+"bmd4": ["img/bmd4-0.webp", "img/bmd4-1.webp", "img/bmd4-2.webp", "img/bmd4-3.webp", "img/bmd4-4.webp", "img/bmd4-5.webp", "img/bmd4-6.webp", "img/bmd4-7.webp", "img/bmd4-8.webp", "img/bmd4-9.webp"],
+"btr": ["img/btr-0.webp", "img/btr-1.webp", "img/btr-2.webp", "img/btr-3.webp", "img/btr-4.webp", "img/btr-5.webp", "img/btr-6.webp", "img/btr-7.webp", "img/btr-8.webp", "img/btr-9.webp", "img/btr-10.webp", "img/btr-11.webp", "img/btr-12.webp", "img/btr-13.webp"],
+"mtlb": ["img/mtlb-0.webp", "img/mtlb-1.webp", "img/mtlb-2.webp", "img/mtlb-3.webp", "img/mtlb-4.webp", "img/mtlb-5.webp", "img/mtlb-6.webp", "img/mtlb-7.webp", "img/mtlb-8.webp"],
+"btrd": ["img/btrd-0.webp", "img/btrd-1.webp", "img/btrd-2.webp", "img/btrd-3.webp", "img/btrd-4.webp"],
+"btrmdm": ["img/btrmdm-0.webp", "img/btrmdm-1.webp", "img/btrmdm-2.webp", "img/btrmdm-3.webp", "img/btrmdm-4.webp", "img/btrmdm-5.webp", "img/btrmdm-6.webp", "img/btrmdm-7.webp", "img/btrmdm-8.webp"],
+"brdm2": ["img/brdm2-0.webp", "img/brdm2-1.webp", "img/brdm2-2.webp", "img/brdm2-3.webp", "img/brdm2-4.webp", "img/brdm2-5.webp", "img/brdm2-6.webp", "img/brdm2-7.webp", "img/brdm2-8.webp"],
+"tigr": ["img/tigr-0.webp", "img/tigr-1.webp", "img/tigr-2.webp", "img/tigr-3.webp", "img/tigr-4.webp"],
+"typhoon": ["img/typhoon-0.webp", "img/typhoon-1.webp", "img/typhoon-2.webp", "img/typhoon-3.webp", "img/typhoon-4.webp", "img/typhoon-5.webp", "img/typhoon-6.webp", "img/typhoon-7.webp", "img/typhoon-8.webp", "img/typhoon-9.webp", "img/typhoon-10.webp"],
+"shturm": ["img/shturm-0.webp", "img/shturm-1.webp", "img/shturm-2.webp", "img/shturm-3.webp", "img/shturm-4.webp", "img/shturm-5.webp", "img/shturm-6.webp", "img/shturm-7.webp", "img/shturm-8.webp"],
+"kornet": ["img/kornet-0.webp", "img/kornet-1.webp", "img/kornet-2.webp", "img/kornet-3.webp", "img/kornet-4.webp", "img/kornet-5.webp"]
+};
+const VAR = {"t62": [null, null, null, null, null, null, null, null, null], "t64": [null, null, null, null, null, null], "t72": ["b3", "b3", "b3", "b3", "b3", "b3", "b3", null, "ab", "ab", "ab", "ab", "ab", "ab", "ab", null, "b3m", "b3m", "b3m", "b3m", "b3m", "b3m", "b3m", "b3m", null, null, null, null, "b3m"], "t80": ["bvm", "bvm", "bvm", "bvm", "bvm", "bvm", null, "bvm", "bvm", "bv", "bv", "bv", "bv", "bv", "bv", "u", "u", "u", "u", "u", "u", "u", null, "bvm"], "t90": ["m", "m", "m", "m", "m", "m", "m", "m", "a", "a", "a", "a", "a", "a", "a", "m", "m", "m"], "t14": [null, null, null, null, null, null, null, null, null], "bmpt": [null, null, null, null, null, null, null, null, null, null, null], "bmp1": ["std", "std", "std", "std", "am", "am", "am", "am", "am", null, "am"], "bmp2": ["std", "std", "std", "std", "std", "std", "std", "std", "std", "m", "m", "m", "m", "m", null, null, "m"], "bmp3": [null, null, null, null, null, null, null], "bmd2": [null, null, null, null, null, null, null, null, null, null, null], "bmd3": [null, null, null], "bmd4": [null, null, null, null, null, null, null, null, null, null], "btr": ["82", "82", "82", "82", "82", "82", "82", "80", null, null, null, null, "82", null], "mtlb": [null, null, null, null, null, null, null, null, null], "btrd": [null, null, null, null, null], "btrmdm": [null, null, null, null, null, null, null, null, null], "brdm2": [null, null, null, null, null, null, null, null, null], "tigr": [null, null, null, null, null], "typhoon": [null, null, null, null, null, null, null, null, null, null, null], "shturm": [null, null, null, null, null, null, null, null, null], "kornet": [null, null, null, null, null, null]};
+const AR = {"t62": 1.6014, "t64": 1.5, "t72": 1.5, "t80": 1.5, "t90": 1.5, "t14": 1.5, "bmpt": 1.5063, "bmp1": 1.5126, "bmp2": 1.5, "bmp3": 1.4008, "bmd2": 1.5, "bmd3": 1.5, "bmd4": 1.5, "btr": 1.5, "mtlb": 1.5, "btrd": 1.5, "btrmdm": 1.5, "brdm2": 1.4634, "tigr": 1.3333, "typhoon": 1.5, "shturm": 1.3333, "kornet": 1.5};
+const ARS = {"t62": [1.6014, 1.848, 1.5, 1.5045, 1.5126, 1.5451, 1.5, 1.7797, 1.3333], "t64": [1.5, 1.5, 1.5, 1.5108, 1.5, 1.3333], "t72": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.3333, 1.7308, 1.5584, 1.5, 1.5, 1.5, 1.5, 1.4634, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5025, 1.5, 1.5, 1.5, 1.5, 1.5], "t80": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.4754, 1.5, 1.5, 1.5, 1.5, 1.5584, 1.5, 1.3688, 1.5859, 1.5, 1.5, 1.5, 1.5, 1.5, 1.7797, 1.5], "t90": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 0.6667, 1.5, 1.5721, 1.5, 1.0], "t14": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.4261, 1.5849, 1.5], "bmpt": [1.5063, 1.5063, 1.5063, 1.5063, 1.5, 1.5063, 1.5652, 1.5, 1.5009, 1.5, 1.4165], "bmp1": [1.5126, 1.5517, 1.4754, 1.5, 1.5571, 1.5, 1.4876, 1.5, 1.5625, 1.3333, 1.5], "bmp2": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.7791, 1.5, 1.848, 2.0, 1.5, 1.5, 1.6216, 1.3312, 1.5], "bmp3": [1.4008, 1.4173, 1.5, 1.5, 1.5, 1.5, 1.519], "bmd2": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.8143, 1.5108, 1.5, 1.5, 1.5], "bmd3": [1.5, 1.5842, 1.5], "bmd4": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], "btr": [1.5, 1.4575, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5859, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], "mtlb": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.9692, 1.492], "btrd": [1.5, 1.5, 1.5, 1.5009, 1.581], "btrmdm": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], "brdm2": [1.4634, 1.3333, 1.85, 1.3273, 1.4286, 1.6, 1.5, 1.5, 1.3333], "tigr": [1.3333, 1.3333, 1.5, 1.5, 1.547], "typhoon": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5441], "shturm": [1.3333, 1.3333, 1.5464, 1.3752, 1.3333, 1.3333, 1.5, 1.5, 1.5], "kornet": [1.5, 1.5, 1.5, 1.3333, 1.5, 1.3333]};
+const PINS = {"t62": {}, "t64": {}, "t72": {"0": [[50, 38, "Kontakt-5: wenige große, flache Keile an der Turmfront statt vieler kleiner Kacheln"], [35, 26, "Visierkasten Sosna-U auf dem Turmdach"], [42, 53, "Glatte Gummischürzen ohne Module"]], "1": [[60, 52, "Kontakt-5: große, flache Keile an der Turmfront"]], "2": [[66, 37, "Kontakt-5: große, flache Keile an der Turmfront"], [65, 56, "Glatte Gummischürzen ohne Module"]], "3": [[43, 52, "Kontakt-5-Keile an der Turmfront"], [62, 63, "Glatte Seitenschürzen ohne Module"]], "9": [[78, 48, "T-72A: glatter Gussturm ohne Reaktivpanzerung, an der Front nur eine Reihe Nebelwurfbecher"]], "11": [[40, 73, "Kontakt-1-Kacheln dicht an dicht auf dem Bug – T-72B"]], "13": [[24, 24, "Kontakt-1-Kacheln dicht an dicht auf dem Turm – viele kleine „Ziegelsteine“"], [45, 58, "Kontakt-1 auch auf dem Bug"]], "14": [[64, 40, "Kontakt-1-Kacheln auf dem Turm"], [40, 53, "Kontakt-1 auf dem Bug"]], "16": [[25, 58, "Seitenschürzen mit eingesetzten Relikt-Modulen"], [38, 38, "Relikt an der Turmfront"]], "17": [[20, 63, "Seitenschürzen mit eingesetzten Relikt-Modulen"], [40, 55, "Relikt an der Turmfront"]], "18": [[50, 80, "Seitenschürzen mit eingesetzten Relikt-Modulen"], [94, 72, "Gitterschutz am Heck"], [47, 62, "Relikt an der Turmfront"]], "21": [[12, 60, "Gitterschutz an der Seite"], [35, 66, "Seitenschürzen mit Relikt-Modulen"]], "22": [[40, 70, "Seitenschürzen mit eingesetzten Relikt-Modulen"], [45, 55, "Relikt an der Turmfront"]]}, "t80": {"0": [[33, 50, "Relikt-Module an der Turmfront"], [25, 63, "Seitenschürzen mit eingesetzten Relikt-Modulen"]], "1": [[22, 62, "Seitenschürzen mit Relikt-Modulen"], [30, 47, "Relikt an der Turmfront"]], "3": [[25, 68, "Seitenschürzen mit Relikt-Modulen"], [30, 55, "Relikt am Turm"]], "7": [[30, 55, "Seitenschürzen mit Relikt-Modulen"], [45, 42, "Relikt an der Turmfront"]], "8": [[85, 72, "Seitenschürzen mit Relikt-Modulen"], [60, 55, "Relikt an der Turmfront"], [62, 33, "Drohnendach über dem Turm"]], "9": [[35, 40, "Kontakt-1-Kacheln auf dem Turm"], [58, 58, "Kontakt-1 auf dem Bug"]], "11": [[60, 47, "Kontakt-1-Kacheln auf dem Turm"], [35, 62, "Kontakt-1 auf dem Bug"]], "12": [[38, 45, "Kontakt-1-Kacheln auf dem Turm"]], "17": [[54, 47, "Kontakt-5-Keile an der Turmfront"], [18, 49, "Großer Staukasten am Turmheck"]], "18": [[63, 40, "Kontakt-5-Keile an der Turmfront"], [91, 41, "Großer Staukasten am Turmheck"]]}, "t90": {"0": [[42, 50, "Kantige Turmfront mit Relikt – keine Shtora-Strahler"], [57, 32, "Panoramavisier des Kommandanten"], [78, 46, "Großer Staukorb am Turmheck"], [70, 63, "Gitterschutz an der Seite"]], "1": [[58, 48, "Kantige Turmfront mit Relikt – keine Shtora-Strahler"], [49, 38, "Panoramavisier des Kommandanten"]], "3": [[33, 47, "Relikt am Turm – keine Shtora-Strahler"], [29, 29, "Panoramavisier des Kommandanten"]], "6": [[56, 33, "Kantige Turmfront mit Relikt – keine Shtora-Strahler"]], "7": [[35, 58, "Relikt an der Turmfront – keine Shtora-Strahler"], [24, 42, "Panoramavisier des Kommandanten"], [8, 70, "Gitterschutz an der Seite"]], "8": [[40, 64, "Shtora-Störstrahler („rote Augen“) links der Kanone"], [85, 65, "Zweiter Shtora-Strahler rechts der Kanone"]], "13": [[18, 45, "Shtora-Störstrahler („rote Augen“)"], [88, 45, "Zweiter Shtora-Strahler"]], "14": [[35, 39, "Shtora-Strahler links der Kanone"], [71, 40, "Shtora-Strahler rechts der Kanone"]]}, "t14": {}, "bmpt": {}, "bmp1": {"0": [[46, 24, "Kurzes, dickes 73-mm-Rohr"], [60, 13, "LFK-Starter über dem Turm"]], "1": [[45, 28, "Kurzes, dickes 73-mm-Rohr"]], "3": [[63, 30, "Kurzes, dickes 73-mm-Rohr"]], "5": [[52, 40, "Turm des BTR-82A mit 30-mm-Kanone"]], "6": [[47, 10, "30-mm-Kanone im Turm des BTR-82A"]], "7": [[60, 27, "Langes, dünnes 30-mm-Rohr"], [39, 18, "Turm des BTR-82A auf der BMP-1-Wanne"]], "8": [[40, 37, "Turm des BTR-82A mit 30-mm-Kanone"], [74, 56, "Wanne wie BMP-1: spitzer, gerippter Bug"]]}, "bmp2": {"0": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]], "2": [[44, 18, "Langes, dünnes 30-mm-Rohr"], [52, 32, "Turm ohne Kornet-Rohre"]], "3": [[30, 25, "Langes, dünnes 30-mm-Rohr"]], "4": [[54, 38, "Konkurs-Starter auf dem Turmdach – keine Kornet-Rohre an den Turmseiten"]], "6": [[47, 34, "Langes, dünnes 30-mm-Rohr"], [59, 33, "Turm ohne Kornet-Rohre"]], "9": [[18, 28, "Je zwei Kornet-Rohre an den Turmseiten"], [36, 24, "Neuer Visierkasten mit Wärmebild"]]}, "bmp3": {}, "bmd2": {}, "bmd3": {}, "bmd4": {}, "btr": {"0": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]], "1": [[68, 18, "Langes 30-mm-Rohr 2A72"], [52, 22, "Größerer, runder Turm"]], "2": [[33, 26, "Langes 30-mm-Rohr"], [46, 34, "Größerer, runder Turm"]], "3": [[33, 22, "Langes 30-mm-Rohr, hoch gerichtet"]], "5": [[43, 40, "Langes 30-mm-Rohr"], [55, 47, "Größerer, runder Turm"]], "7": [[35, 14, "Dickes, kurzes 14,5-mm-MG KPWT"], [42, 25, "Kleiner, kegelförmiger Turm"]]}, "mtlb": {}, "btrd": {}, "btrmdm": {}, "brdm2": {}, "tigr": {}, "typhoon": {}, "shturm": {}, "kornet": {}};
+const LEIT = {"t72": {"ab": 13, "b3": 0, "b3m": 18}, "t80": {"bv": 11, "u": 17, "bvm": 0}, "t90": {"a": 8, "m": 0}, "bmp1": {"std": 0, "am": 7}, "bmp2": {"std": 0, "m": 9}, "btr": {"82": 0, "80": 7}};
+const AIR = ["img/air-0.webp", "img/air-1.webp", "img/air-2.webp", "img/air-3.webp", "img/air-4.webp", "img/air-5.webp", "img/air-6.webp", "img/air-7.webp"];
+const ANNO = {"t62": [[45, 30, "Flacher, runder Kuppelturm – beim T-62M mit kastenförmiger Zusatzpanzerung („Augenbrauen“) an der Turmfront"], [33, 51, "T-62M: Zusatzplatte auf dem Bug"], [20, 14, "Langes 115-mm-Rohr"], [64, 62, "Große Laufrollen ohne Stützrollen"]], "t64": [[66, 58, "Kleine Laufrollen – typisch T-64 (T-72 und T-90: große Laufrollen)"], [38, 53, "Kontakt-1-Kacheln auf Bug und Turm"], [70, 24, "Drohnenschutz: Netz auf einem Gestell über dem Turm"]], "t72": [[30, 68, "Sechs große Laufrollen, drei Stützrollen"], [76, 32, "125-mm-Rohr mit Rauchabsauger etwa in der Mitte"], [45, 36, "Flacher, runder Turm in der Mitte"]], "t80": [[40, 77, "Gummibereifte Laufrollen, fünf Stützrollen"], [92, 62, "Flaches Heck mit Gasturbine – im Wärmebild sehr heiß"]], "t90": [[35, 78, "Laufwerk wie T-72: sechs große Laufrollen"], [42, 50, "Kantiger, geschweißter Turm"]], "t14": [[62, 40, "Sehr flacher, kantiger, unbemannter Turm"], [15, 62, "Lange Wanne mit weit vorgezogenem Bug"], [45, 80, "Sieben Laufrollen"]], "bmpt": [[55, 28, "Turm ohne Hauptkanone: zwei 30-mm-Rohre und LFK-Behälter (Ataka)"], [30, 62, "KPz-Fahrgestell mit Reaktivpanzerung"], [55, 85, "Sechs große Laufrollen wie T-72"]], "bmp1": [[27, 50, "Spitzer, flacher Bug mit Rippen"], [78, 72, "Sechs Laufrollen"], [50, 33, "Kleiner Turm vorne-mittig"]], "bmp2": [[30, 73, "Sechs Laufrollen"], [47, 35, "Turm etwas weiter hinten als beim BMP-1"], [75, 57, "Hecktüren – innen Kraftstofftanks"]], "bmp3": [[80, 33, "Dickes 100-mm-Rohr, daneben die 30-mm-Kanone"], [57, 42, "Turm in der Mitte"], [22, 57, "Breite, hohe Wanne"], [40, 85, "Sechs Laufrollen"]], "bmd2": [[45, 51, "30-mm-Rohr"], [63, 52, "Kleiner Ein-Mann-Turm vorne-mittig"], [48, 63, "Tiefe, spitze Bugkante – Wanne wie ein flacher Keil"], [80, 62, "Wannenseiten oben nach innen geneigt"], [70, 76, "Fünf kleine Laufrollen"]], "bmd3": [[56, 36, "Zwei-Mann-Turm wie BMP-2 mit 30-mm-Rohr"], [34, 71, "Hohe, breite, steile Bugplatte"], [80, 53, "Senkrechte, kastige Wannenseiten"], [73, 82, "Fünf Laufrollen mit großen Abständen"]], "bmd4": [[74, 28, "Großer Turm mit dickem 100-mm-Rohr (wie BMP-3)"], [20, 47, "Lange, flache Wanne"], [35, 70, "Laufwerk mit kleinen Laufrollen"]], "btr": [[22, 72, "Acht große Räder"], [49, 61, "Seitentür zwischen 2. und 3. Achse"], [53, 38, "Turm über der 2. Achse"]], "mtlb": [[38, 62, "Flache, lange Kastenwanne"], [16, 83, "Sechs Laufrollen ohne Stützrollen"], [47, 48, "Luken und Aufbauten auf dem flachen Dach"]], "btrd": [[42, 58, "Kein Turm – flaches Dach mit Luken"], [10, 63, "Spitzer Keilbug wie beim BMD"], [64, 30, "Hier: Soldat startet eine Fla-Rakete (MANPADS) vom Dach"], [60, 76, "Kleine Laufrollen"]], "btrmdm": [[40, 62, "Hohe, glatte Kastenwanne ohne Turm"], [20, 45, "MG-Lafette vorn"], [6, 62, "Steiler, flacher Bug"]], "brdm2": [[52, 18, "Kegelturm mit 14,5-mm-MG (wie BTR-80)"], [22, 50, "Spitzer Bootsbug"], [70, 70, "Vier große Räder"]], "tigr": [[57, 40, "Kastiger Aufbau mit hohen, geraden Seiten und kleinen Fenstern"], [17, 56, "Großer Frontschutzbügel"], [48, 72, "Vier große Räder"]], "typhoon": [[68, 30, "Hohe, kantige Panzerkabine mit Panzerglas"], [25, 40, "Kastenaufbau für die Truppe"], [36, 72, "Drei Achsen (Typhoon-K)"]], "shturm": [[68, 25, "Ausgefahrener Starter mit LFK"], [35, 45, "MT-LB-Wanne ohne MG-Turm"], [30, 72, "Sechs Laufrollen ohne Stützrollen"]], "kornet": [[32, 14, "Zwei ausgefahrene Starter mit je vier LFK"], [55, 56, "Fahrgestell Tigr"]]};
+const CMP = [{"a": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[42, 40, "Runder, gegossener Turm"], [38, 63, "Sechs große Laufrollen, drei Stützrollen"]]}, "b": {"fam": "t90", "i": 0, "lab": "T-90M", "pins": [[60, 44, "Kantiger, geschweißter Turm mit Relikt-Modulen"], [77, 44, "Großer Staukorb am Turmheck"], [62, 80, "Gleiches Laufwerk wie T-72"]]}, "key": "Der Turm: T-72 rund und gegossen, T-90 kantig und geschweißt. Den T-90A erkennst du zusätzlich an den Shtora-Strahlern („rote Augen“) neben der Kanone, den T-90M am großen Staukorb am Turmheck. Das Laufwerk ist bei beiden gleich."}, {"a": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[38, 63, "Große Laufrollen, darüber drei Stützrollen"], [42, 40, "Turm des T-72B3"]]}, "b": {"fam": "t80", "i": 0, "lab": "T-80BVM", "pins": [[45, 78, "Kleinere, gummibereifte Laufrollen; fünf Stützrollen (hier hinter der Schürze)"], [40, 42, "Turm mit Relikt und Sosna-U – fast wie T-72B3M"]]}, "key": "Laufwerk und Heck: Der T-80 hat kleinere, gummibereifte Laufrollen mit fünf Stützrollen und hinten ein großes Auslassgitter der Gasturbine. Der T-72 hat große Laufrollen mit drei Stützrollen und den Auspuff links hinten an der Wanne. Die Türme modernisierter Versionen sehen sich sehr ähnlich."}, {"a": {"fam": "t64", "i": 3, "lab": "T-64BV", "pins": [[57, 80, "Sechs kleine Laufrollen mit Stützrollen"], [47, 64, "Kontakt-1-Kacheln am Bug"]]}, "b": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[38, 63, "Sechs große Laufrollen"]]}, "key": "Die Laufrollen: Der T-64 hat sechs kleine, eng stehende Laufrollen mit Stützrollen, T-72 und T-90 haben sechs große. Achtung Freund-Feind: Den T-64 nutzt fast nur die Ukraine."}, {"a": {"fam": "t62", "i": 5, "lab": "T-62", "pins": [[61, 74, "Fünf Laufrollen, Lücken nach hinten größer, keine Stützrollen"], [66, 61, "Flacher, runder Kuppelturm"]]}, "b": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[38, 63, "Sechs große Laufrollen mit Stützrollen"]]}, "key": "Laufrollen zählen: T-62 fünf mit nach hinten größer werdenden Lücken, T-72 sechs gleichmäßig verteilte mit Stützrollen."}, {"a": {"fam": "bmpt", "i": 4, "lab": "BMPT Terminator", "pins": [[34, 33, "Zwei dünne 30-mm-Rohre und LFK-Behälter – keine Hauptkanone"], [55, 72, "KPz-Laufwerk (T-72 bzw. T-90)"]]}, "b": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[72, 32, "Langes 125-mm-Rohr"], [38, 63, "Gleiches Laufwerk"]]}, "key": "Das Rohr: Der BMPT hat keine Hauptkanone, sondern zwei dünne 30-mm-Rohre und LFK-Behälter am Turm. Wo ein BMPT fährt, sind Kampfpanzer in der Nähe."}, {"a": {"fam": "t14", "i": 7, "lab": "T-14 Armata", "pins": [[42, 70, "Sieben Laufrollen – lange Wanne"], [30, 40, "Sehr flacher, kantiger Turm ohne Luken"]]}, "b": {"fam": "t90", "i": 0, "lab": "T-90M", "pins": [[62, 80, "Sechs Laufrollen"], [60, 44, "Turm mit Luken und Visieren"]]}, "key": "Laufrollen zählen: T-14 sieben, T-90 sechs. Der Turm des T-14 ist unbemannt, sehr flach und kantig. Der T-14 ist selten – eine Sichtung genau bestätigen."}, {"a": {"fam": "bmp1", "i": 2, "lab": "BMP-1", "pins": [[42, 30, "Kleiner Kegelturm mit kurzem, dickem 73-mm-Rohr"]]}, "b": {"fam": "bmp2", "i": 0, "lab": "BMP-2", "pins": [[46, 36, "Größerer Zwei-Mann-Turm, etwas weiter hinten"], [31, 43, "Langes, dünnes 30-mm-Rohr"]]}, "key": "Turm und Rohr: BMP-1 mit kleinem Kegelturm und kurzem, dickem Rohr, BMP-2 mit größerem Turm und langem, dünnem 30-mm-Rohr. Wanne und Laufwerk sind fast gleich."}, {"a": {"fam": "bmp2", "i": 15, "lab": "BMP-2", "pins": [[55, 71, "Sechs Laufrollen"], [52, 47, "Turm in der Wannenmitte"]]}, "b": {"fam": "bmd2", "i": 2, "lab": "BMD-2", "pins": [[25, 64, "Fünf Laufrollen, sehr kleine, flache Wanne"], [42, 38, "Kleiner Turm vorne-mittig"]]}, "key": "Größe und Laufrollen: Der BMD-2 ist deutlich kleiner und flacher und hat fünf Laufrollen, der BMP-2 sechs. Aufgesessene Fallschirmjäger bedecken beim BMD fast das ganze Dach."}, {"a": {"fam": "bmd2", "i": 2, "lab": "BMD-2", "pins": [[65, 45, "Spitze Bugkante – flacher Keil"], [44, 38, "Kleiner Ein-Mann-Turm"], [22, 53, "Seiten oben nach innen geneigt"]]}, "b": {"fam": "bmd3", "i": 1, "lab": "BMD-3", "pins": [[21, 68, "Hohe, steile Bugplatte"], [45, 46, "Zwei-Mann-Turm wie BMP-2"], [72, 60, "Senkrechte, kastige Seiten"]]}, "key": "Bug und Wannenform: Der BMD-2 läuft vorn in eine tiefe, spitze Kante aus und wirkt wie ein flacher Keil. Der BMD-3 hat eine hohe, steile Bugplatte und senkrechte Seiten – ein Kasten. Dazu der Turm: beim BMD-3 der größere Zwei-Mann-Turm des BMP-2. Fünf Laufrollen haben beide."}, {"a": {"fam": "bmp3", "i": 0, "lab": "BMP-3", "pins": [[35, 85, "Sechs große Laufrollen, hohe, breite Wanne"], [55, 40, "Turm mit dickem 100-mm- und dünnem 30-mm-Rohr"]]}, "b": {"fam": "bmd4", "i": 9, "lab": "BMD-4M", "pins": [[76, 76, "Fünf kleine Laufrollen, kleine, flache Wanne"], [42, 30, "Gleiche Waffenanlage wie BMP-3"]]}, "key": "Wanne und Laufrollen: BMP-3 groß und hoch mit sechs großen Laufrollen, BMD-4M klein und flach mit fünf kleinen. Die Waffen sind gleich – und damit auch die Gefahr für Hubschrauber."}, {"a": {"fam": "bmd2", "i": 2, "lab": "BMD-2", "pins": [[42, 38, "Turm mit 30-mm-Kanone"], [25, 64, "Fünf Laufrollen"]]}, "b": {"fam": "btrd", "i": 4, "lab": "BTR-D", "pins": [[50, 45, "Kein Turm – flaches Dach"], [65, 82, "Sechs kleine Laufrollen, längere Wanne"]]}, "key": "Der Turm: BMD-2 mit 30-mm-Turm, BTR-D ohne Turm und mit längerer Wanne. Den BTR-D gibt es auch als Träger, z. B. mit ZU-23-2 auf dem Dach."}, {"a": {"fam": "tigr", "i": 0, "lab": "Tigr", "pins": [[50, 33, "Glattes Dach ohne Aufbauten"], [20, 56, "Großer Frontschutzbügel"]]}, "b": {"fam": "kornet", "i": 0, "lab": "Kornet-D auf Tigr", "pins": [[30, 15, "Zwei Starter mit je vier LFK-Rohren, aus dem Dach ausgefahren"], [45, 60, "Gleiches Fahrzeug wie Tigr"]]}, "key": "Das Dach: Beim Kornet-D fahren zwei Starter mit je vier Rohren aus dem Klappdach. Eingefahren sieht er aus wie ein normaler Tigr – dann hilft nur die Lage."}, {"a": {"fam": "tigr", "i": 0, "lab": "Tigr", "pins": [[50, 33, "Flacher Geländewagen in Humvee-Größe"], [20, 56, "Großer Frontschutzbügel"]]}, "b": {"fam": "typhoon", "i": 6, "lab": "Typhoon-VDV", "pins": [[30, 30, "Hoher, LKW-artiger Kastenaufbau mit viel Panzerglas"], [54, 80, "Große Räder, hohe Bodenfreiheit (MRAP)"]]}, "key": "Größe und Form: Der Typhoon ist ein großes, hohes MRAP mit LKW-artigem Aufbau, als Typhoon-K mit drei Achsen. Der Tigr ist kleiner und flacher, etwa in Humvee-Größe."}];
+const CMPTXT = {"bmd2|bmd3": "Wanne und Turm: BMD-2 klein und flach – tiefe, spitze Bugkante, Seiten oben nach innen geneigt, kleiner Ein-Mann-Turm; BMD-3 ein Kasten – hohe, steile Bugplatte, senkrechte Seiten, größerer Zwei-Mann-Turm wie BMP-2.", "bmd2|bmp1": "Größe und Rohr: BMP-1 größer mit sechs Laufrollen und Kegelturm mit kurzem, dickem 73-mm-Rohr; BMD-2 klein und flach mit fünf Laufrollen und langem, dünnem 30-mm-Rohr.", "bmd3|bmd4": "Der Turm: BMD-3 mit dem Zwei-Mann-Turm des BMP-2 und nur einem dünnen 30-mm-Rohr, BMD-4M mit großem Turm, dickem 100-mm- und dünnem 30-mm-Rohr.", "bmd3|bmp2": "Gleicher Turm, andere Wanne: BMP-2 länger mit sechs Laufrollen und spitzem, geripptem Bug; BMD-3 kürzer und kastiger mit fünf Laufrollen und hoher, steiler Bugplatte.", "bmd3|btrmdm": "Der Turm: BMD-3 mit 30-mm-Turm, BTR-MDM ohne Turm – hohe, glatte Kastenwanne mit MG-Lafette vorn.", "bmd4|btrmdm": "Der Turm: BMD-4M mit großem Turm (100-mm- und 30-mm-Rohr), BTR-MDM ohne Turm – hohe, glatte Kastenwanne mit MG-Lafette vorn.", "bmp1|bmp3": "Wanne und Turm: BMP-3 mit breiter, hoher Wanne und mittigem Turm mit dickem 100-mm-Rohr; BMP-1 flach mit spitzem, geripptem Bug und kleinem Kegelturm vorne-mittig.", "bmp1|mtlb": "Turm und Laufwerk: BMP-1 mit Kegelturm, spitzem, geripptem Bug und Stützrollen; MT-LB mit flacher Kastenwanne, nur kleinem MG-Turm vorn und ohne Stützrollen.", "bmp2|bmp3": "Wanne und Rohre: BMP-3 mit breiter, hoher Wanne und Turm mit dickem 100-mm- und dünnem 30-mm-Rohr; BMP-2 flacher mit spitzem, geripptem Bug und nur einem dünnen 30-mm-Rohr.", "bmpt|t14": "Laufrollen und Rohr: BMPT auf T-72/T-90-Laufwerk mit sechs Laufrollen und zwei dünnen 30-mm-Rohren; T-14 mit sieben Laufrollen und 125-mm-Kanone im flachen, unbemannten Turm.", "bmpt|t90": "Das Rohr: Der BMPT hat keine Hauptkanone, sondern zwei dünne 30-mm-Rohre und LFK-Behälter am Turm. Das Fahrgestell ist das des T-72 bzw. T-90.", "brdm2|btr": "Die Räder: BTR-80/82A mit acht großen Rädern und Lücke für die Seitentür; BRDM-2 deutlich kleiner mit nur vier großen Rädern (dazwischen absenkbare Zusatzräder).", "brdm2|tigr": "Die Form: BRDM-2 mit bootsförmiger Panzerwanne, spitzem Bug und Kegelturm; Tigr ein kastiger Geländewagen mit Fenstern und großem Frontschutzbügel, meist ohne Turm.", "btr|typhoon": "Die Fahrzeugart: BTR-80/82A mit flacher, bootsförmiger Wanne, acht Rädern und Turm; Typhoon mit hohem, LKW-artigem Aufbau und Panzerglas auf zwei oder drei Achsen.", "btrd|btrmdm": "Bug und Höhe: BTR-D klein und flach mit spitzem BMD-Keilbug; BTR-MDM höher und kantiger mit steilem, flachem Bug und glatter Kastenwanne.", "btrd|mtlb": "Bug und Dach: BTR-D klein und flach mit spitzem, geripptem Bug wie beim BMD; MT-LB mit langer Kastenwanne, kleinem MG-Turm vorn und Fahrer- und Kommandantenluken vorn.", "kornet|shturm": "Das Fahrgestell: Kornet-D fährt auf dem Tigr (Räder), Shturm-S auf dem MT-LB (Ketten). Beide fahren ihre Starter aus dem Dach aus.", "mtlb|shturm": "Turm und Starter: Shturm-S nutzt die MT-LB-Wanne, hat aber keinen MG-Turm; ausgefahren sitzt der LFK-Starter auf dem Dach. Eingefahren sieht er fast aus wie ein MT-LB – auf den fehlenden MG-Turm achten.", "t62|t64": "Die Laufrollen: T-62 mit fünf großen Laufrollen ohne Stützrollen, T-64 mit sechs kleinen Laufrollen und Stützrollen.", "t64|t80": "Laufwerk und Heck: T-64 mit kleinen, eng stehenden Laufrollen; T-80 mit gummibereiften Laufrollen und großem Turbinengitter am Heck. Den T-64 nutzt fast nur die Ukraine.", "t80|t90": "Laufwerk und Heck: T-90 mit T-72-Laufwerk (große Laufrollen, drei Stützrollen); T-80 mit kleineren, gummibereiften Laufrollen, fünf Stützrollen und Turbinengitter am Heck. T-90A zusätzlich mit Shtora-Strahlern neben der Kanone."};
+const FAMS = DATA.families;
+const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
+const CATS = DATA.cats;
+const ROUND_LEN = 12;
+const GROUPS = [
+  ['Kampfpanzer', ['t62','t64','t72','t80','t90','t14','bmpt']],
+  ['Schützenpanzer', ['bmp1','bmp2','bmp3']],
+  ['Luftlande (VDV)', ['bmd2','bmd3','bmd4','btrd','btrmdm']],
+  ['Transport- und Radfahrzeuge', ['btr','mtlb','brdm2','tigr','typhoon']],
+  ['Panzerjäger', ['shturm','kornet']],
+];
+const MODES = {
+  mix:  {name:'Gemischte Runde', kinds:['img','cat','air','var','aa','lwr','tis','wpn','cur']},
+  img:  {name:'Fahrzeuge erkennen', kinds:['img']},
+  cat:  {name:'Fahrzeugart erkennen', kinds:['cat','air','cur'], tags:['r-']},
+  thr:  {name:'Bedrohung für dein Lfz', kinds:['aa','cur'], tags:['a-']},
+  sens: {name:'Laser und Wärmebild', kinds:['lwr','tis','cur'], tags:['l-','t-']},
+  wpn:  {name:'Wirkmittelwahl', kinds:['wpn','cur'], tags:['w-']},
+  var:  {name:'Versionen unterscheiden', kinds:['var']},
+  conf: {name:'Verwechslungsgefahr', kinds:['img','var'], confusion:true},
+};
+const UNITS = [];
+const UNIT = {};
+FAMS.forEach(f => f.vars.forEach((u, k) => { u.fam = f.id; u.k = k; u.key = f.vars.length > 1 ? `${f.id}:${u.v}` : f.id; UNITS.push(u); if (f.vars.length > 1) UNIT[u.key] = {f, u}; }));
+const multi = f => f.vars.length > 1;
+const pinsFor = (fid, i) => (PINS[fid] || {})[i] || null;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const imgSrc = (fid, i) => fid === 'air' ? AIR[i] : IMG[fid][i];
+const imgCount = fid => fid === 'air' ? AIR.length : (IMG[fid] || []).length;
+
+/* ---------- state & persistence ---------- */
+const KEY = 'manoevertrainer.v1';
+const blank = () => ({v:1, updated:0, fam:{}, q:{}, flags:{}, recent:[], lastImg:{}, answered:0, correct:0, annoOpen:false});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+let remote = null, syncLabel = 'Nur auf diesem Gerät gespeichert';
+let pushTimer = null;
+function save(){
+  S.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (remote){ clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 1200); }
+}
+async function pushRemote(){
+  if (!remote) return;
+  try { await remote.set(JSON.parse(JSON.stringify(S))); }
+  catch(e){ if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) { remote = null; syncLabel = 'Nur auf diesem Gerät gespeichert'; } }
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc('data/users/' + id + '/progress');
+    const snap = await ref.get();
+    remote = ref;
+    syncLabel = 'Fortschritt wird geräteübergreifend gespeichert';
+    if (snap.exists){
+      const r = JSON.parse(JSON.stringify(snap.data() || {}));
+      if ((r.updated || 0) > (S.updated || 0)){
+        S = Object.assign(blank(), r);
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+        if (view === 'home' || view === 'stats' || view === 'cards') render();
+      } else if (S.updated) pushRemote();
+    } else if (S.updated) pushRemote();
+    if (view === 'stats') render();
+  } catch(e){ remote = null; }
+})();
+
+/* ---------- question bank ---------- */
+function buildBank(){
+  const bank = [];
+  for (const f of FAMS){
+    const imgs = IMG[f.id] || [];
+    imgs.forEach((_, i) => bank.push({id:`img:${f.id}:${i}`, kind:'img', fam:f.id, i}));
+    if (multi(f)) imgs.forEach((_, i) => { if (VAR[f.id][i] && pinsFor(f.id, i)) bank.push({id:`var:${f.id}:${i}`, kind:'var', fam:f.id, i}); });
+    bank.push({id:`cat:${f.id}`, kind:'cat', fam:f.id});
+    bank.push({id:`wpn:${f.id}`, kind:'wpn', fam:f.id});
+    f.vars.forEach((u, k) => {
+      for (const kind of ['aa', 'lwr', 'tis']) bank.push({id:`${kind}:${f.id}:${k}`, kind, fam:f.id, k});
+    });
+  }
+  AIR.forEach((_, i) => bank.push({id:`air:${i}`, kind:'air', fam:'air', i}));
+  for (const [id, fam, q, opts, ex] of DATA.curated) bank.push({id, kind:'cur', fam, q, opts, ex});
+  return bank;
+}
+const BANK = buildBank();
+
+function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+function weight(q, prevFam){
+  const fa = famAcc(q.fam);
+  const weak = fa === null ? 0.45 : 1 - fa;
+  const s = S.q[q.id];
+  let w = (1 + 2 * weak) * (s ? Math.max(0.25, 1 + 1.6 * (s.w / Math.max(1, s.c + s.w)) - 0.08 * Math.min(s.c, 6)) : 1.35);
+  if (S.recent.includes(q.id)) w *= 0.12;
+  if (q.fam === prevFam) w *= 0.25;
+  if (q.kind === 'img') w *= 0.9;
+  if (q.kind === 'var' || q.kind === 'cat') w *= 0.8;
+  return w;
+}
+function pickRound(mode){
+  const M = MODES[mode];
+  let pool = BANK.filter(q => M.kinds.includes(q.kind));
+  if (M.tags) pool = pool.filter(q => q.kind !== 'cur' || M.tags.some(t => q.id.startsWith(t)));
+  if (M.confusion) pool = pool.filter(q => FAM[q.fam] && FAM[q.fam].confuse.length);
+  const out = []; let prevFam = null;
+  const n = Math.min(ROUND_LEN, pool.length);
+  const usedImgFam = {};
+  const isImg = q => q.kind === 'img' || q.kind === 'var';
+  while (out.length < n && pool.length){
+    const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
+    let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
+    while (k < ws.length - 1 && (r -= ws[k]) > 0) k++;
+    const q = pool.splice(k, 1)[0];
+    if (isImg(q)) usedImgFam[q.fam] = true;
+    out.push(q); prevFam = q.fam;
+  }
+  return out;
+}
+
+/* distractor helpers */
+function nameDistractors(f, strict){
+  const pool = FAMS.filter(x => x.id !== f.id);
+  const conf = shuffle(f.confuse.map(id => FAM[id]).filter(Boolean));
+  const same = shuffle(pool.filter(x => x.cat === f.cat && !f.confuse.includes(x.id)));
+  const rest = shuffle(pool.filter(x => x.cat !== f.cat && !f.confuse.includes(x.id)));
+  const list = strict ? [...conf, ...same, ...rest] : [...conf.slice(0, 2), ...shuffle([...conf.slice(2), ...same, ...rest])];
+  return list.slice(0, 3).map(x => x.name);
+}
+function varDistractors(f, u){
+  const own = f.vars.filter(x => x !== u).map(x => x.name);
+  const other = shuffle(f.confuse.flatMap(id => FAM[id].vars.map(x => x.name)));
+  return [...own, ...other].filter((x, i, a) => a.indexOf(x) === i).slice(0, 3);
+}
+function catAlternatives(f){
+  const excl = [f.cat, ...(DATA.catExcl[f.cat] || []), ...(DATA.catX[f.id] || [])];
+  return shuffle(DATA.catOrder.filter(c => !excl.includes(c))).slice(0, 3).map(c => CATS[c].label);
+}
+const unitOfImg = (f, i) => f.vars.find(u => u.v === VAR[f.id][i]) || null;
+function unitImgs(f, u){
+  const all = (IMG[f.id] || []).map((_, i) => i);
+  if (!u.v) return all;
+  const own = all.filter(i => VAR[f.id][i] === u.v);
+  return own.length ? own : all;
+}
+function randomImg(f, u){
+  const idx = u ? unitImgs(f, u) : (IMG[f.id] || []).map((_, i) => i);
+  if (!idx.length) return null;
+  let i = idx[Math.floor(Math.random() * idx.length)];
+  if (idx.length > 1 && S.lastImg[f.id] === i) i = idx[(idx.indexOf(i) + 1) % idx.length];
+  return [f.id, i];
+}
+function annoFig(fid, i, pins, alt){
+  if (!pins || !IMG[fid] || IMG[fid][i] == null) return '';
+  const ar = (ARS[fid] || [])[i] || 4/3;
+  return `<figure class="anno" style="aspect-ratio:${ar};width:min(100%, ${Math.round(520 * ar)}px)" data-zoom="${fid}:${i}">
+      <img src="${IMG[fid][i]}" alt="${esc(alt)} mit markierten Erkennungsmerkmalen">
+      ${pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </figure>
+    <ol class="legendlist">${pins.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol>`;
+}
+const annoHtml = f => annoFig(f.id, 0, ANNO[f.id], f.name);
+const leitIdx = (f, u) => (LEIT[f.id] || {})[u.v];
+const unitAnno = (f, u) => { const i = leitIdx(f, u); return i == null ? '' : annoFig(f.id, i, pinsFor(f.id, i), u.name); };
+/* Merkmale passend zum gezeigten Bild: Bild-Pins, sonst Familien-Pins */
+function imgAnno(f, i){
+  const p = i != null ? pinsFor(f.id, i) : null;
+  if (p) return {title:'Merkmale auf diesem Bild', html:annoFig(f.id, i, p, f.name)};
+  return ANNO[f.id] ? {title:`Merkmale der ${f.name}-Familie`, html:annoHtml(f)} : null;
+}
+const tisLong = u => u.sight + (u.tis === 'tis'
+  ? ' Feste Deckung (Erde, Mauern, Glas) schützt, normaler Rauch und normale Tarnnetze kaum.'
+  : ' Trotzdem nicht unbeobachtet: Die Infanterie hat Wärmebild-Handgeräte, Drohnen fliegen mit Wärmebildkameras.');
+const lwrLong = u => u.lwrx || (u.lwr === 'lwr' ? 'Laserwarner mit automatischem Nebel bzw. Aerosol.' : DATA.lwrNo);
+
+function materialize(q, mode){
+  const f = FAM[q.fam];
+  const strict = MODES[mode].confusion;
+  const confTxt = f && f.confuse.length ? ` Verwechslungsgefahr mit ${f.confuse.map(c => FAM[c].name).join(', ')}.` : '';
+  const u = f && q.k != null ? f.vars[q.k] : null;
+  switch (q.kind){
+    case 'img': {
+      const iu = unitOfImg(f, q.i);
+      return {prompt:'Welches Fahrzeug ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict),
+        ex:`${f.name}: ${CATS[f.cat].label}.${iu && f.vars.length > 1 ? ` Hier: ${iu.name} – ${iu.recog}` : ''} Erkennung: ${f.recog}` + confTxt};
+    }
+    case 'var': {
+      const iu = unitOfImg(f, q.i);
+      return {prompt:'Welche Version ist das?', img:[f.id, q.i], correct:iu.name, wrong:varDistractors(f, iu),
+        ex:`${iu.name}: ${iu.recog}`, unit:iu, pinsNow:true,
+        compare:f.vars.filter(x => x !== iu)};
+    }
+    case 'cat':
+      return {prompt:'Was für ein Fahrzeug ist das?', img:randomImg(f), correct:CATS[f.cat].label, wrong:catAlternatives(f),
+        ex:`${f.name}: ${CATS[f.cat].label} – ${CATS[f.cat].cap}.`};
+    case 'air': {
+      const wrong = shuffle(['spz', 'll', 'tpzr', 'tpzk', 'rad', 'pzj']).slice(0, 3).map(c => CATS[c].label);
+      return {prompt:'Drohnen- bzw. Pod-Bild: Was für ein Fahrzeug ist das?', img:['air', q.i], correct:CATS.kpz.label, wrong,
+        ex:`${DATA.airNotes[q.i]} ${DATA.airTip}`};
+    }
+    case 'aa':
+      return {unit:u, prompt:`${u.name}: Was ist die größte Gefahr für einen Hubschrauber?`, img:randomImg(f, u), correct:u.aaQ[0], wrong:shuffle(u.aaQ[1]).slice(0, 3),
+        ex:`${u.aa} ${DATA.fj}`};
+    case 'lwr':
+      return {unit:u, prompt:`Du lasert einen ${u.name} mit Entfernungsmesser oder Designator. Merkt die Besatzung das?`, img:randomImg(f, u),
+        correct:DATA.lwr[u.lwr], wrong:DATA.lwrOrder.filter(k => k !== u.lwr).map(k => DATA.lwr[k]), order:DATA.lwrOrder.map(k => DATA.lwr[k]),
+        ex:lwrLong(u)};
+    case 'tis':
+      return {unit:u, prompt:`Womit klärt ein ${u.name} nachts mit Bordmitteln auf?`, img:randomImg(f, u),
+        correct:DATA.tis[u.tis], wrong:DATA.tisOrder.filter(k => k !== u.tis).map(k => DATA.tis[k]), order:DATA.tisOrder.map(k => DATA.tis[k]),
+        ex:tisLong(u)};
+    case 'wpn':
+      return {prompt:`Welche Wirkmittel empfiehlst du gegen ${f.name}?`, img:randomImg(f),
+        correct:DATA.wcls[f.wcls], wrong:DATA.wOrder.filter(k => k !== f.wcls).map(k => DATA.wcls[k]), order:DATA.wOrder.map(k => DATA.wcls[k]),
+        ex:`${f.protection} Schwachstellen: ${f.weak}`};
+    case 'cur':
+      return {prompt:q.q, correct:q.opts[0], wrong:q.opts.slice(1), ex:q.ex};
+  }
+}
+
+/* ---------- views ---------- */
+let view = 'home';
+let R = null;
+
+function setBar(title, opts = {}){
+  const b = $('#barin');
+  b.innerHTML = (opts.back ? `<button class="iconbtn" data-act="${opts.back}" aria-label="Zurück">‹ Zurück</button>` : '') +
+    `<div class="t">${esc(title)}</div>` + (opts.right || '');
+  const p = $('#prog');
+  if (opts.progress != null){ p.hidden = false; p.firstElementChild.style.width = (opts.progress * 100) + '%'; } else p.hidden = true;
+}
+function famState(id){ const a = famAcc(id); if (a === null) return 'none'; return a >= .8 ? 'ok' : a >= .5 ? 'mid' : 'bad'; }
+function pct(id){ const a = famAcc(id); return a === null ? '–' : Math.round(a * 100) + ' %'; }
+const cellsHtml = list => `<div class="cells">${list.map(id => FAM[id]).map(f => `<button class="cell" data-s="${famState(f.id)}" data-card="${f.id}" title="${esc(f.name)}: ${pct(f.id)}"><b>${esc(f.short)}</b><span>${esc(f.name)}</span><i style="width:${famAcc(f.id) === null ? 0 : Math.max(8, famAcc(f.id) * 100)}%"></i></button>`).join('')}</div>`;
+const countPool = mode => { const M = MODES[mode]; return BANK.filter(q => M.kinds.includes(q.kind) && (q.kind !== 'cur' || !M.tags || M.tags.some(t => q.id.startsWith(t))) && (!M.confusion || (FAM[q.fam] && FAM[q.fam].confuse.length))).length; };
+
+function renderHome(){
+  setBar('Manöver-Trainer');
+  $('#bar').hidden = true;
+  const nImg = BANK.filter(q => q.kind === 'img').length;
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a>
+    <h1>Manöver-Trainer</h1>
+    <p>Manöverelemente der Kräfte Rot aus JTAC-Sicht: Fahrzeugart erkennen, Bedrohung für dein Lfz einschätzen, wissen, ob er deinen Laser bemerkt oder dich im Wärmebild sieht – und das passende Wirkmittel wählen.</p>
+  </section>
+  <section class="board" aria-label="Lagebild">
+    <div class="board-h"><h2>Lagebild</h2><span class="small muted">${S.answered ? `${S.answered} Antworten, ${Math.round(100 * S.correct / Math.max(1, S.answered))} % richtig` : 'Noch keine Antworten'}</span></div>
+    ${GROUPS.map(([t, ids]) => `<h3>${esc(t)}</h3>${cellsHtml(ids)}`).join('')}
+    <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Fahrzeuge kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <nav class="modes" aria-label="Trainingsarten">
+    <button class="mode" data-start="img"><span class="mi"><strong>Fahrzeuge erkennen</strong><small>Welches Fahrzeug ist das? Mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
+    <button class="mode" data-start="cat"><span class="mi"><strong>Fahrzeugart erkennen</strong><small>KPz, SPz, Radfahrzeug, Panzerjäger – auch aus Drohnen- und Pod-Perspektive</small></span><span class="n">${countPool('cat')} Fragen</span></button>
+    <button class="mode" data-start="thr"><span class="mi"><strong>Bedrohung für dein Lfz</strong><small>MG, Maschinenkanone, Kanonen-LFK, Ataka und Kornet – was reicht wie weit</small></span><span class="n">${countPool('thr')} Fragen</span></button>
+    <button class="mode" data-start="sens"><span class="mi"><strong>Laser und Wärmebild</strong><small>Merkt er deinen Laser? Sieht er dich nachts und hinter Deckung?</small></span><span class="n">${countPool('sens')} Fragen</span></button>
+    <button class="mode" data-start="wpn"><span class="mi"><strong>Wirkmittelwahl</strong><small>Welche Waffe gegen welche Panzerung, Schwachstellen</small></span><span class="n">${countPool('wpn')} Fragen</span></button>
+    <button class="mode" data-start="var"><span class="mi"><strong>Versionen unterscheiden</strong><small>T-72B oder B3, T-90A oder M, BTR-80 oder 82A …</small></span><span class="n">${countPool('var')} Bilder</span></button>
+    <button class="mode" data-start="conf"><span class="mi"><strong>Verwechslungsgefahr</strong><small>Bilder nur gegen ähnliche Fahrzeuge, z. B. T-72 und T-90</small></span><span class="n">${countPool('conf')} Bilder</span></button>
+    <button class="mode" data-act="merk"><span class="mi"><strong>Merkblatt</strong><small>Laser, Wärmebild und Deckung, Bedrohung, Wirkmittel auf einen Blick</small></span><span class="n"></span></button>
+    <button class="mode" data-act="cmpall"><span class="mi"><strong>Direktvergleiche</strong><small>Ähnliche Fahrzeuge nebeneinander – z. B. T-72 oder T-90, BMP-3 oder BMD-4M</small></span><span class="n">${CMP.length} Paare</span></button>
+      <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle Fahrzeuge zum Nachlesen, mit Bildern und Versionen</small></span><span class="n">${FAMS.length}</span></button>
+    <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Fahrzeug, markierte Fragen zum Prüfen</small></span><span class="n">${Object.keys(S.flags).length ? Object.keys(S.flags).length + ' gemeldet' : ''}</span></button>
+  </nav>
+  <a class="guide-link" href="https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS#k1" target="_blank" rel="noopener"><span class="mi"><strong>Sensor-to-Shooter-Guide</strong><small>Hintergrund zu K1: warum ein Fahrzeug auf 8 km nur ein paar Pixel ist, mit Sicht-Simulator</small></span><span class="n">Guide ›</span></a>
+  <a class="guide-link" href="../brevity/"><span class="mi"><strong>Brevity-Trainer</strong><small>Brevity-Codewörter nach ATP 1-02.1 und CAS-Abkürzungen üben</small></span><span class="n">Trainer ›</span></a>
+  <p class="foot">Alle Angaben stammen aus öffentlichen Quellen und sind gerundet; Reichweiten gegen Luftziele sind Herstellerangaben bzw. grobe Richtwerte. Einige Bilder stammen aus dem Krieg in der Ukraine – dort nutzen beide Seiten sowjetische Technik. Falsche oder unklare Fragen kannst du nach der Antwort melden. Teil der Reihe mit dem <a href="../pods/">Pod-Trainer</a>, dem <a href="../waffen/">Waffen-Trainer</a>, dem <a href="../artillerie/">Artillerie-Trainer</a>, dem <a href="../flugabwehr/">Flugabwehr-Trainer</a>, dem <a href="../brevity/">Brevity-Trainer</a> und dem <a href="https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS" target="_blank" rel="noopener">Sensor-to-Shooter-Guide</a>.</p>`;
+}
+
+function hudSvg(){
+  return `<svg viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="var(--hud)" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".9">
+  <path d="M14 46V14h32M354 14h32v32M386 254v32h-32M46 286H14v-32"/>
+  <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
+}
+function feedHtml(famId, i, opts = {}){
+  return `<figure class="feed" data-zoom="${famId}:${i}">
+    <img src="${imgSrc(famId, i)}" alt="${opts.alt ? esc(opts.alt) : 'Bild eines Fahrzeugs'}">${hudSvg()}
+    <span class="hud tl">${famId === 'air' ? 'UAS' : 'TV'}</span><span class="hud tr">NAR</span>${opts.counter ? `<span class="hud bl">${opts.counter}</span>` : ''}
+    ${opts.nav ? `<button class="nav l" data-img="-1" aria-label="Vorheriges Bild">‹</button><button class="nav r" data-img="1" aria-label="Nächstes Bild">›</button>` : ''}
+  </figure>`;
+}
+
+function startRound(mode){
+  const qs = pickRound(mode);
+  R = {mode, qs, i:0, score:0, missed:[], cur:null, answered:false};
+  view = 'quiz'; nextQ(true);
+}
+function nextQ(first){
+  if (!first) R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; return render(); }
+  const q = R.qs[R.i];
+  const m = materialize(q, R.mode);
+  const all = [m.correct, ...m.wrong.slice(0, 3)];
+  const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct)};
+  R.answered = false;
+  render();
+  window.scrollTo(0, 0);
+}
+function renderQuiz(){
+  $('#bar').hidden = false;
+  const {m, opts} = R.cur;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  $('#app').innerHTML = `
+    ${m.img ? feedHtml(m.img[0], m.img[1]) : ''}
+    <h2 class="prompt">${esc(m.prompt)}</h2>
+    <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
+    <div id="fb"></div>`;
+}
+function fbAnno(f, m){
+  if (!f) return '';
+  const idx = m.img && m.img[0] === f.id ? m.img[1] : null;
+  if (m.pinsNow){
+    return `<div class="sec"><h3>Merkmale auf diesem Bild</h3>${annoFig(f.id, idx, pinsFor(f.id, idx), m.correct)}</div>`;
+  }
+  const a = imgAnno(f, idx); if (!a) return '';
+  return `<div class="annobox"><button class="btn" data-act="anno" aria-expanded="${S.annoOpen ? 'true' : 'false'}">${S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen'}</button><div id="annoarea"${S.annoOpen ? '' : ' hidden'}><p class="small muted" style="margin:10px 0 0">${esc(a.title)}</p>${a.html}</div></div>`;
+}
+function answer(k){
+  if (R.answered) return;
+  R.answered = true;
+  const {q, m, ci} = R.cur;
+  const ok = k === ci;
+  document.querySelectorAll('.opt').forEach((b, j) => {
+    b.disabled = true;
+    if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
+  });
+  const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
+  ok ? qs.c++ : qs.w++;
+  const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
+  ok ? fs.c++ : fs.w++;
+  const uk = m.unit && m.unit.key !== q.fam ? m.unit.key : (q.kind === 'img' && FAM[q.fam] && multi(FAM[q.fam]) && unitOfImg(FAM[q.fam], q.i) ? unitOfImg(FAM[q.fam], q.i).key : null);
+  if (uk){ const us = S.fam[uk] || (S.fam[uk] = {c:0, w:0}); ok ? us.c++ : us.w++; }
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  if (m.img) S.lastImg[m.img[0]] = m.img[1];
+  save();
+  if (ok) R.score++; else R.missed.push({fam:q.fam, prompt:m.prompt, correct:m.correct});
+  const f = FAM[q.fam];
+  const flagged = !!S.flags[q.id];
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    <p>${esc(m.ex)}</p>
+    ${fbAnno(f, m)}
+    ${m.compare ? `<div class="sec"><h3>Zum Vergleich</h3>${m.compare.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join('')}</div>` : ''}
+    ${f ? profileHtml(f, m.unit || (m.img && m.img[0] === f.id ? unitOfImg(f, m.img[1]) : null)) : ''}
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const fb = $('#fb .btn.main'); if (fb) fb.focus({preventScroll:true});
+  $('#fb').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+/* Chips: rot = Gefahr für dich, grün = Vorteil für dich */
+const HELI = {hoch:'0', mittel:'?', gering:'1'};
+const TISC = {tis:['ja', '0'], mix:['teils', '?'], ii:['nein, Restlicht', '1'], day:['nein', '1']};
+function unitChips(u){
+  return `<ul class="chips">
+    <li data-v="${HELI[u.heli]}">Gefahr Hubschrauber: ${u.heli}</li>
+    <li data-v="${u.lwr === 'lwr' ? '0' : '1'}">Laserwarner: ${u.lwr === 'lwr' ? 'ja' : 'nein'}</li>
+    <li data-v="${TISC[u.tis][1]}">Wärmebild: ${TISC[u.tis][0]}</li></ul>`;
+}
+const armorChip = f => `<ul class="chips"><li data-v="${f.wcls === 'mbt' ? '0' : f.wcls === 'ifv' ? '?' : '1'}">Panzerung: ${DATA.wlab[f.wcls]}</li></ul>`;
+function unitsHtml(f, cur){
+  if (!multi(f)) return unitChips(f.vars[0]);
+  const list = cur ? [cur, ...f.vars.filter(u => u !== cur)] : f.vars;
+  return list.map(u => `<div class="unitrow${u === cur ? ' cur' : ''}"><strong>${esc(u.name)}${u === cur ? ' <span class="tag">im Bild</span>' : ''}</strong>${unitChips(u)}</div>`).join('');
+}
+function profileHtml(f, cur){
+  const title = cur && multi(f) ? cur.name : f.name;
+  return `<div class="profile">
+    <h3>${esc(title)}<small>${esc(CATS[f.cat].label)}</small></h3>
+    ${unitsHtml(f, cur)}
+    <dl class="kv"><dt>Bewaffnung</dt><dd>${esc(f.weapons.join('; '))}</dd><dt>Panzerung</dt><dd>${esc(DATA.wlab[f.wcls])} – ${esc(f.protection)}</dd></dl>
+    <div class="row" style="margin-top:10px">${cur && multi(f) ? `<button class="linkbtn" data-card="${cur.key}">Steckbrief ${esc(cur.name)}</button>` : ''}<button class="linkbtn" data-card="${f.id}">${multi(f) ? `Familie ${esc(f.name)}` : 'Steckbrief öffnen'}</button></div>
+  </div>`;
+}
+function renderEnd(){
+  $('#bar').hidden = false;
+  setBar('Auswertung', {back:'home'});
+  const n = R.qs.length;
+  $('#app').innerHTML = `
+    <div class="score">${R.score}<span class="muted" style="font-size:.45em"> / ${n}</span></div>
+    <p class="muted">${MODES[R.mode].name} – ${Math.round(100 * R.score / n)} % richtig.</p>
+    ${R.missed.length ? `<h2 style="margin-top:22px">Nacharbeiten</h2><ul class="misslist">${R.missed.map(x => `<li><div>${esc(x.prompt)}</div><div class="small"><strong>${esc(x.correct)}</strong>${FAM[x.fam] ? ` – <button class="linkbtn" data-card="${x.fam}">Steckbrief ${esc(FAM[x.fam].name)}</button>` : x.fam === 'gen' || x.fam === 'air' ? ` – <button class="linkbtn" data-act="merk">Merkblatt</button>` : ''}</div></li>`).join('')}</ul>` : '<p>Alles richtig.</p>'}
+    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+}
+function renderCards(){
+  $('#bar').hidden = false;
+  setBar('Steckbriefe', {back:'home'});
+  $('#app').innerHTML = `<div class="row" style="margin-top:6px"><button class="btn" data-act="merk">Merkblatt öffnen</button></div>` + GROUPS.map(([t, ids]) => `<section class="group"><h2>${esc(t)}</h2>
+      ${ids.map(id => FAM[id]).map(f => `<button class="fam" data-card="${f.id}"><span class="code">${esc(f.short)}</span><span class="nm">${esc(f.name)}${multi(f) ? ' <span class="small muted" style="font-weight:400">– Familie, Versionen im Vergleich</span>' : ''}<br><span class="small muted" style="font-weight:400">${esc(CATS[f.cat].label)}</span></span><span class="pct">${pct(f.id)}</span></button>`
+        + (multi(f) ? f.vars.map(u => `<button class="fam sub" data-card="${u.key}"><span class="code"></span><span class="nm">${esc(u.name)}<br><span class="small muted" style="font-weight:400">${esc(u.recog)}</span></span><span class="pct">${pct(u.key)}</span></button>`).join('') : '')).join('')}</section>`).join('');
+}
+let cardState = null;
+function openSheet(html){
+  $('#sheet').innerHTML = html;
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function openCard(id){
+  if (!FAM[id] && !UNIT[id]) return;
+  cardState = {id, i:0, pins:false};
+  drawCard();
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+/* Bildliste der Karte: Familie = alle Bilder, Version = nur ihre eigenen */
+function cardImgs(){
+  const id = cardState.id;
+  if (UNIT[id]){ const {f, u} = UNIT[id]; return unitImgs(f, u).filter(i => VAR[f.id][i] === u.v); }
+  return (IMG[id] || []).map((_, i) => i);
+}
+function carouselHtml(f){
+  const list = cardImgs(); if (!list.length) return '';
+  const k = cardState.i % list.length, i = list[k];
+  const iu = multi(f) ? unitOfImg(f, i) : null;
+  const pins = pinsFor(f.id, i);
+  const label = !multi(f) ? '' : iu ? iu.name : 'Version nicht eindeutig erkennbar';
+  const onUnit = !!UNIT[cardState.id];
+  return `${feedHtml(f.id, i, {nav:list.length > 1, counter:`${k + 1}/${list.length}`, alt:label || f.name})}
+    <div class="imgcap">
+      ${multi(f) ? `<span class="vlabel${iu ? '' : ' none'}">${esc(label)}</span>` : '<span></span>'}
+      <span class="capbtns">${pins ? `<button class="btn sm" data-act="cardpins" aria-expanded="${cardState.pins ? 'true' : 'false'}">${cardState.pins ? 'Merkmale ausblenden' : 'Merkmale auf diesem Bild'}</button>` : ''}${multi(f) && iu && !onUnit ? `<button class="btn sm" data-card="${iu.key}">Steckbrief ${esc(iu.name)}</button>` : ''}</span>
+    </div>
+    ${pins && cardState.pins ? `<div class="pinwrap">${annoFig(f.id, i, pins, label || f.name)}</div>` : ''}`;
+}
+const cmpFor = fid => CMP.filter(c => c.a.fam === fid || c.b.fam === fid);
+const cmpPair = (x, y) => CMP.find(c => (c.a.fam === x && c.b.fam === y) || (c.a.fam === y && c.b.fam === x));
+function cmpSide(sd, pos, ci, side){
+  const ar = (ARS[sd.fam] || [])[sd.i] || 4/3;
+  const w = ar >= 4/3 ? 100 : Math.round(ar / (4/3) * 1000) / 10;
+  return `<figure class="cmpfig">
+    <span class="ctag">${pos}</span>
+    <div class="cmpbox" data-czoom="${ci}:${side}"><div class="cmpin" style="aspect-ratio:${ar};width:${w}%">
+      <img src="${imgSrc(sd.fam, sd.i)}" alt="${esc(sd.lab)}">
+      ${sd.pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </div></div>
+    <figcaption><b>${pos}: ${esc(sd.lab)}</b><ol class="legendlist">${sd.pins.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol></figcaption>
+  </figure>`;
+}
+function cmpHtml(c, focus){
+  const sw = c.b.fam === focus && c.a.fam !== focus, ci = CMP.indexOf(c);
+  const [L, Rt] = sw ? [c.b, c.a] : [c.a, c.b];
+  return `<div class="cmpwrap"><div class="cmp">${cmpSide(L, 'Links', ci, sw ? 'b' : 'a')}${cmpSide(Rt, 'Rechts', ci, sw ? 'a' : 'b')}</div><p class="cmpkey"><strong>${esc(c.keyLab || 'Sicherstes Merkmal:')}</strong> ${esc(c.key)}</p></div>`;
+}
+function confCompare(f){
+  const others = [...new Set([...f.confuse, ...cmpFor(f.id).map(c => c.a.fam === f.id ? c.b.fam : c.a.fam)])].filter(c => FAM[c]);
+  if (!others.length) return '';
+  others.sort((x, y) => (cmpPair(f.id, y) ? 1 : 0) - (cmpPair(f.id, x) ? 1 : 0));
+  return `<div class="sec"><h3>Verwechslungsgefahr – Gegenüberstellung</h3><p class="confint">Fahrzeuge, die leicht mit dem ${esc(f.name)} verwechselt werden, und woran du sie unterscheidest.</p>${others.map(c => {
+    const o = FAM[c], pr = cmpPair(f.id, c);
+    return `<div class="vbox"><h4>${esc(f.name)} oder ${esc(o.name)}?</h4>${pr ? cmpHtml(pr, f.id) : `<p style="margin:4px 0 0"><strong>${esc(o.name)}:</strong> ${esc(o.recog)}</p>${CMPTXT[[f.id, c].sort().join('|')] ? `<p class="cmpkey"><strong>Sicherstes Merkmal:</strong> ${esc(CMPTXT[[f.id, c].sort().join('|')])}</p>` : ''}`}<button class="linkbtn" data-card="${c}" style="margin-top:8px">Steckbrief ${esc(o.name)}</button></div>`;
+  }).join('')}</div>`;
+}
+function openCmpAll(){
+  cardState = null;
+  openSheet(`<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">Direktvergleiche</div></div></div>
+  <div class="wrap">
+    <h1 style="font-size:2.6rem;margin-top:16px">Direktvergleiche</h1>
+    <p class="muted" style="margin:6px 0 0">Fahrzeuge mit hoher Verwechslungsgefahr nebeneinander, mit den Merkmalen, die sie unterscheiden. Tippe auf ein Bild, um es zu vergrößern.</p>
+    ${CMP.map(c => `<div class="sec"><h3>${esc(FAM[c.a.fam].name)} oder ${esc(FAM[c.b.fam].name)}?</h3>${cmpHtml(c, c.a.fam)}</div>`).join('')}
+  </div>`);
+}
+function drawCard(){
+  const id = cardState.id;
+  const isUnit = !!UNIT[id];
+  const f = isUnit ? UNIT[id].f : FAM[id];
+  const U = isUnit ? UNIT[id].u : null;
+  const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  const sec = (h, body) => `<div class="sec"><h3>${h}</h3>${body}</div>`;
+  const p = s => `<p style="margin:0">${esc(s)}</p>`;
+  const unitDetail = u => `<dl class="kv">
+        <dt>Gefahr Lfz</dt><dd>${esc(u.aa)}</dd>
+        <dt>Laser</dt><dd>${esc(lwrLong(u))}</dd>
+        <dt>Nachtsicht</dt><dd>${esc(u.sight)}</dd>
+      </dl>`;
+  const common = `
+    ${sec('Bewaffnung', list(f.weapons))}
+    ${sec('Schutz', p(f.protection))}
+    ${sec('Wirkmittel und Schwachstellen', `<p style="margin:0 0 6px">${esc(DATA.wcls[f.wcls])}.</p>` + p(f.weak))}
+    ${sec('Als JTAC beachten', list(f.jtac))}`;
+  const confBtns = (extra) => (extra.length ? sec('Andere Versionen', `<div class="row" style="margin-top:4px">${extra.join('')}</div>`) : '') + confCompare(f);
+  let body;
+  if (isUnit){
+    const others = f.vars.filter(x => x !== U);
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(U.name)}</h1>
+    <div class="desig">Version der ${esc(f.name)}-Familie · ${esc(CATS[f.cat].label)} · <button class="linkbtn" data-card="${f.id}">alle ${esc(f.name)}-Versionen im Vergleich</button></div>
+    ${unitChips(U)}
+    ${sec(`Woran erkennst du den ${esc(U.name)}?`, unitAnno(f, U) + `<p style="margin:10px 0 0"><strong>${esc(U.recog)}</strong></p><p class="small muted" style="margin:6px 0 0">Gilt für alle ${esc(f.name)}: ${esc(f.recog)}</p>`)}
+    ${sec('Unterschied zu den anderen Versionen', others.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join(''))}
+    ${sec('Gefahr für dein Lfz', p(U.aa))}
+    ${sec('Laser – merkt er es?', p(lwrLong(U)))}
+    ${sec('Nachtsicht und Wärmebild', p(tisLong(U)))}
+    ${common}
+    ${confBtns(others.map(x => `<button class="btn" data-card="${x.key}">${esc(x.name)}</button>`))}`;
+  } else if (multi(f)){
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
+    <div class="desig">${esc(f.designation)}</div>
+    ${armorChip(f)}
+    <div class="row" style="margin-top:12px">${f.vars.map(u => `<button class="btn" data-card="${u.key}">Steckbrief ${esc(u.name)}</button>`).join('')}</div>
+    ${sec('Nutzer', p(f.users))}
+    ${ANNO[f.id] ? sec(`Merkmale aller ${esc(f.name)}`, annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
+    ${sec('Versionen unterscheiden', f.vars.map(u => `<div class="vbox">
+        <h4>${esc(u.name)}</h4>${unitChips(u)}
+        <div style="margin-top:8px">${unitAnno(f, u)}</div>
+        <p style="margin:8px 0 0"><strong>${esc(u.recog)}</strong></p>
+        ${unitDetail(u)}
+        <button class="btn" data-card="${u.key}" style="margin-top:8px">Steckbrief ${esc(u.name)}</button>
+      </div>`).join(''))}
+    ${common}
+    ${confBtns([])}`;
+  } else {
+    const u = f.vars[0];
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
+    <div class="desig">${esc(f.designation)}</div>
+    ${armorChip(f)}
+    ${sec('Nutzer', p(f.users))}
+    ${ANNO[f.id] ? sec('Erkennungsmerkmale', annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
+    ${sec('Gefahr, Laser, Nachtsicht', `<div class="vbox">${unitChips(u)}${unitDetail(u)}</div>`)}
+    ${common}
+    ${confBtns([])}`;
+  }
+  const title = isUnit ? U.name : f.name;
+  $('#sheet').innerHTML = `<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">${esc(title)}</div><span class="muted small">${pct(id)}</span></div></div>
+  <div class="wrap">
+    ${carouselHtml(f)}
+    ${body}
+  </div>`;
+}
+
+function openMerk(){
+  cardState = null;
+  openSheet(`<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">Merkblatt</div></div></div>
+  <div class="wrap">
+    <h1 style="font-size:2.6rem;margin-top:16px">Merkblatt</h1>
+    <p class="muted" style="margin:6px 0 0">Die wichtigsten Regeln aus der App auf einen Blick. Richtwerte aus öffentlichen Quellen – im Einsatz gilt die aktuelle Lage.</p>
+    ${DATA.merk.map(([h, items]) => `<div class="sec"><h3>${esc(h)}</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+  </div>`);
+}
+function closeCard(){ $('#sheet').hidden = true; document.body.style.overflow = ''; cardState = null; }
+
+function renderStats(){
+  $('#bar').hidden = false;
+  setBar('Statistik', {back:'home'});
+  const rows = FAMS.map(f => ({id:f.id, name:f.name, card:true, a:famAcc(f.id), s:S.fam[f.id] || {c:0, w:0}}));
+  UNITS.filter(u => UNIT[u.key] && S.fam[u.key]).forEach(u => rows.push({id:u.key, name:u.name + ' (Version)', card:true, a:famAcc(u.key), s:S.fam[u.key]}));
+  rows.push({id:'air', name:'Aus der Luft', card:false, a:famAcc('air'), s:S.fam.air || {c:0, w:0}});
+  rows.push({id:'gen', name:'Grundlagen', card:false, a:famAcc('gen'), s:S.fam.gen || {c:0, w:0}});
+  rows.sort((x, y) => (x.a ?? -1) - (y.a ?? -1));
+  const flags = Object.entries(S.flags);
+  const flagText = flags.map(([id, v]) => `• [${id}] ${v.t}`).join('\n');
+  const bar = a => `<div class="sbar"><i style="width:${a === null ? 0 : a * 100}%;background:${a === null ? 'transparent' : a >= .8 ? 'var(--ok)' : a >= .5 ? 'var(--cta)' : 'var(--bad)'}"></i></div>`;
+  $('#app').innerHTML = `
+    <div class="stat-top"><div><b>${S.answered}</b><span class="muted small">Antworten</span></div><div><b>${S.answered ? Math.round(100 * S.correct / S.answered) + ' %' : '–'}</b><span class="muted small">richtig</span></div></div>
+    <p class="sync">${esc(syncLabel)}</p>
+    <h2 style="margin-top:18px">Je Fahrzeug, schwächste zuerst</h2>
+    <div style="margin-top:6px">${rows.map(r => `<div class="srow">${r.card ? `<button class="linkbtn" data-card="${r.id}" style="text-align:left">${esc(r.name)}</button>` : `<span>${esc(r.name)}</span>`}${bar(r.a)}<span class="small muted" style="text-align:right">${r.a === null ? '–' : Math.round(r.a * 100) + ' %'}<br>${r.s.c + r.s.w}×</span></div>`).join('')}</div>
+    <h2 style="margin-top:26px">Gemeldete Fragen</h2>
+    ${flags.length ? `<p class="small muted" style="margin:4px 0 8px">Kopiere die Liste und schick sie mir im Chat, dann prüfe und korrigiere ich die Fragen.</p><textarea readonly id="flagtxt">${esc(flagText)}</textarea><div class="row"><button class="btn" data-act="copyflags">Liste kopieren</button><button class="btn" data-act="clearflags">Meldungen löschen</button></div>` : '<p class="muted">Noch keine Frage gemeldet. Nach jeder Antwort kannst du eine Frage mit „Frage melden“ markieren.</p>'}
+    <h2 style="margin-top:26px">Zurücksetzen</h2>
+    <p class="small muted" style="margin:4px 0 8px">Löscht alle Antworten und Trefferquoten. Gemeldete Fragen bleiben erhalten.</p>
+    <button class="btn" data-act="reset">Statistik zurücksetzen</button>`;
+}
+function render(){
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'cards') renderCards();
+  else if (view === 'stats') renderStats();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-zoom],[data-czoom]');
+  if (!t) return;
+  if (t.dataset.img && cardState){
+    e.stopPropagation();
+    const n = cardImgs().length;
+    cardState.i = (cardState.i + Number(t.dataset.img) + n) % n; cardState.pins = false; drawCard(); return;
+  }
+  if (t.dataset.czoom){
+    const [ci, side] = t.dataset.czoom.split(':'); const sd = CMP[Number(ci)][side];
+    const ar = (ARS[sd.fam] || [])[sd.i] || 4/3;
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<div class="czoom"><div class="cmpin" style="aspect-ratio:${ar};width:min(100%, calc((100vh - 140px) * ${ar}))"><img src="${imgSrc(sd.fam, sd.i)}" alt="${esc(sd.lab)}">${sd.pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}</div>
+      <p class="czcap"><b>${esc(sd.lab)}</b>${sd.pins.map(([, , tx], k) => `<span><i>${k + 1}</i>${esc(tx)}</span>`).join('')}</p></div>`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.zoom){
+    const [fid, i] = t.dataset.zoom.split(':');
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<img src="${imgSrc(fid, Number(i))}" alt="Vergrößerte Ansicht">`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.start){ closeCard(); startRound(t.dataset.start); return; }
+  if (t.dataset.go){ view = t.dataset.go; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.card){ openCard(t.dataset.card); return; }
+  if (t.dataset.ans != null){ answer(Number(t.dataset.ans)); return; }
+  if (t.dataset.flag){
+    const id = t.dataset.flag;
+    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt : id, ts:Date.now()};
+    save();
+    t.classList.toggle('flagged', !!S.flags[id]); t.textContent = S.flags[id] ? 'Gemeldet' : 'Frage melden';
+    return;
+  }
+  const act = t.dataset.act;
+  if (act === 'home'){ closeCard(); view = 'home'; R = null; render(); window.scrollTo(0, 0); }
+  else if (act === 'next') nextQ();
+  else if (act === 'merk') openMerk();
+  else if (act === 'cmpall') openCmpAll();
+  else if (act === 'anno'){
+    const ar = $('#annoarea'); if (!ar) return;
+    S.annoOpen = ar.hidden; ar.hidden = !ar.hidden; save();
+    t.textContent = S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen';
+    t.setAttribute('aria-expanded', S.annoOpen ? 'true' : 'false');
+    if (S.annoOpen) ar.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  else if (act === 'closecard') closeCard();
+  else if (act === 'cardpins' && cardState){ cardState.pins = !cardState.pins; drawCard(); }
+  else if (act === 'copyflags'){
+    const ta = $('#flagtxt'); ta.select();
+    const done = () => { t.textContent = 'Kopiert'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, () => { try { document.execCommand('copy'); done(); } catch(_){} });
+    else { try { document.execCommand('copy'); done(); } catch(_){} }
+  }
+  else if (act === 'clearflags'){ S.flags = {}; save(); render(); }
+  else if (act === 'reset'){
+    if (t.dataset.confirm){ const fl = S.flags; S = blank(); S.flags = fl; save(); render(); }
+    else { t.dataset.confirm = '1'; t.textContent = 'Wirklich zurücksetzen? Erneut tippen'; t.classList.add('flagged'); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
+  if (!$('#sheet').hidden){ if (e.key === 'Escape') closeCard(); return; }
+  if (view !== 'quiz' || !R) return;
+  if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
+  else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
+});
+render();
+
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

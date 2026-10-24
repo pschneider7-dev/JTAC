@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JTAC-Trainer</title>
+<meta name="description" content="Sieben Trainer für CAS aus JTAC-Sicht – Kräfte Rot, Waffen und Sensoren, Verfahren und Brevity.">
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+/* Übersicht im Look der Trainer-Reihe: eine Spalte, Trainer nach Themen gruppiert, Fortschritt je Trainer */
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --bad:#B0382B; --cta:#E0A526; --cta-ink:#1A2326;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --bad:#E36D5E; --cta:#E3AA2E; --cta-ink:#111719; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --bad:#E36D5E; --cta:#E3AA2E; --cta-ink:#111719; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-block:12px 48px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2{font-family:var(--font-d);line-height:1.1;margin:0}
+
+.hero{padding:28px 0 8px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.state{display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:.9rem;color:var(--muted)}
+.state::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--c,var(--line))}
+
+.install{margin-top:18px}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.hint{margin:0;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:0 10px 10px 0;background:var(--surface);font-size:.95rem}
+
+.group{margin-top:26px}
+.group h2{font-size:1rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.list{border-top:1px solid var(--line)}
+.tr{position:relative;display:flex;gap:14px;align-items:center;padding:14px 2px 15px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none}
+.tr .code{flex:none;width:3.4em;height:2.5em;border-radius:8px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:700;font-size:1.05rem;letter-spacing:.03em;display:flex;align-items:center;justify-content:center}
+.tr .mi{flex:1;min-width:0}
+.tr strong{display:block;font-family:var(--font-d);font-size:1.35rem;font-weight:600;line-height:1.1}
+.tr small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.tr .n{flex:none;max-width:7.5em;font-family:var(--font-d);font-size:1rem;color:var(--muted);text-align:right;line-height:1.15;font-variant-numeric:tabular-nums}
+.tr i{position:absolute;left:0;bottom:-1px;height:3px;width:0;background:var(--c,var(--line))}
+.tr:hover strong{text-decoration:underline;text-underline-offset:3px}
+
+.foot{margin-top:32px;font-size:.88rem;color:var(--muted);max-width:42em}
+.foot h2{font-size:1rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.foot p{margin:0 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.btn{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:8px;padding:10px 14px;font-weight:600;font-size:.95rem;cursor:pointer}
+.msg{color:var(--ink);font-weight:600}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <h1>JTAC-Trainer</h1>
+    <p>Sieben Trainer für CAS aus JTAC-Sicht: Kräfte Rot erkennen und einschätzen, eigene Waffen und Sensoren kennen, Verfahren und Funk sicher beherrschen.</p>
+    <span class="state" id="state" hidden></span>
+  </section>
+
+  <section class="install" id="install" hidden>
+    <button class="cta" id="installbtn" hidden><span><strong>Als App installieren</strong><small>Startet vom Home-Bildschirm und läuft offline</small></span><span class="go" aria-hidden="true">+</span></button>
+    <p class="hint" id="ioshint" hidden>Als App installieren: In Safari auf <b>Teilen</b> tippen, dann <b>„Zum Home-Bildschirm“</b>.</p>
+  </section>
+
+  <section class="group" aria-labelledby="g-rot">
+    <h2 id="g-rot">Kräfte Rot</h2>
+    <div class="list">
+      <a class="tr" href="manoever/" data-key="manoevertrainer.v1"><span class="code">MAN</span><span class="mi"><strong>Manöver-Trainer</strong><small>Fahrzeuge erkennen, Bedrohung für dein Lfz, Laser und Wärmebild, Wirkmittelwahl</small></span><span class="n"></span><i></i></a>
+      <a class="tr" href="artillerie/" data-key="artillerietrainer.v1"><span class="code">ART</span><span class="mi"><strong>Artillerie-Trainer</strong><small>Rohr- und Raketenartillerie, EloKa und Ortung: erkennen, Stellungsraum, Wirkmittel</small></span><span class="n"></span><i></i></a>
+      <a class="tr" href="flugabwehr/" data-key="flugabwehrtrainer.v1"><span class="code">FLA</span><span class="mi"><strong>Flugabwehr-Trainer</strong><small>Systeme erkennen, Bekämpfungszone, RWR-Warnung, Radare zuordnen</small></span><span class="n"></span><i></i></a>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="g-mittel">
+    <h2 id="g-mittel">Waffen und Sensoren</h2>
+    <div class="list">
+      <a class="tr" href="waffen/" data-key="waffentrainer.v1"><span class="code">WPN</span><span class="mi"><strong>Waffen-Trainer</strong><small>Luft-Boden-Waffen und CAS-Plattformen: erkennen, Lenkung, Wirkung</small></span><span class="n"></span><i></i></a>
+      <a class="tr" href="pods/" data-key="podtrainer.v1"><span class="code">POD</span><span class="mi"><strong>Pod-Trainer</strong><small>Targeting- und Aufklärungspods: erkennen, Plattform, Fähigkeiten</small></span><span class="n"></span><i></i></a>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="g-verf">
+    <h2 id="g-verf">Verfahren und Funk</h2>
+    <div class="list">
+      <a class="tr" href="drill/" data-key="jtacdrill.v1"><span class="code">DRL</span><span class="mi"><strong>JTAC-Drill</strong><small>Freie Eingabe: Daten, Anwendung und Mini-Lagen quer durch alle Themen</small></span><span class="n"></span><i></i></a>
+      <a class="tr" href="brevity/" data-key="brevitytrainer.v1"><span class="code">BRV</span><span class="mi"><strong>Brevity-Trainer</strong><small>Codewörter nach ATP 1-02.1 und CAS-Abkürzungen</small></span><span class="n"></span><i></i></a>
+    </div>
+  </section>
+
+  <section class="foot" aria-labelledby="g-fort">
+    <h2 id="g-fort">Fortschritt</h2>
+    <p>Dein Fortschritt wird nur auf diesem Gerät gespeichert. Zum Übertragen auf ein anderes Gerät hier sichern und dort laden.</p>
+    <div class="row">
+      <button class="btn" id="export">Fortschritt sichern</button>
+      <label class="btn">Fortschritt laden<input type="file" id="import" accept="application/json,.json" hidden></label>
+    </div>
+    <p class="msg" id="msg" role="status"></p>
+    <p id="version"></p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const rows = [...document.querySelectorAll('.tr[data-key]')];
+  const KEYS = rows.map(a => a.dataset.key);
+
+  /* ---------- Fortschritt je Trainer ---------- */
+  function read(key){ try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+  function progress(key){
+    const s = read(key);
+    if (!s) return null;
+    if (key === 'jtacdrill.v1'){
+      const q = Object.values(s.q || {});
+      if (!q.length) return null;
+      const ok = q.filter(x => x.last >= .999).length;
+      return {text: `${ok} von ${q.length} sicher`, frac: ok / q.length};
+    }
+    if (!s.answered) return null;
+    return {text: `${s.answered} Antw. · ${Math.round(100 * s.correct / s.answered)} %`, frac: s.correct / s.answered};
+  }
+  function renderProgress(){
+    for (const a of rows){
+      const p = progress(a.dataset.key), bar = a.querySelector('i');
+      a.querySelector('.n').textContent = p ? p.text : 'Neu';
+      bar.style.width = p ? Math.max(4, p.frac * 100) + '%' : '0';
+      bar.style.setProperty('--c', !p ? 'var(--line)' : p.frac >= .8 ? 'var(--ok)' : p.frac >= .5 ? 'var(--cta)' : 'var(--bad)');
+    }
+  }
+  renderProgress();
+  addEventListener('pageshow', renderProgress);
+
+  /* ---------- Sichern und laden ---------- */
+  const say = t => { $('#msg').textContent = t; };
+  $('#export').addEventListener('click', async () => {
+    const data = {};
+    for (const k of KEYS){ const s = read(k); if (s) data[k] = s; }
+    if (!Object.keys(data).length){ say('Noch kein Fortschritt zum Sichern.'); return; }
+    const day = new Date().toISOString().slice(0, 10);
+    const file = new File([JSON.stringify({app: 'jtac-trainer', v: 1, exported: new Date().toISOString(), data})],
+      `jtac-fortschritt-${day}.json`, {type: 'application/json'});
+    if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({files: [file]})){
+      try { await navigator.share({files: [file], title: 'JTAC-Trainer – Fortschritt'}); say('Fortschritt gesichert.'); return; }
+      catch (e) { if (e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file); a.download = file.name;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    say('Fortschritt gesichert.');
+  });
+  $('#import').addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    let j;
+    try { j = JSON.parse(await f.text()); } catch (err) { j = null; }
+    if (!j || j.app !== 'jtac-trainer' || !j.data){ say('Die Datei ist keine Sicherung des JTAC-Trainers.'); return; }
+    const keys = KEYS.filter(k => j.data[k]);
+    if (KEYS.some(k => progress(k)) && !confirm('Der Fortschritt auf diesem Gerät wird durch die Sicherung ersetzt. Fortfahren?')) return;
+    for (const k of keys){ try { localStorage.setItem(k, JSON.stringify(j.data[k])); } catch (err) {} }
+    renderProgress();
+    say(`Fortschritt geladen (${keys.length} Trainer).`);
+  });
+
+  /* ---------- Installieren ---------- */
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let deferred = null;
+  if (!standalone && ios){ $('#install').hidden = false; $('#ioshint').hidden = false; }
+  addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferred = e;
+    $('#install').hidden = false; $('#installbtn').hidden = false;
+  });
+  $('#installbtn').addEventListener('click', async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice.catch(() => {});
+    deferred = null; $('#install').hidden = true;
+  });
+  addEventListener('appinstalled', () => { $('#install').hidden = true; });
+  if (standalone && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+  /* ---------- Offline-Stand ---------- */
+  const state = (text, color) => { const el = $('#state'); el.textContent = text; el.style.setProperty('--c', color); el.hidden = false; };
+  async function offline(){
+    if (!('serviceWorker' in navigator)) return;
+    const sw = navigator.serviceWorker;
+    if (!sw.controller){
+      state('Offline-Daten werden geladen …', 'var(--cta)');
+      await new Promise(r => sw.addEventListener('controllerchange', r, {once: true}));
+    }
+    const reg = await sw.ready;
+    const s = await new Promise(resolve => {
+      const ch = new MessageChannel();
+      ch.port1.onmessage = e => resolve(e.data);
+      reg.active.postMessage('status', [ch.port2]);
+      setTimeout(() => resolve(null), 3000);
+    });
+    if (!s || !s.total){ $('#state').hidden = true; return; }
+    if (s.cached >= s.total) state('Offline verfügbar', 'var(--ok)');
+    else state(`Offline teilweise verfügbar (${s.cached} von ${s.total} Dateien)`, 'var(--cta)');
+    const d = s.version.slice(0, 10).split('-').reverse().join('.');
+    $('#version').textContent = `Stand ${d}`;
+  }
+  offline();
+})();
+</script>
+<script src="assets/app.js" defer></script>
+</body>
+</html>

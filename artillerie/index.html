@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Artillerie-Trainer</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --feed:#0B1113; --hud:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 18px 48px}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0}
+h2{font-size:1.45rem;font-weight:600;letter-spacing:.005em}
+h3{font-size:1.25rem;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* home */
+.hero{padding:28px 0 20px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.board{margin:8px 0 24px}
+.board-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cells{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.board h3{font-size:1.05rem;color:var(--muted);margin:14px 0 6px;letter-spacing:.04em;text-transform:uppercase}
+@media (min-width:600px){.cells{grid-template-columns:repeat(8,minmax(0,1fr))}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px 12px;min-height:66px;overflow:hidden}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1}
+.cell span{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.cell[data-s="none"]{border-style:dashed}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.legend em{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.legend em::before{content:"";width:12px;height:5px;background:var(--c)}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:22px;border-top:1px solid var(--line)}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px}
+.mode .mi{flex:1}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot{margin-top:28px;font-size:.82rem;color:var(--muted);max-width:40em}
+
+/* feed */
+.feed{position:relative;margin:0;background:var(--feed);border-radius:10px;overflow:hidden;aspect-ratio:4/3;cursor:zoom-in}
+.feed img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.feed .hud{position:absolute;font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.06em;color:var(--hud);opacity:.85;text-shadow:0 1px 2px #000}
+.feed .hud.tl{top:10px;left:14px} .feed .hud.tr{top:10px;right:14px} .feed .hud.bl{bottom:10px;left:14px}
+.feed .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+.feed .nav.l{left:8px} .feed .nav.r{right:8px}
+
+/* quiz */
+.qmeta{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 10px;font-size:.9rem;color:var(--muted)}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:14px 0 14px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.profile{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.profile h3 small{font-family:var(--font-b);font-size:.85rem;font-weight:500;color:var(--muted);margin-left:6px}
+.kv{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;margin:10px 0 0;font-size:.94rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.chips li{font-size:.82rem;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--surface2);border:1px solid var(--line)}
+.chips li[data-v="1"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.chips li[data-v="0"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.chips li[data-v="?"]{background:var(--unk-bg);border-color:var(--unk);color:var(--unk)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 14px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* end */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:24px 0 4px}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+
+/* cards list */
+.group{margin-top:24px}
+.group h2{margin-bottom:6px}
+.fam{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px}
+.fam .code{font-family:var(--font-d);font-weight:700;font-size:1.1rem;width:3em;color:var(--muted)}
+.fam .nm{flex:1;font-weight:600}
+.fam .pct{font-family:var(--font-d);font-size:1.05rem;color:var(--muted)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet[hidden]{display:none}
+.sec{margin-top:18px}
+.sec h3{font-size:1.1rem;margin-bottom:4px}
+.sec ul{margin:4px 0 0;padding-left:1.15em}
+.sec li{margin:2px 0}
+.desig{font-size:.95rem;color:var(--muted);margin-top:4px}
+.bw{margin-top:12px;border-left:4px solid var(--cta);background:var(--surface);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.95rem}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* stats */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1}
+.srow{display:grid;grid-template-columns:8.5em 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.sync{font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.annobox{margin-top:12px}
+.annobox #annoarea{margin-top:12px}
+.anno{position:relative;margin:0;max-width:100%;border-radius:10px;overflow:hidden;background:var(--feed);cursor:zoom-in}
+.anno img{display:block;width:100%;height:100%;object-fit:cover}
+.anno .pin{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.95rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.legendlist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.legendlist li{display:flex;gap:10px;align-items:flex-start;font-size:.94rem;line-height:1.35}
+.legendlist b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;font-family:var(--font-d);font-size:.85rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.unitrow{margin-top:10px}
+.unitrow strong{font-family:var(--font-d);font-size:1.08rem;font-weight:600}
+.unitrow .chips{margin-top:4px}
+.vbox{margin-top:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.vbox h4{margin:0;font-family:var(--font-d);font-size:1.2rem;font-weight:600}
+.vbox .kv{grid-template-columns:6.8em 1fr}
+.sec h3 + .vbox{margin-top:6px}
+.imgcap{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+.vlabel{font-family:var(--font-d);font-weight:700;font-size:1.25rem;background:var(--ink);color:var(--bg);border-radius:6px;padding:2px 10px}
+.vlabel.none{background:var(--surface2);color:var(--muted);font-weight:600;font-size:1rem}
+.capbtns{display:flex;gap:6px;flex-wrap:wrap}
+.btn.sm{padding:6px 10px;font-size:.88rem}
+.pinwrap{margin-top:10px}
+.fam.sub{padding-left:18px;background:var(--surface)}
+.fam.sub .nm{font-weight:600}
+.unitrow.cur{border-left:4px solid var(--cta);padding-left:8px}
+.tag{font-family:var(--font-b);font-size:.75rem;font-weight:600;background:var(--cta);color:var(--cta-ink);border-radius:999px;padding:1px 8px;vertical-align:middle}
+.guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+</style>
+<style>
+.cmpwrap{margin-top:8px}
+.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cmpfig{margin:0;min-width:0}
+.cmpfig>.ctag{display:inline-block;margin-bottom:4px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;padding:1px 8px;border-radius:5px}
+.cmpbox{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;max-width:100%;background:var(--feed);border-radius:8px;overflow:hidden;cursor:zoom-in}
+.cmpin{position:relative;max-height:100%}
+.cmpin img{display:block;width:100%;height:100%;object-fit:cover}
+.cmpin .pin{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.85rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.czoom{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-height:100%}
+.czoom .cmpin{max-width:100%}
+.czoom .pin{width:28px;height:28px;font-size:1rem}
+.czcap{margin:0;color:#eee;font-size:.92rem;line-height:1.35;display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;max-width:720px}
+.czcap b{width:100%;text-align:center;font-family:var(--font-d);font-size:1.05rem}
+.czcap i{font-style:normal;font-weight:700;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--hud);color:#111;margin-right:6px;font-size:.8rem}
+.cmpfig figcaption{margin-top:6px;font-size:.88rem;line-height:1.3}
+.cmpfig figcaption>b{font-family:var(--font-d);font-size:1.02rem;font-weight:600}
+.cmpfig .legendlist{margin-top:4px;gap:4px}
+.cmpfig .legendlist li{font-size:.84rem;gap:6px}
+.cmpfig .legendlist b{width:19px;height:19px;font-size:.78rem}
+.vbox h4 .nato{display:inline-block;vertical-align:middle;margin-left:4px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.02em;padding:1px 7px;border-radius:5px}
+.cmpkey{margin:10px 0 0;padding:8px 12px;border-left:4px solid var(--cta);background:var(--surface);border-radius:0 8px 8px 0;font-size:.95rem}
+</style>
+</head>
+<body>
+<header class="bar" id="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></div>
+<script>
+const DATA = {"title":"Artillerie-Trainer","key":"artillerietrainer.v1","intro":"Feuerunterstützung und Kampfunterstützung der Kräfte Rot aus JTAC-Sicht: System erkennen, auch aus der Drohne, Reichweite und Stellungsraum kennen, das passende Wirkmittel wählen und wissen, was die EloKa stört.","airAsk":"cat","cats":{"sph":{"label":"Panzerhaubitze (Kette)","cap":"Selbstfahrende Rohrartillerie, leicht gepanzert – schießt indirekt aus mehreren km hinter der Front"},"mrs":{"label":"Selbstfahrender Mörser bzw. Mörserhaubitze","cap":"Steilfeuer auf kurze Entfernung – steht nah an der Front"},"tow":{"label":"Gezogene Haubitze bzw. Kanone","cap":"Ungepanzert, braucht Lkw oder MT-LB als Zugmittel – Bedienung arbeitet im Freien"},"mor":{"label":"Mörser (abgesessen bzw. auf Lkw)","cap":"Leicht und schnell in Stellung – kurze Reichweite, nah an der Front"},"mlrs":{"label":"Raketenwerfer (MLRS)","cap":"Flächenfeuer in einer Salve, danach sofortiger Stellungswechsel"},"tos":{"label":"Schwerer Flammenwerfer (thermobarische Raketen)","cap":"Thermobarische Raketen auf kurze Entfernung – muss nah an die Front"},"srbm":{"label":"Operativ-taktische Rakete (ballistisch bzw. Marschflugkörper)","cap":"Präzisionsschläge bis ca. 500 km – Ziel mit höchster Priorität"},"ew":{"label":"EloKa-System (Störung, Aufklärung)","cap":"Stört Funk, GPS, Mobilfunk oder Radar – Antennen sind der wertvollste Teil"},"rad":{"label":"Artillerieortungsradar","cap":"Ortet feuernde Geschütze und Werfer und lenkt das Gegenfeuer"}},"catOrder":["sph","mrs","tow","mor","mlrs","tos","srbm","ew","rad"],"catExcl":{"sph":["mrs"],"mrs":["sph","mor"],"mor":["mrs","tow"],"tow":["mor"],"mlrs":["tos"],"tos":["mlrs"],"ew":["rad"],"rad":["ew"]},"catX":{},"pos":{"front":"Sehr nah an der Front – ca. 2–6 km dahinter","near":"Ca. 4–10 km hinter der Front","mid":"Ca. 8–15 km hinter der Front","deep":"Ca. 15–40 km hinter der Front","op":"Tief im Hinterland – 50 km und mehr"},"posShort":{"front":"2–6 km","near":"4–10 km","mid":"8–15 km","deep":"15–40 km","op":"50 km +"},"posOrder":["front","near","mid","deep","op"],"posRule":"Faustregel: Rohrartillerie steht etwa ein Drittel bis die Hälfte ihrer Reichweite hinter der Front – nah genug, um tief zu wirken, weit genug weg von Mörsern, Drohnen und Panzerabwehr.","posRules":{"sph":"Faustregel: Rohrartillerie steht etwa ein Drittel bis die Hälfte ihrer Reichweite hinter der Front – nah genug, um tief zu wirken, weit genug weg von Mörsern, Drohnen und Panzerabwehr.","tow":"Faustregel: Rohrartillerie steht etwa ein Drittel bis die Hälfte ihrer Reichweite hinter der Front – nah genug, um tief zu wirken, weit genug weg von Mörsern, Drohnen und Panzerabwehr. Gezogene Geschütze brauchen länger für den Stellungswechsel als Panzerhaubitzen.","mrs":"Mörser haben die kürzeste Reichweite der Artillerie und stehen deshalb dicht hinter der vordersten Linie, nah bei der unterstützten Truppe – oft in Deckung hinter Hängen oder in Ortschaften.","mor":"Mörser haben die kürzeste Reichweite der Artillerie und stehen deshalb dicht hinter der vordersten Linie, nah bei der unterstützten Truppe – oft in Deckung hinter Hängen oder in Ortschaften.","mlrs":"Raketenartillerie schießt und verlegt sofort: Sie fährt aus einem verdeckten Warteraum in die Feuerstellung, verschießt die Salve in wenigen Minuten und ist danach wieder weg. Nachgeladen wird abseits mit Transport- bzw. Transportladefahrzeugen. Bekämpfen kannst du sie meist nur in diesem kurzen Fenster oder im Warte- und Nachladeraum.","tos":"Die Raketen der TOS reichen nur wenige Kilometer. Das System muss deshalb dicht an die Front, meist gedeckt durch Kampf- oder Schützenpanzer, und zieht sich nach der Salve sofort zurück.","srbm":"Iskander-Startfahrzeuge stehen tief im Hinterland, verdeckt in Wäldern, Hallen oder Ortschaften, und verlegen nach dem Start sofort."},"wcls":{"mbt":"Schwer gepanzert: LFK mit Tandem-Hohlladung (Hellfire/JAGM, Brimstone), Maverick oder Volltreffer mit Lenkbombe – Bordkanone nur von Seite, Heck oder oben","spg":"Leicht gepanzert (Splitterschutz): Hellfire, Maverick, kleine Lenkbombe (GBU-12/-54, GBU-39) oder 30-mm-Bordkanone – Munition an Bord sorgt oft für Folgeexplosionen","soft":"Ungepanzert: Splitterwirkung genügt – Airburst, APKWS bzw. Hydra, Bordkanone, kleine Bomben; Bedienung und Munitionsstapel mit erfassen","emit":"Antennen- und Kabinenfahrzeug: Splitter genügen, Ziel sind Antennen und Kabinen – bei GPS-Störung Laser- oder Dual-Mode-Waffen statt reiner GPS-Waffen"},"wOrder":["mbt","spg","soft","emit"],"wlab":{"mbt":"schwer","spg":"leicht","soft":"ungepanzert","emit":"Antennen/Kabinen"},"airTip":"Aus der Luft reicht für die Meldung die Art: Panzerhaubitze, gezogenes Geschütz, Raketenwerfer oder Flammenwerfer – mit Anzahl, Lage und Feuerbereitschaft (Rohr erhöht, Sporn abgesenkt, Werfer aufgerichtet).","families":[{"id":"2s1","name":"2S1 Gvozdika","short":"2S1","cat":"sph","wcls":"spg","pos":"near","rng":"ca. 15 km, mit Raketenzusatzantrieb ca. 22 km","rngKm":15,"designation":"2S1 Gvozdika – 122-mm-Panzerhaubitze (1971) auf flachem, schwimmfähigem Fahrgestell; Standard der Motschützen-Artillerie","users":"Russland, Ukraine, Belarus und viele weitere – auch NATO-Partner (z. B. Polen als 2S1 Goździk, Bulgarien)","weapons":["122-mm-Haubitze 2A31 (ca. 40 Schuss an Bord)","Spreng-, Nebel-, Leucht- und Streumunition wie D-30","Kein Fla-MG – Besatzung mit Handwaffen"],"protection":"Stahl bis ca. 20 mm – schützt gegen Gewehrmunition und Splitter, nicht gegen Maschinenkanonen.","weak":"Dünne Panzerung rundum; Munition im Kampfraum – Treffer führen oft zum Ausbrennen.","recog":"Flache Wanne mit sieben Laufrollen, flacher Turm hinten, 122-mm-Rohr mit Rauchabsauger und Mündungsbremse – kürzer und dünner als jedes 152-mm-Rohr.","confuse":["2s34","2s3","2s9"],"jtac":["Feuert typischerweise aus 4–10 km hinter der Front und verlegt nach wenigen Salven (Shoot and scoot).","Wegen der Schwimmfähigkeit oft an Gewässern und Flussübergängen.","In Feuerstellung mit Tarnnetz, Erdwall und Munitionsstapeln – Mündungsfeuer und Staub verraten sie."],"vars":[{"v":null,"name":"2S1 Gvozdika"}]},{"id":"2s3","name":"2S3 Akatsiya","short":"2S3","cat":"sph","wcls":"spg","pos":"mid","rng":"ca. 18 km, mit Raketenzusatzantrieb ca. 24 km","rngKm":18,"designation":"2S3 Akatsiya – 152-mm-Panzerhaubitze (1971), heute meist 2S3M/M1; wird schrittweise durch die 2S19 ersetzt","users":"Russland, Ukraine, Belarus und weitere GUS-Staaten","weapons":["152-mm-Haubitze 2A33 (ca. 46 Schuss, Nachladen auch vom Boden über Heckluken)","Lasergelenkte Krasnopol-Granaten möglich","7,62-mm-MG auf der Kommandantenkuppel"],"protection":"Stahl bis ca. 20 mm – Splitter- und Gewehrschutz.","weak":"Großer, hoher Turm; viel Munition an Bord; Heckluken zur Munitionsversorgung oft offen.","recog":"Sechs große Laufrollen, großer runder Turm im hinteren Teil, langes 152-mm-Rohr mit Rauchabsauger und Zweikammer-Mündungsbremse, das weit über den Bug ragt.","confuse":["2s19","2s1","2s5"],"jtac":["Feuerstellung meist 8–15 km hinter der Front.","Krasnopol: Ein Beobachter oder eine Drohne beleuchtet das Ziel mit Laser – die Laserquelle steht dann vorn, nicht bei der Haubitze.","Aus der Luft: runder Turm und langes Rohr – kleiner als die 2S19 und ohne deren Kastenturm."],"vars":[{"v":null,"name":"2S3 Akatsiya"}]},{"id":"2s5","name":"2S5 Giatsint-S","short":"2S5","cat":"sph","wcls":"spg","pos":"mid","rng":"ca. 28 km, mit Raketenzusatzantrieb ca. 33 km","rngKm":28,"designation":"2S5 Giatsint-S – 152-mm-Selbstfahrlafette (1976) mit offen aufgebauter Kanone und großer Reichweite","users":"Russland, Ukraine, Finnland, Belarus","weapons":["152-mm-Kanone 2A37 (ca. 30 Schuss), offen auf dem Heck","Munition wie die gezogene 2A36 Giatsint-B","7,62-mm-MG"],"protection":"Nur das Fahrgestell ist leicht gepanzert; Bedienung und Kanone stehen offen.","weak":"Die Bedienung arbeitet ungeschützt an der Kanone – Splitter und Airburst wirken sofort.","recog":"Kein Turm: langes Rohr offen über dem Fahrzeug, Lafette und Sporn am Heck, Kabine vorn. Der 2S7 ist größer, sein Rohr dicker und ohne Mündungsbremse.","confuse":["2s7","2s19"],"jtac":["Große Reichweite – steht oft 10–15 km hinter der Front.","In Feuerstellung mit abgesenktem Sporn und Bedienung rund um die Kanone.","Splitterwirkung genügt gegen Bedienung und Munition."],"vars":[{"v":null,"name":"2S5 Giatsint-S"}]},{"id":"2s19","name":"2S19 Msta-S","short":"2S19","cat":"sph","wcls":"spg","pos":"mid","rng":"ca. 25 km, mit Base-Bleed ca. 29 km","rngKm":25,"designation":"2S19 Msta-S – Standard-Panzerhaubitze 152 mm der russischen Artillerie (1989); modernisiert als 2S19M1 und 2S19M2 (höhere Feuerrate, neue Feuerleitung)","users":"Russland, Ukraine, Belarus, Aserbaidschan, Venezuela u. a.","weapons":["152-mm-Haubitze 2A64 (ca. 50 Schuss, bis 8 Schuss/min)","Lasergelenkte Krasnopol-Granaten","12,7-mm-Fla-MG auf dem Turm"],"protection":"Stahl, Splitter- und Gewehrschutz; Fahrgestell aus T-72/T-80-Komponenten.","weak":"Riesiger Turm mit viel Munition – Durchschläge führen oft zur Totalzerstörung; dünnes Dach.","recog":"Kampfpanzer-Laufwerk mit sechs Laufrollen, sehr großer kastenförmiger Turm, langes Rohr mit Rauchabsauger und Mündungsbremse.","confuse":["2s3","2s5"],"jtac":["Wichtigste Panzerhaubitze Rot – 8–15 km hinter der Front, oft eingegraben und getarnt.","Feuert schnell und wechselt nach wenigen Minuten die Stellung; Munitionsfahrzeuge (Ural, KamAZ) stehen in der Nähe.","Krasnopol: Laserbeleuchtung durch einen Beobachter oder eine Drohne vorn am Ziel."],"vars":[{"v":null,"name":"2S19 Msta-S"}]},{"id":"2s7","name":"2S7 Pion / Malka","short":"2S7","cat":"sph","wcls":"spg","pos":"deep","rng":"ca. 37 km, mit Raketenzusatzantrieb ca. 47 km","rngKm":37,"designation":"2S7 Pion – 203-mm-Selbstfahrlafette (1976), modernisiert als 2S7M Malka; größtes Rohrartilleriesystem Russlands","users":"Russland, Ukraine, Belarus, Aserbaidschan","weapons":["203-mm-Kanone 2A44 offen auf dem Heck","Nur wenige Schuss an Bord – der Rest kommt vom Munitionsfahrzeug"],"protection":"Nur Kabine und Fahrgestell leicht gepanzert; Kanone und Bedienung offen.","weak":"Abhängig vom Munitionsfahrzeug; Bedienung arbeitet ungeschützt am Heck; braucht mehrere Minuten für Feuerbereitschaft und Abbau.","recog":"Riesiges, sehr langes Rohr ohne Mündungsbremse offen auf dem Heck, großer Sporn am Heck, Kabine vorn über die ganze Breite.","confuse":["2s5","2s4"],"jtac":["Hochwertziel: schießt 30–45 km weit und steht entsprechend weit hinter der Front.","Braucht mehrere Minuten für Stellungsbezug und Abbau – längeres Zeitfenster als bei der 2S19.","Munitionsfahrzeug immer in der Nähe – mitbekämpfen."],"vars":[{"v":null,"name":"2S7 Pion / Malka"}]},{"id":"2s9","name":"2S9 Nona-S","short":"2S9","cat":"mrs","wcls":"spg","pos":"front","rng":"ca. 9 km, mit Raketenzusatzantrieb ca. 13 km","rngKm":9,"designation":"2S9 Nona-S – selbstfahrende 120-mm-Mörserhaubitze der Luftlandetruppen (VDV) auf BTR-D-Fahrgestell, luftverlastbar","users":"Russland (VDV), Ukraine, Belarus u. a.","weapons":["120-mm-Mörserhaubitze 2A51: verschießt Mörser- und Artilleriegranaten","Lasergelenkte Granate Kitolov-2 möglich"],"protection":"Aluminium – nur gegen Gewehrmunition und Splitter.","weak":"Sehr dünne Aluminiumpanzerung; kleines Fahrzeug mit Munition im Kampfraum.","recog":"Kleine, flache Luftlande-Wanne mit sechs kleinen Laufrollen, flacher Turm mit 120-mm-Rohr ohne Mündungsbremse.","confuse":["2s34","2s1"],"jtac":["Begleitet VDV-Einheiten und steht nah an der Front (2–5 km).","Schießt direkt und im Steilfeuer hinter Deckung.","Jede Bordkanone und APKWS genügen."],"vars":[{"v":null,"name":"2S9 Nona-S"}]},{"id":"2s34","name":"2S34 Khosta","short":"2S34","cat":"mrs","wcls":"spg","pos":"front","rng":"ca. 10 km, mit Raketenzusatzantrieb ca. 14 km","rngKm":10,"designation":"2S34 Khosta – Kampfwertsteigerung der 2S1: Fahrgestell der 2S1 mit 120-mm-Mörserhaubitze 2A80","users":"Russland","weapons":["120-mm-Mörserhaubitze 2A80-1 (Mörser- und Artilleriegranaten)","7,62-mm-MG"],"protection":"Wie 2S1 – Splitter- und Gewehrschutz.","weak":"Dünne Panzerung, Munition im Kampfraum.","recog":"2S1-Wanne mit sieben Laufrollen, aber Turm mit 120-mm-Rohr ohne Mündungsbremse und Rauchabsauger – das Rohr der 2S1 hat beides.","confuse":["2s1","2s9"],"jtac":["Steht wie ein Mörser nah an der Front (2–6 km).","Aus der Luft fast nicht von der 2S1 zu unterscheiden – die Meldung „Panzerhaubitze“ genügt.","Splitterwirkung bzw. kleine Lenkwaffen genügen."],"vars":[{"v":null,"name":"2S34 Khosta"}]},{"id":"2s4","name":"2S4 Tyulpan","short":"2S4","cat":"mrs","wcls":"spg","pos":"front","rng":"ca. 10 km, mit Raketenzusatzantrieb ca. 19 km","rngKm":10,"designation":"2S4 Tyulpan – selbstfahrender 240-mm-Mörser (1975), schwerster Mörser im Einsatz; gegen Befestigungen und Gebäude","users":"Russland","weapons":["240-mm-Mörser 2B8 (ca. 40 Granaten an Bord)","Lasergelenkte Granate Smelchak möglich","7,62-mm-MG"],"protection":"Fahrgestell leicht gepanzert, der Mörser liegt außen.","weak":"Feuerbereitschaft dauert mehrere Minuten (Mörser absenken, Grundplatte setzen); langsame Feuerrate von etwa 1 Schuss pro Minute.","recog":"Langes, dickes Mörserrohr liegt in Marschlage über dem Fahrzeug; in Feuerstellung steht der Mörser hinter dem Fahrzeug auf einer großen Grundplatte.","confuse":["2s7","2s5"],"jtac":["Langer Stellungsbezug und langsame Feuerrate – gutes Ziel, wenn erkannt.","Wird gegen befestigte Stellungen und Häuser eingesetzt und steht 3–6 km hinter der Front.","Smelchak: Laserbeleuchtung durch einen Beobachter vorn."],"vars":[{"v":null,"name":"2S4 Tyulpan"}]},{"id":"d30","name":"D-30","short":"D30","cat":"tow","wcls":"soft","pos":"near","rng":"ca. 15 km, mit Raketenzusatzantrieb ca. 22 km","rngKm":15,"designation":"D-30 (2A18) – gezogene 122-mm-Haubitze (1963), weltweit verbreitet; auch improvisiert auf MT-LB oder Lkw","users":"Russland, Ukraine und über 60 weitere Staaten","weapons":["122-mm-Haubitze mit 360° Seitenrichtbereich","Munition wie 2S1"],"protection":"Keine – nur ein kleiner Schutzschild.","weak":"Bedienung (ca. 7 Soldaten) im Freien, Munition daneben gestapelt; Zugmittel (Ural, KamAZ, MT-LB) in der Nähe.","recog":"Drei sternförmig gespreizte Lafettenholme, Räder in Feuerstellung angehoben, Zugöse an der Mündungsbremse.","confuse":["2a65","2a36"],"jtac":["Die Dreibein-Lafette ist aus der Luft das sicherste Merkmal.","Steht 4–10 km hinter der Front, oft eingegraben und mit Tarnnetz.","Splitter bzw. Airburst gegen Bedienung und Munition – das Geschütz selbst ist robust."],"vars":[{"v":null,"name":"D-30"}]},{"id":"2a65","name":"2A65 Msta-B","short":"2A65","cat":"tow","wcls":"soft","pos":"mid","rng":"ca. 25 km, mit Base-Bleed ca. 29 km","rngKm":25,"designation":"2A65 Msta-B – gezogene 152-mm-Haubitze (1987), Ballistik wie die 2S19","users":"Russland, Ukraine, Belarus u. a.","weapons":["152-mm-Haubitze, Ballistik wie 2S19","Krasnopol möglich"],"protection":"Keine – kleiner Schutzschild.","weak":"Bedienung im Freien; braucht ein Zugmittel – der Stellungswechsel dauert länger als bei Panzerhaubitzen.","recog":"Spreizlafette mit zwei Holmen, Schutzschild, langes Rohr mit Mündungsbremse.","confuse":["2a36","d30"],"jtac":["Häufige 152-mm-Haubitze – Feuerstellung 8–15 km hinter der Front.","Braucht Minuten zum Abbau und ein Zugmittel – gutes Zeitfenster.","Splitterwirkung genügt."],"vars":[{"v":null,"name":"2A65 Msta-B"}]},{"id":"2a36","name":"2A36 Giatsint-B","short":"2A36","cat":"tow","wcls":"soft","pos":"mid","rng":"ca. 28 km, mit Raketenzusatzantrieb ca. 33 km","rngKm":28,"designation":"2A36 Giatsint-B – gezogene 152-mm-Kanone (1976) mit großer Reichweite","users":"Russland, Ukraine u. a.","weapons":["152-mm-Kanone mit sehr langem Rohr","Munition wie 2S5 Giatsint-S"],"protection":"Keine – Schutzschild.","weak":"Bedienung im Freien, schwerfälliger Stellungswechsel mit Zugmittel.","recog":"Sehr langes Rohr mit langer, mehrfach geschlitzter Mündungsbremse, Spreizlafette, Schutzschild.","confuse":["2a65","d30"],"jtac":["Längstes Rohr der gezogenen Artillerie – aus der Luft auffällig lang.","Steht 10–15 km hinter der Front.","Splitterwirkung genügt."],"vars":[{"v":null,"name":"2A36 Giatsint-B"}]},{"id":"2b11","name":"120-mm-Mörser 2B11","short":"120","cat":"mor","wcls":"soft","pos":"front","rng":"ca. 7 km","rngKm":7,"designation":"2B11 Sani – 120-mm-Mörser der Motschützen; als System 2S12 mit Lkw (GAZ-66, Ural) als Transport- und Zugmittel","users":"Russland, Ukraine und viele weitere","weapons":["120-mm-Mörser (Steilfeuer, ca. 10–15 Schuss/min)"],"protection":"Keine.","weak":"Bedienung im Freien; kleines Ziel – Splitter bzw. Airburst nötig.","recog":"Rohr auf Zweibein und runder Grundplatte; in Marschlage auf einem zweirädrigen Anhänger oder auf der Lkw-Ladefläche.","confuse":["2s9","2s4"],"jtac":["Steht nah an der Front (1–4 km), oft in Gräben oder hinter Häusern.","Mörserfeuer trifft eigene Truppen direkt – häufiges CAS-Ziel.","Kleines Ziel: genaue Koordinate und Splitterwirkung (Airburst, APKWS, Bordkanone)."],"vars":[{"v":null,"name":"120-mm-Mörser 2B11"}]},{"id":"bm21","name":"BM-21 Grad","short":"BM21","cat":"mlrs","wcls":"soft","pos":"near","rng":"ca. 20 km, neue Raketen bis ca. 40 km","rngKm":20,"designation":"BM-21 Grad – 122-mm-Raketenwerfer (1963) auf Ural-Lkw; modernisiert als 9K51M Tornado-G mit automatisierter Feuerleitung","users":"Russland, Ukraine und über 50 weitere Staaten","weapons":["40 Rohre 122 mm – volle Salve in ca. 20 s","Spreng-, Streu-, Brand- und Minenraketen"],"protection":"Keine – Tornado-G teils mit geschützter Kabine.","weak":"Ungepanzerter Lkw mit Raketen an Bord; Nachladen dauert ca. 10 min.","recog":"Ural 6×6 mit 40 Rohren in vier Reihen hinter der Kabine.","confuse":["bm27","bm30","tos2"],"jtac":["Feuert eine Salve und verlegt sofort – besser im Bereitstellungs- oder Nachladeraum bekämpfen.","Steht 5–10 km hinter der Front.","Die Rauchwolke beim Abschuss ist kilometerweit sichtbar."],"vars":[{"v":null,"name":"BM-21 Grad"}]},{"id":"bm27","name":"BM-27 Uragan","short":"BM27","cat":"mlrs","wcls":"soft","pos":"mid","rng":"ca. 35 km","rngKm":35,"designation":"BM-27 Uragan – 220-mm-Raketenwerfer (1975) auf ZIL-135","users":"Russland, Ukraine, Belarus u. a.","weapons":["16 Rohre 220 mm","Spreng-, Streu- und Minenraketen"],"protection":"Keine.","weak":"Ungepanzert; Nachladen mit eigenem Kranfahrzeug dauert rund 15–20 min.","recog":"ZIL-135 8×8 mit einer breiten Kabine; die beiden mittleren Achsen stehen dicht beieinander. 16 dicke Rohre.","confuse":["bm30","bm21"],"jtac":["Steht 10–15 km hinter der Front und verlegt nach der Salve.","Das Nachladefahrzeug mit Kran ist ein lohnendes Ziel.","Streumunition und Minen: Eigene Truppen im Zielgebiet warnen."],"vars":[{"v":null,"name":"BM-27 Uragan"}]},{"id":"bm30","name":"BM-30 Smerch / Tornado-S","short":"BM30","cat":"mlrs","wcls":"soft","pos":"deep","rng":"ca. 70 km, Tornado-S bis ca. 120 km","rngKm":70,"designation":"BM-30 Smerch – 300-mm-Raketenwerfer (1987) auf MAZ-543; Tornado-S (9K515) mit gelenkten Raketen und neuer Feuerleitung","users":"Russland, Ukraine, Belarus u. a.","weapons":["12 Rohre 300 mm","Spreng-, Streu-, Minen- und gelenkte Raketen"],"protection":"Keine – Kabinen leicht geschützt.","weak":"Großes, ungepanzertes Fahrzeug; Nachladen mit Kran dauert ca. 20 min.","recog":"MAZ-543 8×8 mit zwei getrennten Kabinen vorn, Achsen paarweise mit großer Lücke zwischen 2. und 3. Achse, 12 dicke Rohre auf dem Heck.","confuse":["bm27","iskander"],"jtac":["Hochwertziel: schießt bis tief in den eigenen Raum.","Steht 20–40 km hinter der Front – meist außerhalb der CAS-Zone.","Kurzes Zeitfenster: Salve in ca. 40 s, danach Stellungswechsel."],"vars":[{"v":null,"name":"BM-30 Smerch / Tornado-S"}]},{"id":"tos1a","name":"TOS-1A Solntsepyok","short":"TOS","cat":"tos","wcls":"mbt","pos":"front","rng":"ca. 6 km","rngKm":6,"designation":"TOS-1A Solntsepyok – schwerer Flammenwerfer: Werfer für 24 thermobarische 220-mm-Raketen auf T-72-Fahrgestell","users":"Russland, Aserbaidschan, Irak, Armenien u. a.","weapons":["24 Rohre 220 mm mit thermobarischen bzw. Brandraketen"],"protection":"KPz-Fahrgestell (T-72) mit Zusatzpanzerung, oft mit Drohnenschutzkäfig; der Werfer selbst ist kaum geschützt.","weak":"Ein Treffer im Werfer mit 24 Raketen führt zur Explosion; das Nachladefahrzeug TZM-T steht in der Nähe.","recog":"T-72-Fahrgestell mit großem Kastenwerfer statt Turm.","confuse":["tos2","bm21"],"jtac":["Muss sehr nah an die Front (2–5 km) – in Reichweite von CAS, Panzerabwehr und Drohnen.","Hohe Priorität: verheerende Wirkung gegen Stellungen und Gebäude.","Gegen das Fahrgestell Panzerabwehrwaffen; gegen den Werfer genügt Splitter."],"vars":[{"v":null,"name":"TOS-1A Solntsepyok"}]},{"id":"tos2","name":"TOS-2 Tosochka","short":"TOS2","cat":"tos","wcls":"soft","pos":"front","rng":"ca. 10–15 km","rngKm":12,"designation":"TOS-2 Tosochka – Radversion des schweren Flammenwerfers auf gepanzertem Ural 6×6 mit eigenem Ladekran (ab 2020)","users":"Russland","weapons":["18 Rohre 220 mm mit thermobarischen Raketen"],"protection":"Gepanzerte Kabine, sonst Splitterschutz.","weak":"Radfahrzeug, der Werfer ist ungeschützt.","recog":"Ural-Radfahrzeug mit Kastenwerfer auf dem Heck und Ladekran.","confuse":["tos1a","bm21"],"jtac":["Mobiler als TOS-1A und lädt mit dem eigenen Kran nach.","Steht 3–6 km hinter der Front.","Der Werfer mit den Raketen ist der verwundbarste Teil."],"vars":[{"v":null,"name":"TOS-2 Tosochka"}]},{"id":"iskander","name":"Iskander","short":"ISK","cat":"srbm","wcls":"soft","pos":"op","rng":"ca. 500 km","rngKm":500,"designation":"9K720 Iskander – operativ-taktisches Raketensystem: Iskander-M mit zwei ballistischen Raketen 9M723, Iskander-K mit Marschflugkörpern","users":"Russland, Belarus, Armenien","weapons":["2 ballistische Raketen 9M723 (Iskander-M)","Marschflugkörper 9M728 (Iskander-K)"],"protection":"Leicht geschützte Kabine, sonst ungepanzert.","weak":"Großes Fahrzeug mit nur zwei Raketen – Nachladen vom Transportfahrzeug.","recog":"MZKT-7930 8×8 mit langer Ladefläche unter Abdeckung; die Rakete wird zum Start senkrecht aufgerichtet.","confuse":["bm30"],"jtac":["Höchste Priorität (Time Sensitive Target) – steht meist 50 km und mehr hinter der Front.","Kurzes Zeitfenster: Stellung beziehen, starten und verlegen in kurzer Zeit.","Attrappen sind verbreitet – das Ziel bestätigen."],"vars":[{"v":null,"name":"Iskander"}]},{"id":"krasukha","name":"Krasukha-4","short":"KR4","cat":"ew","wcls":"emit","pos":"deep","ew":"Stört Radare von Flugzeugen, Drohnen und Satelliten (z. B. Bodenaufklärungsradar SAR/GMTI, AWACS) auf große Entfernung","designation":"1RL257 Krasukha-4 – EloKa-System gegen Bord- und Satellitenradare","users":"Russland","weapons":["Breitband-Störsender gegen Radare von Lfz, Drohnen und Satelliten","Keine Waffen"],"protection":"Ungepanzerte Kabinen auf 8×8-Lkw.","weak":"Große Antennen und Stromerzeuger; strahlt stark ab und ist dadurch ortbar.","recog":"8×8-Lkw mit Kofferaufbau und runden Parabolantennen am Mast.","confuse":["zhitel","leer3"],"jtac":["Radarbilder (SAR, GMTI) werden gestört – EO/IR-Sensoren und Laser sind nicht betroffen.","Schützt meist Hochwertobjekte tief im Hinterland.","Hochwertziel für Aufklärung und tiefe Schläge."],"vars":[{"v":null,"name":"Krasukha-4"}]},{"id":"borisoglebsk","name":"Borisoglebsk-2","short":"B-2","cat":"ew","wcls":"emit","pos":"near","ew":"Stört taktischen Sprechfunk (KW/UKW, auch Frequenzsprungverfahren) und klärt Funkverkehr auf","designation":"RB-301B Borisoglebsk-2 – EloKa-Komplex der Truppe: Funkaufklärung und Störung des Sprechfunks; Leitstand und vier Störfahrzeuge auf MT-LBu","users":"Russland","weapons":["Störsender gegen KW- und UKW-Funk","Funkaufklärung und Peilung"],"protection":"MT-LBu – Splitterschutz.","weak":"Antennenmasten und Kabinen; mehrere Fahrzeuge in einem Raum.","recog":"MT-LBu-Kettenfahrgestell mit Teleskopmast und Antennengruppen.","confuse":["zoopark","zhitel"],"jtac":["Kann deinen Sprechfunk stören – Ausweichfrequenzen, kurze Funksprüche, Brevity.","Steht 5–15 km hinter der Front.","Mast ausgefahren heißt: in Betrieb."],"vars":[{"v":null,"name":"Borisoglebsk-2"}]},{"id":"leer3","name":"Leer-3","short":"LR3","cat":"ew","wcls":"emit","pos":"near","ew":"Stört und täuscht Mobilfunk mit Orlan-10-Drohnen als fliegenden Funkzellen und ortet Handys","designation":"RB-341V Leer-3 – EloKa-System mit KamAZ-Bodenstation und mehreren Orlan-10-Drohnen als fliegenden Störsendern","users":"Russland","weapons":["Orlan-10 mit Mobilfunk-Störsender bzw. falscher Funkzelle","Ortung von Mobiltelefonen, Versand von SMS"],"protection":"Ungepanzerte Kabine.","weak":"Bodenstation ungeschützt, Orlan-10 langsam.","recog":"KamAZ-Kofferfahrzeug; eindeutig erst mit Startgerät und Orlan-10-Drohnen.","confuse":["zhitel","krasukha"],"jtac":["Handys verraten Stellungen – die Orlan-10 ortet sie und lenkt Artilleriefeuer.","Die Orlan-10 dient auch als Artilleriebeobachter.","Bodenstation steht einige km hinter der Front."],"vars":[{"v":null,"name":"Leer-3"}]},{"id":"zhitel","name":"R-330Zh Zhitel","short":"ZHI","cat":"ew","wcls":"emit","pos":"near","ew":"Stört Satellitennavigation (GPS, GLONASS), Satellitentelefone und Mobilfunk","designation":"R-330Zh Zhitel – EloKa-System gegen Satellitenkommunikation, Satellitennavigation und Mobilfunk","users":"Russland","weapons":["Störsender gegen GPS, Satellitentelefone (u. a. Iridium, Inmarsat) und Mobilfunk"],"protection":"Ungepanzerte Kabine.","weak":"Antennenmasten im Gelände, Stromerzeuger.","recog":"KamAZ- oder Ural-Kofferfahrzeug, im Betrieb mit mehreren Antennenmasten im Gelände.","confuse":["leer3","borisoglebsk"],"jtac":["GPS-Störung: JDAM und andere GPS-Waffen fliegen nur mit Trägheitsnavigation und werden ungenauer – Laser- bzw. Dual-Mode-Waffen bevorzugen.","Auch deine GPS-Geräte (Koordinaten, ATAK) können falsch anzeigen – Position plausibilisieren.","Steht einige km hinter der Front."],"vars":[{"v":null,"name":"R-330Zh Zhitel"}]},{"id":"zoopark","name":"Zoopark-1M","short":"ZOO","cat":"rad","wcls":"emit","pos":"near","ew":"Ortet anfliegende Granaten und Raketen per Radar und berechnet daraus die Feuerstellung","designation":"1L219M Zoopark-1M – Artillerieortungsradar auf MT-LBu: ortet Mörser-, Artillerie- und Raketengeschosse im Flug und berechnet die Feuerstellung","users":"Russland","weapons":["Ortungsradar – je nach Geschoss ca. 15–40 km Ortungsreichweite","Keine Waffen außer MG"],"protection":"MT-LBu – Splitterschutz; die Antenne ist ungeschützt.","weak":"Große Klappantenne; strahlt im Betrieb und ist dadurch ortbar.","recog":"MT-LBu-Kettenfahrgestell mit großer, aufklappbarer Radarantenne auf dem Dach.","confuse":["borisoglebsk"],"jtac":["Hochwertziel: lenkt das Gegenfeuer gegen deine Artillerie.","Antenne aufgeklappt heißt: in Betrieb. Steht einige km hinter der Front.","Splitter genügen gegen Antenne und Kabine."],"vars":[{"v":null,"name":"Zoopark-1M"}]}],"airNotes":{"wm_004_2s1":"Von oben bei der Bahnverladung: flache Panzerhaubitzen mit kleinem Turm hinten.","dr_014_2s1":"Drohnenbild: flache Panzerhaubitze mit kleinem Turm, rechts der Treffer.","dr_015_2s1":"Drohnenbild: getarnte Panzerhaubitze unter Netz, rechts der Treffer im Zielkreuz.","dr_021_2s3":"Drohne aus großer Höhe: Panzerhaubitzen in Stellung am Feldrand – nur Form und Rohr sind erkennbar.","dr_022_bm21":"Wärmebild: Lkw mit Raketenwerfer auf der Ladefläche hinter der Kabine.","wm_037_bm30":"Von oben: zwei 8×8-Fahrzeuge mit 12 dicken Rohren auf dem Heck.","dr_017_tos1a":"FPV-Wärmebild kurz vor dem Einschlag: großer Kastenwerfer auf Kettenfahrgestell.","dr_020_tos1a":"Drohnenbild: Kettenfahrzeug mit großem Kastenwerfer unter einem Drohnenschutzkäfig.","dr_016_zhitel":"Links am Boden die Antennenmasten, rechts aus der Drohne das markierte Kofferfahrzeug."},"curated":[["r-1","gen","Faustregel: Wie weit hinter der Front steht Rohrartillerie meist?",["Etwa ein Drittel bis die Hälfte ihrer Reichweite","Direkt an der Front","Immer an der Grenze ihrer Reichweite","Unabhängig vom Kaliber immer ca. 30 km"],"Die Artillerie will tief wirken, ohne selbst in Reichweite von Mörsern, Drohnen und Panzerabwehr zu stehen. Daraus ergibt sich grob ein Drittel bis die Hälfte der Reichweite – 122 mm also ca. 4–10 km, 152 mm ca. 8–15 km hinter der Front."],["r-2","gen","Welches dieser Systeme steht am nächsten an der Front?",["TOS-1A","BM-30 Smerch","2S7 Pion","Iskander-M"],"Der TOS-1A schießt nur ca. 6 km weit und muss deshalb 2–5 km hinter die Front – in Reichweite von CAS, Drohnen und Panzerabwehr."],["r-3","bm21","Ein BM-21 hat gerade eine Salve gefeuert. Was tut er als Nächstes?",["Er verlegt sofort, meist innerhalb weniger Minuten","Er bleibt in der Stellung und lädt dort nach","Er feuert sofort eine zweite volle Salve","Er gräbt sich ein"],"Raketenwerfer feuern die Salve in Sekunden und verlassen die Stellung sofort, weil Rauchwolke und Ortungsradare sie verraten. Nachgeladen wird abseits – im Nachladeraum ist er zusammen mit dem Nachladefahrzeug ein besseres Ziel."],["r-4","gen","Woran erkennst du eine Artillerie-Feuerstellung aus der Luft?",["Mehrere Geschütze aufgelockert in Linie oder Bogen, dazu Munitionsstapel, Tarnnetze, Erdwälle und Fahrspuren","Ein einzelnes Fahrzeug mitten auf der Straße","Fahrzeuge dicht an dicht in einer Kolonne","Nur an Funkantennen"],"Eine Batterie stand klassisch mit 4–6 Geschützen in einer Linie oder einem Bogen mit 50–150 m Abstand. Wegen der Drohnen stehen Geschütze heute oft einzeln und weit verteilt – Munitionsstapel, Erdwälle, Netze und frische Fahrspuren bleiben die Hinweise."],["r-5","gen","Was verrät eine feuernde Haubitze im Wärmebild?",["Heißes Rohr und Mündungsfeuer, warmer Boden vor der Mündung","Nichts – Rohrwaffen bleiben kalt","Nur der Motor","Nur die Bedienung"],"Rohr, Mündungsfeuer und der aufgewirbelte, erwärmte Boden vor der Mündung leuchten im Wärmebild noch Minuten nach dem Schießen – auch unter Tarnnetzen."],["r-6","iskander","Du siehst ein Iskander-Startfahrzeug. Was ist der nächste Schritt?",["Sofort melden: Time Sensitive Target mit höchster Priorität – Ziel bestätigen, Attrappen sind verbreitet","Erst nach der Mission melden","Ignorieren, keine Gefahr für Bodentruppen","Nur beobachten, nie bekämpfen"],"Iskander schießt bis ca. 500 km und hat nur ein kurzes Zeitfenster zwischen Stellungsbezug und Verlegen. Russland setzt Attrappen ein – das Ziel daher bestätigen."],["r-7","2s7","Warum steht beim 2S7 Pion immer ein Munitionsfahrzeug in der Nähe?",["Er hat nur wenige Schuss an Bord","Er braucht nach jedem Schuss Treibstoff","Es bringt die Bedienung zurück","Es stört Radare"],"Der 2S7 führt nur wenige 203-mm-Schuss mit, der Rest kommt vom Begleitfahrzeug. Wer das Munitionsfahrzeug trifft, legt die Kanone lahm."],["w-1","tos1a","Womit bekämpfst du einen TOS-1A am wirksamsten?",["Panzerabwehr-LFK oder Lenkbombe – und der Werfer mit 24 Raketen ist selbst ungeschützt","Nur mit einem Maschinengewehr","Gar nicht, er ist unverwundbar","Mit Nebel"],"Das Fahrgestell ist ein T-72 mit Zusatzpanzerung – dagegen helfen Hellfire, Brimstone, Maverick oder ein Volltreffer mit Lenkbombe. Der Werfer mit 24 Raketen ist kaum geschützt; ein Treffer dort führt zur Explosion."],["w-2","d30","Gegen eine eingegrabene D-30 mit Bedienung wirkt am besten …",["Splitterwirkung bzw. Airburst – Bombe mit Annäherungs- oder Zeitzünder, Raketen, Bordkanone","Panzerbrechende Hohlladung","Nebel","Nur ein Volltreffer mit 2000-lb-Bombe"],"Das Geschütz selbst ist robust, aber Bedienung, Richtmittel und Munition sind empfindlich. Splitter von oben erreichen auch Bedienung in Gräben."],["w-3","bm21","Wo erwischst du einen Raketenwerfer am ehesten?",["Im Bereitstellungs- bzw. Nachladeraum","In der Feuerstellung nach der Salve","Nur nachts an der Front","Auf dem Truppenübungsplatz"],"In der Feuerstellung bleibt er nur Sekunden bis Minuten. Im Bereitstellungs- oder Nachladeraum steht er länger, oft mit Nachladefahrzeug und Munition."],["w-4","gen","Warum lohnt es sich, Begleitfahrzeuge der Artillerie mitzubekämpfen?",["Ohne Munitions-, Nachlade- und Zugfahrzeuge ist das System schnell wirkungslos","Begleitfahrzeuge sind stärker gepanzert","Sie tragen die Feuerleitung der Division","Gar nicht – nur das Geschütz zählt"],"Panzerhaubitzen, gezogene Geschütze und Raketenwerfer hängen von Munitionsnachschub ab, gezogene Geschütze zusätzlich vom Zugmittel. Ungepanzerte Lkw sind leicht zu bekämpfen."],["e-1","zhitel","Ein Zhitel stört GPS in deinem Raum. Was bedeutet das für einen JDAM-Einsatz?",["Die Bombe fliegt nur mit Trägheitsnavigation und wird ungenauer – Laser- bzw. Dual-Mode-Waffe bevorzugen","Kein Einfluss – JDAM nutzt nur Laser","Die Bombe lässt sich gar nicht auslösen","Die Bombe trifft genauer"],"JDAM kombiniert GPS mit Trägheitsnavigation. Fällt GPS aus, driftet die Trägheitsnavigation – die Streuung wächst. Laser- und Dual-Mode-Waffen (z. B. GBU-12, GBU-54, LJDAM) sind davon nicht betroffen."],["e-2","gen","Die Position in deinem GPS-Gerät springt plötzlich um mehrere hundert Meter. Was tust du?",["Störung bzw. Täuschung annehmen: Position mit Karte, Gelände und Pod-Bild prüfen, bevor du Koordinaten durchgibst","Koordinate sofort durchgeben","Gerät neu starten und weitermachen","Nichts, das ist normal"],"GNSS-Störung oder -Täuschung (Spoofing) verfälscht Positionen. Eine falsche Eigen- oder Zielkoordinate kann zum Brudermord führen – Koordinaten immer plausibilisieren."],["e-3","borisoglebsk","Dein Funk zum Lfz wird gestört (Rauschen, Pfeifen). Was hilft?",["Ausweichfrequenz bzw. anderes Band (z. B. SATCOM), kurze Funksprüche, Brevity","Lauter sprechen","Funkgerät ausschalten und warten","Die neue Frequenz im Klartext ansagen"],"Störsender wie Borisoglebsk-2 wirken auf bestimmte Frequenzbereiche. Vorgeplante Ausweichfrequenzen und andere Übertragungswege helfen; kurze Funksprüche verringern die Angriffsfläche für Peilung."],["e-4","krasukha","Die Krasukha-4 stört Bordradare. Was bleibt für dich voll nutzbar?",["EO/IR-Pod und Laser","SAR-Radarbilder","Bodenradar (GMTI)","Das AWACS-Lagebild"],"Krasukha-4 stört Radare. Optische Sensoren, Wärmebild und Laser arbeiten in anderen Wellenlängen und sind davon nicht betroffen."],["e-5","leer3","Warum sind eingeschaltete Handys in der Stellung gefährlich?",["Leer-3 ortet sie und lenkt Artilleriefeuer auf die Position","Sie stören das Funkgerät","Sie leuchten im Wärmebild","Gar nicht"],"Die Orlan-10-Drohnen des Leer-3 arbeiten als falsche Funkzellen, erfassen Mobiltelefone und orten sie – die Positionen gehen an die Artillerie."],["e-6","zoopark","Eure Artillerie hat gefeuert, kurz danach kommt präzises Gegenfeuer. Welches System steckt wahrscheinlich dahinter?",["Ein Artillerieortungsradar wie der Zoopark-1M","Ein Krasukha-4","Ein Frühwarnradar Nebo-M","Ein TOS-1A"],"Ortungsradare erfassen die Geschossbahn im Flug und rechnen auf die Feuerstellung zurück – das Gegenfeuer kommt in Minuten."],["a-1","gen","Aus der Luft: Wie unterscheidest du eine Panzerhaubitze von einem Kampfpanzer?",["Großer Turm, sehr langes Rohr mit Mündungsbremse, oft erhöht; Munitionsstapel und -fahrzeuge in der Nähe","Gar nicht – sie sehen gleich aus","Panzerhaubitzen haben Räder","Am Tarnmuster"],"Panzerhaubitzen haben größere Türme, längere Rohre mit großer Mündungsbremse und stehen meist in Feuerstellung mit erhöhtem Rohr – oft mit Munition und Lkw daneben, weit hinter der Front."],["a-2","gen","Ein Kettenfahrzeug mit großem Kasten statt Turm – was ist es wahrscheinlich?",["TOS-1A","2S19 Msta-S","2S1 Gvozdika","BM-21 Grad"],"Der TOS-1A trägt auf dem T-72-Fahrgestell einen großen Kastenwerfer mit 24 Rohren statt eines Turms."],["a-3","d30","Wie erkennst du eine D-30 von oben?",["Drei sternförmig gespreizte Lafettenholme","Zwei Holme und ein Schutzschild","Vier Räder und ein Turm","An den Ketten"],"Die Dreibein-Lafette der D-30 ist einzigartig. 2A65 und 2A36 haben zwei gespreizte Holme und einen Schutzschild."]],"merk":[["Stellung und Reichweite",["Faustregel: Rohrartillerie steht etwa ein Drittel bis die Hälfte ihrer Reichweite hinter der Front.","Mörser, 2S9, 2S34, 2S4 und TOS: ca. 2–6 km. 122 mm (2S1, D-30, BM-21): ca. 4–10 km.","152 mm (2S3, 2S19, 2S5, 2A65, 2A36) und BM-27: ca. 8–15 km.","2S7 und BM-30/Tornado-S: ca. 15–40 km. Iskander: 50 km und mehr."]],["Zeitfenster",["Raketenwerfer: Salve in Sekunden, danach sofortiger Stellungswechsel – im Bereitstellungs- oder Nachladeraum bekämpfen.","Panzerhaubitzen: feuern und verlegen in wenigen Minuten (Shoot and scoot).","Gezogene Geschütze, 2S7 und 2S4: brauchen mehrere Minuten zum Abbau, gezogene zusätzlich ein Zugmittel – längeres Zeitfenster."]],["Erkennen aus der Luft",["Feuerstellung: Geschütze aufgelockert in Linie oder Bogen bzw. einzeln verteilt, Munitionsstapel, Erdwälle, Tarnnetze, frische Fahrspuren.","Feuerbereitschaft: Rohr erhöht, Sporn bzw. Holme gespreizt, Werfer aufgerichtet.","Abschuss: Mündungsfeuer, Staub und Rauch; Raketenwerfer mit großer Rauchwolke.","Im Wärmebild: heiße Rohre, Motoren und Abgase, warmer Boden vor der Mündung."]],["Wirkmittel",["Panzerhaubitzen: leicht gepanzert – Hellfire, Maverick, kleine Lenkbomben, 30 mm; Munition an Bord sorgt für Folgeexplosionen.","Gezogene Geschütze, Mörser, Raketenwerfer: Splitter bzw. Airburst gegen Bedienung, Munition und Fahrzeuge.","TOS-1A: KPz-Fahrgestell – Panzerabwehrwaffen; der Werfer selbst ist ungeschützt.","Munitions-, Nachlade- und Zugfahrzeuge mitbekämpfen."]],["EloKa",["GPS-Störung (Zhitel): GPS-Waffen werden ungenauer – Laser oder Dual-Mode bevorzugen; eigene Koordinaten plausibilisieren.","Funkstörung (Borisoglebsk-2): Ausweichfrequenz, anderes Band, kurze Funksprüche.","Radarstörung (Krasukha-4): SAR- und GMTI-Bilder gestört – EO/IR und Laser nicht.","Mobilfunk (Leer-3): Handys werden geortet und zu Zielen.","Artillerieortungsradar (Zoopark-1M): lenkt das Gegenfeuer – Hochwertziel."]]],"cmpDesc":"Ähnliche Systeme nebeneinander – z. B. 2S1 oder 2S34, BM-27 oder BM-30","compare":[{"a":{"fam":"2s1","f":"wm_001_2s1","lab":"2S1 Gvozdika","pins":[[55,12,"122-mm-Rohr mit Rauchabsauger und Mündungsbremse (hier unter der Schutzhülle)"],[20,75,"Sieben Laufrollen"]],"i":0},"b":{"fam":"2s34","f":"wm_016_2s34","lab":"2S34 Khosta","pins":[[16,45,"Glattes 120-mm-Rohr ohne Mündungsbremse und Rauchabsauger"],[60,75,"Gleiche Wanne mit sieben Laufrollen"]],"i":0},"key":"Gleiche Wanne mit sieben Laufrollen – den Unterschied macht das Rohr: Die 2S1 hat Mündungsbremse und Rauchabsauger, die 2S34 ein glattes Rohr ohne beides."},{"a":{"fam":"2s9","f":"wm_014_2s9","lab":"2S9 Nona-S","pins":[[47,30,"Flacher Turm mit 120-mm-Rohr"],[25,70,"Kleine Luftlande-Wanne mit sechs kleinen Laufrollen"]],"i":0},"b":{"fam":"2s34","f":"wm_016_2s34","lab":"2S34 Khosta","pins":[[16,45,"120-mm-Rohr ohne Mündungsbremse"],[60,75,"Große 2S1-Wanne mit sieben Laufrollen"]],"i":0},"key":"Beide verschießen 120 mm aus einem Rohr ohne Mündungsbremse. Laufrollen zählen: sechs kleine = 2S9 auf der Luftlande-Wanne, sieben = 2S34 auf der 2S1-Wanne."},{"a":{"fam":"2s3","f":"wm_005_2s3","lab":"2S3 Akatsiya","pins":[[25,30,"Großer, runder und gewölbter Turm"],[92,36,"Rohr mit Zweikammer-Mündungsbremse"],[35,75,"Sechs große Laufrollen"]],"i":0},"b":{"fam":"2s19","f":"wm_061_2s19","lab":"2S19 Msta-S","pins":[[70,48,"Riesiger, kastenförmiger Turm mit flachen Seiten"],[38,30,"Sehr langes Rohr"],[75,88,"Kampfpanzer-Laufwerk"]],"i":0},"key":"Turmform: rund und gewölbt = 2S3, riesig und kastenförmig mit flachen Seiten = 2S19. Das Rohr der 2S19 ist deutlich länger."},{"a":{"fam":"2s5","f":"wm_009_2s5","lab":"2S5 Giatsint-S","pins":[[6,46,"Mündungsbremse an einem langen, schlanken 152-mm-Rohr"],[78,52,"Offene Lafette am Heck – kein Turm"]],"i":0},"b":{"fam":"2s7","f":"wm_011_2s7","lab":"2S7 Pion","pins":[[57,10,"Sehr dickes 203-mm-Rohr ohne Mündungsbremse"],[12,68,"Großer Sporn am Heck"]],"i":0},"key":"An der Mündung entscheiden: 2S5 mit Mündungsbremse an einem langen, schlanken Rohr, 2S7 mit sehr dickem Rohr ohne Mündungsbremse. Die 2S7 ist insgesamt deutlich größer."},{"a":{"fam":"d30","f":"wm_020_d30","lab":"D-30","pins":[[30,72,"Drei Holme sternförmig gespreizt"],[48,66,"Räder in Feuerstellung angehoben"]],"i":0},"b":{"fam":"2a65","f":"wm_025_2a65","lab":"2A65 Msta-B","pins":[[85,82,"Zwei gespreizte Holme"],[62,62,"Schutzschild – steht auf den Rädern"]],"i":0},"key":"Holme zählen: drei sternförmig = D-30 (Räder in der Luft, 360° Seitenrichtbereich), zwei gespreizt = 2A65 (steht auf den Rädern, mit Schutzschild)."},{"a":{"fam":"2a65","f":"wm_025_2a65","lab":"2A65 Msta-B","pins":[[40,52,"Kurze, kompakte Mündungsbremse"],[85,82,"Spreizlafette mit zwei Holmen"]],"i":0},"b":{"fam":"2a36","f":"wm_027_2a36","lab":"2A36 Giatsint-B","pins":[[24,8,"Lange, mehrfach geschlitzte Mündungsbremse"],[35,30,"Sehr langes Rohr"],[45,65,"Lafette mit Schutzschild"]],"i":0},"key":"Mündungsbremse ansehen: lang und vielfach geschlitzt = 2A36, kurz und kompakt = 2A65. Das Rohr der 2A36 ist sichtbar länger."},{"a":{"fam":"bm21","f":"wm_036_bm21","lab":"BM-21 Grad","pins":[[22,33,"40 dünne Rohre in vier Reihen"],[18,80,"Ural 6×6 – drei Achsen"]],"i":0},"b":{"fam":"bm27","f":"wm_040_bm27","lab":"BM-27 Uragan","pins":[[40,37,"16 dicke Rohre"],[33,68,"ZIL-135 – vier Achsen"]],"i":0},"key":"Rohre und Achsen zählen: 40 dünne Rohre auf drei Achsen = BM-21, 16 dicke Rohre auf vier Achsen = BM-27."},{"a":{"fam":"bm27","f":"wm_040_bm27","lab":"BM-27 Uragan","pins":[[40,37,"16 Rohre"],[78,43,"Eine breite Kabine"],[33,68,"Die beiden mittleren Achsen dicht beieinander"]],"i":0},"b":{"fam":"bm30","f":"wm_038_bm30","lab":"BM-30 Smerch","pins":[[60,45,"12 dickere Rohre"],[13,47,"Zwei getrennte Kabinen"],[53,70,"Achsen paarweise – große Lücke in der Mitte"]],"i":0},"key":"Achsen und Kabine: BM-27 (ZIL-135) mit einer breiten Kabine und den mittleren Achsen dicht beieinander, BM-30 (MAZ-543) mit zwei getrennten Kabinen und großer Lücke zwischen 2. und 3. Achse."},{"a":{"fam":"tos1a","f":"wm_043_tos1a","lab":"TOS-1A Solntsepyok","pins":[[60,30,"Großer Kastenwerfer statt Turm"],[55,63,"T-72-Kettenfahrgestell"]],"i":0},"b":{"fam":"tos2","f":"wm_046_tos2","lab":"TOS-2 Tosochka","pins":[[72,40,"Kastenwerfer auf dem Heck"],[40,35,"Eigener Ladekran"],[12,62,"Radfahrgestell"]],"i":0},"key":"Ketten = TOS-1A (Kastenwerfer auf T-72-Fahrgestell), Räder mit eigenem Ladekran = TOS-2."},{"a":{"fam":"bm30","f":"wm_038_bm30","lab":"BM-30 Smerch","pins":[[60,45,"Offene Rohrbündel"],[13,47,"Zwei getrennte Kabinen"]],"i":0},"b":{"fam":"iskander","f":"wm_048_iskander","lab":"Iskander, Startfahrzeug","pins":[[40,40,"Geschlossene Abdeckung – keine Rohre sichtbar"],[88,45,"Eine Kabine vorn"]],"i":0},"key":"Rohre sichtbar = BM-30. Glatte, geschlossene Abdeckung über der Ladefläche = Iskander."}],"app":"2B","groups":[["Panzerhaubitzen",["2s1","2s3","2s5","2s19","2s7"]],["Mörser und Mörserhaubitzen",["2s9","2s34","2s4","2b11"]],["Gezogene Artillerie",["d30","2a65","2a36"]],["Raketenwerfer und Raketen",["bm21","bm27","bm30","tos1a","tos2","iskander"]],["EloKa und Ortung",["krasukha","borisoglebsk","leer3","zhitel","zoopark"]]],"links":{"guide":"https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS","brevity":"../brevity/","series":[["dem Pod-Trainer","../pods/"],["dem Waffen-Trainer","../waffen/"],["dem Manöver-Trainer","../manoever/"],["dem Flugabwehr-Trainer","../flugabwehr/"],["dem Brevity-Trainer","../brevity/"],["dem Sensor-to-Shooter-Guide","https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS"]]}};
+const IMG = {
+"2s1": ["img/2s1-0.webp", "img/2s1-1.webp", "img/2s1-2.webp", "img/2s1-3.webp", "img/2s1-4.webp", "img/2s1-5.webp"],
+"2s3": ["img/2s3-0.webp", "img/2s3-1.webp", "img/2s3-2.webp", "img/2s3-3.webp"],
+"2s5": ["img/2s5-0.webp", "img/2s5-1.webp"],
+"2s19": ["img/2s19-0.webp", "img/2s19-1.webp", "img/2s19-2.webp", "img/2s19-3.webp"],
+"2s7": ["img/2s7-0.webp", "img/2s7-1.webp", "img/2s7-2.webp"],
+"2s9": ["img/2s9-0.webp", "img/2s9-1.webp"],
+"2s34": ["img/2s34-0.webp", "img/2s34-1.webp"],
+"2s4": ["img/2s4-0.webp", "img/2s4-1.webp", "img/2s4-2.webp"],
+"d30": ["img/d30-0.webp", "img/d30-1.webp", "img/d30-2.webp"],
+"2a65": ["img/2a65-0.webp", "img/2a65-1.webp", "img/2a65-2.webp"],
+"2a36": ["img/2a36-0.webp", "img/2a36-1.webp", "img/2a36-2.webp"],
+"2b11": ["img/2b11-0.webp", "img/2b11-1.webp", "img/2b11-2.webp"],
+"bm21": ["img/bm21-0.webp", "img/bm21-1.webp", "img/bm21-2.webp", "img/bm21-3.webp"],
+"bm27": ["img/bm27-0.webp", "img/bm27-1.webp", "img/bm27-2.webp"],
+"bm30": ["img/bm30-0.webp", "img/bm30-1.webp", "img/bm30-2.webp"],
+"tos1a": ["img/tos1a-0.webp", "img/tos1a-1.webp", "img/tos1a-2.webp", "img/tos1a-3.webp", "img/tos1a-4.webp"],
+"tos2": ["img/tos2-0.webp"],
+"iskander": ["img/iskander-0.webp", "img/iskander-1.webp", "img/iskander-2.webp"],
+"krasukha": ["img/krasukha-0.webp", "img/krasukha-1.webp"],
+"borisoglebsk": ["img/borisoglebsk-0.webp", "img/borisoglebsk-1.webp"],
+"leer3": ["img/leer3-0.webp", "img/leer3-1.webp"],
+"zhitel": ["img/zhitel-0.webp", "img/zhitel-1.webp", "img/zhitel-2.webp"],
+"zoopark": ["img/zoopark-0.webp", "img/zoopark-1.webp"]
+};
+const IMETA = {"2s1":[{"f":"wm_001_2s1","v":null,"e":null,"air":false,"ask":null},{"f":"wm_002_2s1","v":null,"e":null,"air":false,"ask":null},{"f":"wm_003_2s1","v":null,"e":null,"air":false,"ask":null},{"f":"wm_004_2s1","v":null,"e":null,"air":true,"ask":null},{"f":"dr_014_2s1","v":null,"e":null,"air":true,"ask":null},{"f":"dr_015_2s1","v":null,"e":null,"air":true,"ask":null}],"2s3":[{"f":"wm_005_2s3","v":null,"e":null,"air":false,"ask":null},{"f":"wm_006_2s3","v":null,"e":null,"air":false,"ask":null},{"f":"wm_007_2s3","v":null,"e":null,"air":false,"ask":null},{"f":"dr_021_2s3","v":null,"e":null,"air":true,"ask":null}],"2s5":[{"f":"wm_009_2s5","v":null,"e":null,"air":false,"ask":null},{"f":"wm_010_2s5","v":null,"e":null,"air":false,"ask":null}],"2s19":[{"f":"wm_061_2s19","v":null,"e":null,"air":false,"ask":null},{"f":"wm_060_2s19","v":null,"e":null,"air":false,"ask":null},{"f":"wm_062_2s19","v":null,"e":null,"air":false,"ask":null},{"f":"wm_063_2s19","v":null,"e":null,"air":false,"ask":null}],"2s7":[{"f":"wm_011_2s7","v":null,"e":null,"air":false,"ask":null},{"f":"wm_012_2s7","v":null,"e":null,"air":false,"ask":null},{"f":"wm_013_2s7","v":null,"e":null,"air":false,"ask":null}],"2s9":[{"f":"wm_014_2s9","v":null,"e":null,"air":false,"ask":null},{"f":"wm_015_2s9","v":null,"e":null,"air":false,"ask":null}],"2s34":[{"f":"wm_016_2s34","v":null,"e":null,"air":false,"ask":null},{"f":"wm_017_2s34","v":null,"e":null,"air":false,"ask":null}],"2s4":[{"f":"wm_023_2s4","v":null,"e":null,"air":false,"ask":null},{"f":"wm_018_2s4","v":null,"e":null,"air":false,"ask":null},{"f":"wm_019_2s4","v":null,"e":null,"air":false,"ask":null}],"d30":[{"f":"wm_020_d30","v":null,"e":null,"air":false,"ask":null},{"f":"wm_021_d30","v":null,"e":null,"air":false,"ask":null},{"f":"wm_030_d30","v":null,"e":null,"air":false,"ask":null}],"2a65":[{"f":"wm_025_2a65","v":null,"e":null,"air":false,"ask":null},{"f":"wm_024_2a65","v":null,"e":null,"air":false,"ask":null},{"f":"wm_026_2a65","v":null,"e":null,"air":false,"ask":null}],"2a36":[{"f":"wm_027_2a36","v":null,"e":null,"air":false,"ask":null},{"f":"wm_028_2a36","v":null,"e":null,"air":false,"ask":null},{"f":"wm_029_2a36","v":null,"e":null,"air":false,"ask":null}],"2b11":[{"f":"wm_032_2b11","v":null,"e":null,"air":false,"ask":null},{"f":"wm_031_2b11","v":null,"e":null,"air":false,"ask":null},{"f":"wm_033_2b11","v":null,"e":null,"air":false,"ask":null}],"bm21":[{"f":"wm_036_bm21","v":null,"e":null,"air":false,"ask":null},{"f":"wm_034_bm21","v":null,"e":null,"air":false,"ask":null},{"f":"wm_035_bm21","v":null,"e":null,"air":false,"ask":null},{"f":"dr_022_bm21","v":null,"e":null,"air":true,"ask":null}],"bm27":[{"f":"wm_040_bm27","v":null,"e":null,"air":false,"ask":null},{"f":"wm_041_bm27","v":null,"e":null,"air":false,"ask":null},{"f":"wm_042_bm27","v":null,"e":null,"air":false,"ask":null}],"bm30":[{"f":"wm_038_bm30","v":null,"e":null,"air":false,"ask":null},{"f":"wm_039_bm30","v":null,"e":null,"air":false,"ask":null},{"f":"wm_037_bm30","v":null,"e":null,"air":true,"ask":null}],"tos1a":[{"f":"wm_043_tos1a","v":null,"e":null,"air":false,"ask":null},{"f":"wm_044_tos1a","v":null,"e":null,"air":false,"ask":null},{"f":"wm_045_tos1a","v":null,"e":null,"air":false,"ask":null},{"f":"dr_017_tos1a","v":null,"e":null,"air":true,"ask":null},{"f":"dr_020_tos1a","v":null,"e":null,"air":true,"ask":null}],"tos2":[{"f":"wm_046_tos2","v":null,"e":null,"air":false,"ask":null}],"iskander":[{"f":"wm_048_iskander","v":null,"e":null,"air":false,"ask":null},{"f":"wm_047_iskander","v":null,"e":null,"air":false,"ask":null},{"f":"wm_049_iskander","v":null,"e":null,"air":false,"ask":null}],"krasukha":[{"f":"wm_050_krasukha","v":null,"e":null,"air":false,"ask":null},{"f":"wm_051_krasukha","v":null,"e":null,"air":false,"ask":null}],"borisoglebsk":[{"f":"wm_053_borisoglebsk","v":null,"e":null,"air":false,"ask":null},{"f":"wm_052_borisoglebsk","v":null,"e":null,"air":false,"ask":null}],"leer3":[{"f":"wm_054_leer3","v":null,"e":null,"air":false,"ask":null},{"f":"wm_055_leer3","v":null,"e":null,"air":false,"ask":null}],"zhitel":[{"f":"wm_058_zhitel","v":null,"e":null,"air":false,"ask":null},{"f":"wm_059_zhitel","v":null,"e":null,"air":false,"ask":null},{"f":"dr_016_zhitel","v":null,"e":null,"air":true,"ask":null}],"zoopark":[{"f":"wm_057_zoopark","v":null,"e":null,"air":false,"ask":null},{"f":"wm_056_zoopark","v":null,"e":null,"air":false,"ask":null}]};
+const ARS = {"2s1":[1.5,1.5441,1.5,1.3333,2.1159,2.1159],"2s3":[1.5,1.5,1.5,1.8381],"2s5":[1.5,1.5],"2s19":[1.5,1.576,1.5,1.5],"2s7":[1.5,1.4947,1.5027],"2s9":[1.5,1.5],"2s34":[1.5441,1.5441],"2s4":[1.5441,1.5,1.5],"d30":[1.5,1.4781,1.4],"2a65":[1.5108,1.5,1.5054],"2a36":[1.5,1.5054,1.5],"2b11":[1.5,1.5,1.5],"bm21":[1.3333,1.3333,1.6438,2.3077],"bm27":[1.3333,1.5,1.5],"bm30":[1.6935,1.5789,1.4103],"tos1a":[1.4103,1.5,1.4225,1.5135,0.8873],"tos2":[1.7797],"iskander":[1.5,1.5027,1.5],"krasukha":[1.5,1.5],"borisoglebsk":[1.4103,1.4103],"leer3":[1.5356,1.5],"zhitel":[1.5,1.5,1.7759],"zoopark":[1.3333,1.5]};
+const PINS = {"2s1":{"0":[[40,22,"Flacher Turm hinten auf der Wanne, 122-mm-Rohr mit Rauchabsauger und Mündungsbremse"],[20,75,"Sieben Laufrollen, flache schwimmfähige Wanne"]]},"2s3":{"0":[[25,30,"Großer, runder Turm im hinteren Teil"],[52,38,"Rauchabsauger etwa in der Rohrmitte"],[92,36,"152-mm-Rohr mit Zweikammer-Mündungsbremse, ragt weit über den Bug"],[35,75,"Sechs große Laufrollen"]]},"2s5":{"0":[[22,48,"Langes 152-mm-Rohr offen auf dem Fahrzeug – kein Turm"],[78,52,"Offene Lafette am Heck, die Bedienung steht frei"],[86,62,"Heck mit Sporn – in Feuerstellung abgesenkt"]]},"2s19":{"0":[[70,48,"Sehr großer, kastenförmiger Turm"],[38,30,"Langes 152-mm-Rohr mit Rauchabsauger und Mündungsbremse"],[75,88,"Kampfpanzer-Laufwerk mit sechs Laufrollen"]]},"2s7":{"0":[[45,20,"Riesiges 203-mm-Rohr ohne Mündungsbremse, offen auf dem Heck"],[12,68,"Heck mit großem Sporn"],[52,52,"Kabine vorn über die ganze Breite"]]},"2s9":{"0":[[47,30,"Flacher Turm mit 120-mm-Rohr ohne Mündungsbremse"],[25,70,"Kleine Luftlande-Wanne (BTR-D) mit sechs kleinen Laufrollen"]]},"2s34":{"0":[[55,37,"Nona-artiger Turm mit 120-mm-Rohr"],[16,45,"Rohr ohne Mündungsbremse und Rauchabsauger – beim 2S1 mit beidem"],[60,75,"2S1-Wanne mit sieben Laufrollen"]]},"2s4":{"0":[[55,34,"240-mm-Mörserrohr liegt in Marschlage über dem Fahrzeug"],[10,38,"Am Heck angelenkte Grundplatte – in Feuerstellung schwenkt der Mörser nach hinten auf den Boden"],[45,72,"Langes Kettenfahrgestell"]]},"d30":{"0":[[30,72,"Drei Lafettenholme sternförmig gespreizt – 360° Seitenrichtbereich"],[52,42,"122-mm-Rohr mit Mündungsbremse"],[48,66,"Räder in Feuerstellung angehoben"]]},"2a65":{"0":[[40,52,"Langes 152-mm-Rohr mit Mündungsbremse"],[62,62,"Schutzschild und Lafette mit großen Rädern"],[85,82,"Zwei gespreizte Lafettenholme (Spreizlafette)"]]},"2a36":{"0":[[24,8,"Lange, mehrfach geschlitzte Mündungsbremse"],[35,30,"Sehr langes Rohr – deutlich länger als bei der 2A65"],[45,65,"Lafette mit Schutzschild"]]},"2b11":{"0":[[48,50,"120-mm-Mörserrohr"],[33,82,"Zweibein"],[62,94,"Runde Grundplatte am Boden"]]},"bm21":{"0":[[22,33,"40 Rohre 122 mm in vier Reihen hinter der Kabine"],[60,45,"Ural-Lkw 6×6"]]},"bm27":{"0":[[40,37,"16 dicke Rohre 220 mm"],[33,68,"ZIL-135: die beiden mittleren Achsen dicht beieinander"]]},"bm30":{"0":[[60,45,"12 dicke Rohre 300 mm in Marschlage"],[13,47,"MAZ-543 mit zwei getrennten Kabinen links und rechts vom Motor"],[45,75,"Vier gleich große Achsen"]]},"tos1a":{"0":[[60,30,"Großer Kastenwerfer statt Turm (24 Rohre)"],[55,63,"T-72-Fahrgestell mit sechs großen Laufrollen"]]},"tos2":{"0":[[72,40,"Kastenwerfer auf dem Heck"],[40,35,"Eigener Ladekran"],[12,62,"Gepanzertes Ural-Radfahrgestell 6×6"]]},"iskander":{"0":[[40,40,"Lange Ladefläche mit Abdeckung – darunter zwei Raketen"],[80,48,"MZKT-7930: Kabine vorn, vier Achsen"]]},"krasukha":{"0":[[35,32,"Parabolantenne über dem Kofferaufbau"],[24,10,"Teleskopmast mit Antennen"],[45,65,"Großer Kofferaufbau auf 8×8-Fahrgestell"]]},"borisoglebsk":{"0":[[70,25,"Teleskopmast mit Antennengruppen"],[45,82,"MT-LBu-Kettenfahrgestell"]]},"leer3":{"0":[[55,40,"KamAZ-Kofferaufbau – ohne Orlan-10-Drohne kaum von anderen Führungs- und EloKa-Fahrzeugen zu unterscheiden"],[79,10,"Antenne auf Mast"]]},"zhitel":{"0":[[70,12,"Antennengruppe auf Teleskopmast"],[60,50,"KamAZ-Kofferaufbau"]]},"zoopark":{"0":[[78,25,"Große Radarantenne aufgeklappt – in Betrieb"],[50,88,"MT-LBu-Kettenfahrgestell"]]}};
+const LEIT = {};
+const APP = DATA.app;
+const FAMS = DATA.families;
+const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
+const CATS = DATA.cats;
+const ROUND_LEN = 12;
+const GROUPS = DATA.groups;
+const IS2C = APP === '2C';
+const MODES = IS2C ? {
+  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','wez','rwr','elem','var','wpn','cur']},
+  img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
+  air:  {name:'Aus der Luft erkennen', kinds:['air','cat'], desc:'Drohnen- und Pod-Bilder, auch Wärmebild – dazu die Systemart'},
+  thr:  {name:'Bekämpfungszone', kinds:['wez','cur'], tags:['t-'], desc:'Wie weit und wie hoch reicht welches System?'},
+  rwr:  {name:'Radarwarner und Gegenmaßnahmen', kinds:['rwr','cur'], tags:['r-'], desc:'Warnt dein RWR? Flares oder Chaff?'},
+  elem: {name:'Radare und Elemente', kinds:['elem','cur'], tags:['e-'], desc:'Radar erkannt = System erkannt: 30N6, 92N6, 9S18 …'},
+  wpn:  {name:'Wirkmittel und Taktik', kinds:['wpn','cur'], tags:['w-'], desc:'Stand-off, SEAD/DEAD oder Lenkbombe – was passt?'},
+  var:  {name:'Versionen unterscheiden', kinds:['var'], desc:'Tor-M1 oder M2, Buk-M1/M1-2, M2 oder M3, Pantsir-S1 oder SM'},
+  conf: {name:'Verwechslungsgefahr', kinds:['img','var'], confusion:true, desc:'Bilder nur gegen ähnliche Systeme, z. B. S-300V und S-300P, Buk und Tor'},
+} : {
+  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','rng','pos','wpn','ew','cur']},
+  img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
+  air:  {name:'Art erkennen – auch aus der Luft', kinds:['air','cat','cur'], tags:['a-'], desc:'Panzerhaubitze, Geschütz, Raketenwerfer – auch auf Drohnenbildern'},
+  rng:  {name:'Reichweite und Stellung', kinds:['rng','pos','cur'], tags:['r-'], desc:'Wie weit schießt sie, wie weit hinter der Front steht sie?'},
+  wpn:  {name:'Wirkmittel und Zeitfenster', kinds:['wpn','cur'], tags:['w-'], desc:'Welche Waffe, wann zuschlagen, was mitbekämpfen?'},
+  ew:   {name:'EloKa und Ortung', kinds:['ew','cur'], tags:['e-'], desc:'Was stören Zhitel, Krasukha, Borisoglebsk und Leer-3?'},
+  conf: {name:'Verwechslungsgefahr', kinds:['img'], confusion:true, desc:'Bilder nur gegen ähnliche Systeme, z. B. 2S1 und 2S34'},
+};
+const UNITS = [];
+const UNIT = {};
+FAMS.forEach(f => f.vars.forEach((u, k) => { u.fam = f.id; u.k = k; u.key = f.vars.length > 1 ? `${f.id}:${u.v}` : f.id; UNITS.push(u); if (f.vars.length > 1) UNIT[u.key] = {f, u}; }));
+const multi = f => f.vars.length > 1;
+const pinsFor = (fid, i) => (PINS[fid] || {})[i] || null;
+const meta = (fid, i) => (IMETA[fid] || [])[i] || {};
+const isAir = (fid, i) => !!meta(fid, i).air;
+const elemOf = (fid, i) => { const e = meta(fid, i).e; return e && DATA.elems && DATA.elems[fid] ? DATA.elems[fid][e] : null; };
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const imgSrc = (fid, i) => IMG[fid][i];
+const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
+
+/* ---------- state & persistence ---------- */
+const KEY = DATA.key;
+const blank = () => ({v:1, updated:0, fam:{}, q:{}, flags:{}, recent:[], lastImg:{}, answered:0, correct:0, annoOpen:false});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+let remote = null, syncLabel = 'Nur auf diesem Gerät gespeichert';
+let pushTimer = null;
+function save(){
+  S.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (remote){ clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 1200); }
+}
+async function pushRemote(){
+  if (!remote) return;
+  try { await remote.set(JSON.parse(JSON.stringify(S))); }
+  catch(e){ if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) { remote = null; syncLabel = 'Nur auf diesem Gerät gespeichert'; } }
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc('data/users/' + id + '/progress');
+    const snap = await ref.get();
+    remote = ref;
+    syncLabel = 'Fortschritt wird geräteübergreifend gespeichert';
+    if (snap.exists){
+      const r = JSON.parse(JSON.stringify(snap.data() || {}));
+      if ((r.updated || 0) > (S.updated || 0)){
+        S = Object.assign(blank(), r);
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+        if (view === 'home' || view === 'stats' || view === 'cards') render();
+      } else if (S.updated) pushRemote();
+    } else if (S.updated) pushRemote();
+    if (view === 'stats') render();
+  } catch(e){ remote = null; }
+})();
+
+/* ---------- question bank ---------- */
+function buildBank(){
+  const bank = [];
+  for (const f of FAMS){
+    const imgs = IMG[f.id] || [];
+    imgs.forEach((_, i) => bank.push({id:`${isAir(f.id, i) ? 'air' : 'img'}:${f.id}:${i}`, kind:isAir(f.id, i) ? 'air' : 'img', fam:f.id, i}));
+    if (multi(f)) imgs.forEach((_, i) => { if (meta(f.id, i).v && !isAir(f.id, i)) bank.push({id:`var:${f.id}:${i}`, kind:'var', fam:f.id, i}); });
+    bank.push({id:`cat:${f.id}`, kind:'cat', fam:f.id});
+    bank.push({id:`wpn:${f.id}`, kind:'wpn', fam:f.id});
+    if (IS2C){
+      f.vars.forEach((u, k) => {
+        if (u.wez) bank.push({id:`wez:${f.id}:${k}`, kind:'wez', fam:f.id, k});
+        if (u.rwr) bank.push({id:`rwr:${f.id}:${k}`, kind:'rwr', fam:f.id, k});
+      });
+      imgs.forEach((_, i) => { if (elemOf(f.id, i) && !isAir(f.id, i)) bank.push({id:`elem:${f.id}:${i}`, kind:'elem', fam:f.id, i}); });
+    } else {
+      if (f.rng) bank.push({id:`rng:${f.id}`, kind:'rng', fam:f.id});
+      bank.push({id:`pos:${f.id}`, kind:'pos', fam:f.id});
+      if (f.ew) bank.push({id:`ew:${f.id}`, kind:'ew', fam:f.id});
+    }
+  }
+  for (const [id, fam, q, opts, ex] of DATA.curated) bank.push({id, kind:'cur', fam, q, opts, ex});
+  return bank;
+}
+const BANK = buildBank();
+
+function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+function weight(q, prevFam){
+  const fa = famAcc(q.fam);
+  const weak = fa === null ? 0.45 : 1 - fa;
+  const s = S.q[q.id];
+  let w = (1 + 2 * weak) * (s ? Math.max(0.25, 1 + 1.6 * (s.w / Math.max(1, s.c + s.w)) - 0.08 * Math.min(s.c, 6)) : 1.35);
+  if (S.recent.includes(q.id)) w *= 0.12;
+  if (q.fam === prevFam) w *= 0.25;
+  if (q.kind === 'img') w *= 0.9;
+  if (q.kind === 'var' || q.kind === 'cat' || q.kind === 'elem') w *= 0.8;
+  return w;
+}
+function poolFor(mode){
+  const M = MODES[mode];
+  let pool = BANK.filter(q => M.kinds.includes(q.kind));
+  if (M.tags) pool = pool.filter(q => q.kind !== 'cur' || M.tags.some(t => q.id.startsWith(t)));
+  else pool = pool.filter(q => q.kind !== 'cur' || mode === 'mix');
+  if (M.confusion) pool = pool.filter(q => FAM[q.fam] && FAM[q.fam].confuse.length);
+  return pool;
+}
+function pickRound(mode){
+  const pool = poolFor(mode);
+  const out = []; let prevFam = null;
+  const n = Math.min(ROUND_LEN, pool.length);
+  const usedImgFam = {};
+  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'air' || q.kind === 'elem';
+  while (out.length < n && pool.length){
+    const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
+    let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
+    while (k < ws.length - 1 && (r -= ws[k]) > 0) k++;
+    const q = pool.splice(k, 1)[0];
+    if (isImg(q)) usedImgFam[q.fam] = true;
+    out.push(q); prevFam = q.fam;
+  }
+  return out;
+}
+
+/* distractor helpers */
+const ALIKE = DATA.alike || [];
+function alikeOf(fid, i){
+  const e = i == null ? null : meta(fid, i).e;
+  if (!e) return [];
+  return ALIKE.flatMap(p => p.a[0] === fid && p.a[1] === e ? [{g:p.b[0], k:p.b[1], note:p.note}] : p.b[0] === fid && p.b[1] === e ? [{g:p.a[0], k:p.a[1], note:p.note}] : []);
+}
+const alikeNote = al => al.length ? ' ' + al.map(x => x.note).join(' ') : '';
+function nameDistractors(f, strict, excl = []){
+  const pool = FAMS.filter(x => x.id !== f.id && !excl.includes(x.id));
+  f = {...f, confuse:f.confuse.filter(id => !excl.includes(id))};
+  const conf = shuffle(f.confuse.map(id => FAM[id]).filter(Boolean));
+  const same = shuffle(pool.filter(x => x.cat === f.cat && !f.confuse.includes(x.id)));
+  const rest = shuffle(pool.filter(x => x.cat !== f.cat && !f.confuse.includes(x.id)));
+  const list = strict ? [...conf, ...same, ...rest] : [...conf.slice(0, 2), ...shuffle([...conf.slice(2), ...same, ...rest])];
+  return list.slice(0, 3).map(x => x.name);
+}
+function varDistractors(f, u){
+  const own = f.vars.filter(x => x !== u).map(x => x.name);
+  const other = shuffle(f.confuse.flatMap(id => FAM[id].vars.map(x => x.name)));
+  return uniq([...own, ...other]).slice(0, 3);
+}
+function catAlternatives(f){
+  const excl = [f.cat, ...(DATA.catExcl[f.cat] || []), ...(DATA.catX[f.id] || [])];
+  return shuffle(DATA.catOrder.filter(c => !excl.includes(c))).slice(0, 3).map(c => CATS[c].label);
+}
+const far = (a, b, k) => Math.max(a, b) / Math.max(0.1, Math.min(a, b)) >= k;
+function rngDistractors(f){
+  const c = FAMS.filter(x => x.id !== f.id && x.rng && far(x.rngKm, f.rngKm, 1.35));
+  return uniq(shuffle(c).map(x => x.rng)).filter(t => t !== f.rng).slice(0, 3);
+}
+function wezDistractors(u){
+  const c = UNITS.filter(x => x !== u && x.wez && (far(x.rKm, u.rKm, 1.45) || far(x.hKm, u.hKm, 1.45)));
+  return uniq(shuffle(c).map(x => x.wez)).filter(t => t !== u.wez).slice(0, 3);
+}
+function elemLabel(fid, key){ const E = DATA.elems[fid][key]; return `${FAM[fid].name} – ${E.name}`; }
+function elemDistractors(fid, key, excl = []){
+  const E = DATA.elems[fid][key];
+  const all = [];
+  for (const [g, m] of Object.entries(DATA.elems)) for (const [k, x] of Object.entries(m)) if (!(g === fid && k === key) && !excl.some(a => a.g === g && a.k === k)) all.push({g, k, x});
+  const sameRole = shuffle(all.filter(a => a.g !== fid && a.x.role === E.role));
+  const sameSys = shuffle(all.filter(a => a.g === fid));
+  const rest = shuffle(all.filter(a => a.g !== fid && a.x.role !== E.role));
+  return uniq([...sameRole.slice(0, 2), ...sameSys.slice(0, 1), ...sameRole.slice(2), ...rest].map(a => elemLabel(a.g, a.k))).slice(0, 3);
+}
+const unitOfImg = (f, i) => f.vars.find(u => u.v && u.v === meta(f.id, i).v) || null;
+function unitImgs(f, u){
+  const all = (IMG[f.id] || []).map((_, i) => i);
+  if (!u || !u.v) return all;
+  const own = all.filter(i => meta(f.id, i).v === u.v);
+  return own.length ? own : all;
+}
+function randomImg(f, u, skip){
+  let idx = u ? unitImgs(f, u) : (IMG[f.id] || []).map((_, i) => i);
+  if (skip && skip.length) { const keep = idx.filter(i => !skip.includes(i)); if (keep.length) idx = keep; }
+  const ground = idx.filter(i => !isAir(f.id, i));
+  if (ground.length) idx = ground;
+  if (!idx.length) return null;
+  let i = idx[Math.floor(Math.random() * idx.length)];
+  if (idx.length > 1 && S.lastImg[f.id] === i) i = idx[(idx.indexOf(i) + 1) % idx.length];
+  return [f.id, i];
+}
+function annoFig(fid, i, pins, alt){
+  if (!pins || !IMG[fid] || IMG[fid][i] == null) return '';
+  const ar = (ARS[fid] || [])[i] || 4/3;
+  return `<figure class="anno" style="aspect-ratio:${ar};width:min(100%, ${Math.round(520 * ar)}px)" data-zoom="${fid}:${i}">
+      <img src="${IMG[fid][i]}" alt="${esc(alt)} mit markierten Erkennungsmerkmalen">
+      ${pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </figure>
+    <ol class="legendlist">${pins.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol>`;
+}
+const annoHtml = f => annoFig(f.id, 0, pinsFor(f.id, 0), f.name);
+const leitIdx = (f, u) => (LEIT[f.id] || {})[u.v];
+const unitAnno = (f, u) => { const i = leitIdx(f, u); return i == null ? '' : annoFig(f.id, i, pinsFor(f.id, i), u.name); };
+function imgAnno(f, i){
+  const p = i != null ? pinsFor(f.id, i) : null;
+  if (p) return {title:'Merkmale auf diesem Bild', html:annoFig(f.id, i, p, f.name)};
+  return pinsFor(f.id, 0) ? {title:`Merkmale: ${f.name}`, html:annoHtml(f)} : null;
+}
+const posTxt = f => DATA.pos[f.pos];
+const posRuleOf = f => (DATA.posRules && DATA.posRules[f.cat]) || '';
+const rngShort = f => f.rng ? f.rng.split(',')[0] : '–';
+const wezShort = u => u.rKm ? `${String(u.rKm).replace('.', ',')} km / ${String(u.hKm).replace('.', ',')} km Höhe` : '–';
+const rwrTxt = u => u.rwr ? DATA.rwrLong[u.rwr] : '';
+
+function materialize(q, mode){
+  const f = FAM[q.fam];
+  const strict = MODES[mode].confusion;
+  const confTxt = f && f.confuse.length ? ` Verwechslungsgefahr mit ${f.confuse.map(c => FAM[c].name).join(', ')}.` : '';
+  const u = f && q.k != null ? f.vars[q.k] : null;
+  switch (q.kind){
+    case 'img': {
+      const iu = unitOfImg(f, q.i), E = elemOf(f.id, q.i), al = alikeOf(f.id, q.i);
+      return {prompt:'Welches System ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict, al.map(x => x.g)),
+        ex:`${f.name}: ${CATS[f.cat].label}.${E ? ` Im Bild: ${E.name}.` : ''}${iu && multi(f) ? ` Hier: ${iu.name} – ${iu.recog}` : ''} Erkennung: ${f.recog}` + confTxt + alikeNote(al)};
+    }
+    case 'air': {
+      const note = (DATA.airNotes || {})[meta(f.id, q.i).f] || '';
+      if (DATA.airAsk === 'cat' || meta(f.id, q.i).ask === 'cat') return {prompt:'Drohnen- bzw. Pod-Bild: Was für ein System ist das?', img:[f.id, q.i], correct:CATS[f.cat].label, wrong:catAlternatives(f),
+        ex:`${note} Es ist ein ${f.name} (${CATS[f.cat].label}). ${meta(f.id, q.i).ask === 'cat' ? (DATA.airCatNote || '') + ' ' : ''}${DATA.airTip}`};
+      const al = alikeOf(f.id, q.i);
+      return {prompt:'Drohnen- bzw. Pod-Bild: Welches System ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, false, al.map(x => x.g)),
+        ex:`${note} ${f.name}: ${CATS[f.cat].label}.${alikeNote(al)} ${DATA.airTip}`};
+    }
+    case 'var': {
+      const iu = unitOfImg(f, q.i);
+      return {prompt:'Welche Version ist das?', img:[f.id, q.i], correct:iu.name, wrong:varDistractors(f, iu),
+        ex:`${iu.name}: ${iu.recog}`, unit:iu, pinsNow:true, compare:f.vars.filter(x => x !== iu)};
+    }
+    case 'cat':
+      return {prompt:'Was für ein System ist das?', img:randomImg(f), correct:CATS[f.cat].label, wrong:catAlternatives(f),
+        ex:`${f.name}: ${CATS[f.cat].label} – ${CATS[f.cat].cap}.`};
+    case 'wpn':
+      return {prompt:`Wie bekämpfst du ${f.name}?`, img:randomImg(f, null, (DATA.wpnSkip || {})[f.id]),
+        correct:DATA.wcls[f.wcls], wrong:DATA.wOrder.filter(k => k !== f.wcls).map(k => DATA.wcls[k]), order:DATA.wOrder.map(k => DATA.wcls[k]),
+        ex:`${f.protection} Schwachstellen: ${f.weak}${f.wpnNote ? ' ' + f.wpnNote : ''}`};
+    case 'rng':
+      return {prompt:`Wie weit schießt ${f.name}?`, img:randomImg(f), correct:f.rng, wrong:rngDistractors(f),
+        ex:`${f.name}: ${f.rng}. Stellung meist: ${posTxt(f)}. ${posRuleOf(f)}`.trim()};
+    case 'pos':
+      return {prompt:`Wo steht ${f.name} typischerweise?`, img:randomImg(f), correct:posTxt(f),
+        wrong:DATA.posOrder.filter(k => k !== f.pos).map(k => DATA.pos[k]), order:DATA.posOrder.map(k => DATA.pos[k]),
+        ex:f.rng ? `Reichweite ${f.rng}. ${posRuleOf(f)}`.trim() : f.jtac.join(' ')};
+    case 'ew': {
+      const others = shuffle(FAMS.filter(x => x.ew && x.id !== f.id).map(x => x.ew)).slice(0, 3);
+      return {prompt:`Was macht ${f.name}?`, img:randomImg(f), correct:f.ew, wrong:others, ex:f.jtac.join(' ')};
+    }
+    case 'wez':
+      return {unit:u, prompt:`${u.name}: Wie weit und wie hoch reicht die Bekämpfungszone?`, img:randomImg(f, u), correct:u.wez, wrong:wezDistractors(u),
+        ex:`${u.name}: ${u.wez}. ${f.jtac.join(' ')}`};
+    case 'rwr':
+      return {unit:u, prompt:`${u.name} bekämpft dein Lfz. Warnt dein Radarwarner (RWR)?`, img:randomImg(f, u),
+        correct:DATA.rwr[u.rwr], wrong:DATA.rwrOrder.filter(k => k !== u.rwr).map(k => DATA.rwr[k]), order:DATA.rwrOrder.map(k => DATA.rwr[k]),
+        ex:`${rwrTxt(u)} ${u.sight || ''}`};
+    case 'elem': {
+      const key = meta(f.id, q.i).e, E = DATA.elems[f.id][key];
+      const z = f.vars[0].wez ? ` Bekämpfungszone des Systems: ${f.vars.map(x => x.wez).filter(Boolean)[0]}.` : '';
+      const al = alikeOf(f.id, q.i);
+      return {prompt:'Was zeigt das Bild?', img:[f.id, q.i], correct:elemLabel(f.id, key), wrong:elemDistractors(f.id, key, al),
+        ex:`${E.name}: ${E.txt}${z}${alikeNote(al)}`};
+    }
+    case 'cur':
+      return {prompt:q.q, correct:q.opts[0], wrong:q.opts.slice(1), ex:q.ex};
+  }
+}
+
+/* ---------- views ---------- */
+let view = 'home';
+let R = null;
+
+function setBar(title, opts = {}){
+  const b = $('#barin');
+  b.innerHTML = (opts.back ? `<button class="iconbtn" data-act="${opts.back}" aria-label="Zurück">‹ Zurück</button>` : '') +
+    `<div class="t">${esc(title)}</div>` + (opts.right || '');
+  const p = $('#prog');
+  if (opts.progress != null){ p.hidden = false; p.firstElementChild.style.width = (opts.progress * 100) + '%'; } else p.hidden = true;
+}
+function famState(id){ const a = famAcc(id); if (a === null) return 'none'; return a >= .8 ? 'ok' : a >= .5 ? 'mid' : 'bad'; }
+function pct(id){ const a = famAcc(id); return a === null ? '–' : Math.round(a * 100) + ' %'; }
+const cellsHtml = list => `<div class="cells">${list.map(id => FAM[id]).map(f => `<button class="cell" data-s="${famState(f.id)}" data-card="${f.id}" title="${esc(f.name)}: ${pct(f.id)}"><b>${esc(f.short)}</b><span>${esc(f.chip || f.name)}</span><i style="width:${famAcc(f.id) === null ? 0 : Math.max(8, famAcc(f.id) * 100)}%"></i></button>`).join('')}</div>`;
+const countPool = mode => poolFor(mode).length;
+const LINKS = DATA.links;
+
+function renderHome(){
+  setBar(DATA.title);
+  $('#bar').hidden = true;
+  const nImg = BANK.filter(q => q.kind === 'img').length, nAir = BANK.filter(q => q.kind === 'air').length;
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a>
+    <h1>${esc(DATA.title)}</h1>
+    <p>${esc(DATA.intro)}</p>
+  </section>
+  <section class="board" aria-label="Lagebild">
+    <div class="board-h"><h2>Lagebild</h2><span class="small muted">${S.answered ? `${S.answered} Antworten, ${Math.round(100 * S.correct / Math.max(1, S.answered))} % richtig` : 'Noch keine Antworten'}</span></div>
+    ${GROUPS.map(([t, ids]) => `<h3>${esc(t)}</h3>${cellsHtml(ids)}`).join('')}
+    <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Systeme kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <nav class="modes" aria-label="Trainingsarten">
+    ${Object.entries(MODES).filter(([k]) => k !== 'mix').map(([k, M]) => `<button class="mode" data-start="${k}"><span class="mi"><strong>${esc(M.name)}</strong><small>${esc(M.desc)}</small></span><span class="n">${k === 'img' ? nImg + ' Bilder' : k === 'air' ? nAir + ' Luftbilder' : countPool(k) + ' Fragen'}</span></button>`).join('')}
+    ${CMP.length ? `<button class="mode" data-act="cmpall"><span class="mi"><strong>Direktvergleiche</strong><small>${esc(DATA.cmpDesc || 'Ähnliche Systeme nebeneinander')}</small></span><span class="n">${CMP.length} Paare</span></button>` : ''}
+    <button class="mode" data-act="merk"><span class="mi"><strong>Merkblatt</strong><small>Die wichtigsten Regeln und Richtwerte auf einen Blick</small></span><span class="n"></span></button>
+    <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle Systeme zum Nachlesen, mit Bildern${IS2C ? ', Versionen und Radaren' : ''}</small></span><span class="n">${FAMS.length}</span></button>
+    <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je System, markierte Fragen zum Prüfen</small></span><span class="n">${Object.keys(S.flags).length ? Object.keys(S.flags).length + ' gemeldet' : ''}</span></button>
+  </nav>
+  <a class="guide-link" href="${LINKS.guide}#k1" target="_blank" rel="noopener"><span class="mi"><strong>Sensor-to-Shooter-Guide</strong><small>Wie Lfz Ziele aufklären und bekämpfen – vom Blick aus dem Fenster bis zum Laser</small></span><span class="n">Guide ›</span></a>
+  ${LINKS.brevity ? `<a class="guide-link" href="${LINKS.brevity}" target="_blank" rel="noopener"><span class="mi"><strong>Brevity-Trainer</strong><small>Brevity-Codewörter nach ATP 1-02.1 und CAS-Abkürzungen üben</small></span><span class="n">Trainer ›</span></a>` : ''}
+  <p class="foot">Alle Angaben stammen aus öffentlichen Quellen und sind gerundet; Reichweiten sind Richtwerte und hängen von Version, Munition und Lage ab. Die meisten Bilder stammen von Wikimedia Commons, die Drohnenbilder aus dem Krieg in der Ukraine – dort nutzen beide Seiten sowjetische Technik. Falsche oder unklare Fragen kannst du nach der Antwort melden. Teil der Reihe mit ${LINKS.series.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>`).join(', ').replace(/, ([^,]*)$/, ' und $1')}.</p>`;
+}
+
+function hudSvg(){
+  return `<svg viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="var(--hud)" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".9">
+  <path d="M14 46V14h32M354 14h32v32M386 254v32h-32M46 286H14v-32"/>
+  <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
+}
+function feedHtml(famId, i, opts = {}){
+  return `<figure class="feed" data-zoom="${famId}:${i}">
+    <img src="${imgSrc(famId, i)}" alt="${opts.alt ? esc(opts.alt) : 'Bild eines Systems'}">${hudSvg()}
+    <span class="hud tl">${isAir(famId, i) ? 'UAS' : 'TV'}</span><span class="hud tr">NAR</span>${opts.counter ? `<span class="hud bl">${opts.counter}</span>` : ''}
+    ${opts.nav ? `<button class="nav l" data-img="-1" aria-label="Vorheriges Bild">‹</button><button class="nav r" data-img="1" aria-label="Nächstes Bild">›</button>` : ''}
+  </figure>`;
+}
+
+function startRound(mode){
+  const qs = pickRound(mode);
+  R = {mode, qs, i:0, score:0, missed:[], cur:null, answered:false};
+  view = 'quiz'; nextQ(true);
+}
+function nextQ(first){
+  if (!first) R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; return render(); }
+  const q = R.qs[R.i];
+  const m = materialize(q, R.mode);
+  const all = uniq([m.correct, ...m.wrong.slice(0, 3)]);
+  const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct)};
+  R.answered = false;
+  render();
+  window.scrollTo(0, 0);
+}
+function renderQuiz(){
+  $('#bar').hidden = false;
+  const {m, opts} = R.cur;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  $('#app').innerHTML = `
+    ${m.img ? feedHtml(m.img[0], m.img[1]) : ''}
+    <h2 class="prompt">${esc(m.prompt)}</h2>
+    <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
+    <div id="fb"></div>`;
+}
+function fbAnno(f, m){
+  if (!f) return '';
+  const idx = m.img && m.img[0] === f.id ? m.img[1] : null;
+  if (m.pinsNow){
+    const p = pinsFor(f.id, idx);
+    return p ? `<div class="sec"><h3>Merkmale auf diesem Bild</h3>${annoFig(f.id, idx, p, m.correct)}</div>` : '';
+  }
+  const a = imgAnno(f, idx); if (!a) return '';
+  return `<div class="annobox"><button class="btn" data-act="anno" aria-expanded="${S.annoOpen ? 'true' : 'false'}">${S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen'}</button><div id="annoarea"${S.annoOpen ? '' : ' hidden'}><p class="small muted" style="margin:10px 0 0">${esc(a.title)}</p>${a.html}</div></div>`;
+}
+function answer(k){
+  if (R.answered) return;
+  R.answered = true;
+  const {q, m, ci} = R.cur;
+  const ok = k === ci;
+  document.querySelectorAll('.opt').forEach((b, j) => {
+    b.disabled = true;
+    if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
+  });
+  const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
+  ok ? qs.c++ : qs.w++;
+  const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
+  ok ? fs.c++ : fs.w++;
+  const iu = (q.kind === 'img' || q.kind === 'var') && FAM[q.fam] && multi(FAM[q.fam]) ? unitOfImg(FAM[q.fam], q.i) : null;
+  const uk = m.unit && m.unit.key !== q.fam ? m.unit.key : (iu ? iu.key : null);
+  if (uk){ const us = S.fam[uk] || (S.fam[uk] = {c:0, w:0}); ok ? us.c++ : us.w++; }
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  if (m.img) S.lastImg[m.img[0]] = m.img[1];
+  save();
+  if (ok) R.score++; else R.missed.push({fam:q.fam, prompt:m.prompt, correct:m.correct});
+  const f = FAM[q.fam];
+  const flagged = !!S.flags[q.id];
+  let cmpFb = '';
+  if (!ok && f){ const cf = famByAnswer(R.cur.opts[k]); const c = cf && cf.id !== f.id ? cmpPair(f.id, cf.id) : null;
+    if (c) cmpFb = `<div class="sec"><h3>Direktvergleich: ${esc(f.name)} und ${esc(cf.name)}</h3>${cmpHtml(c, f.id)}</div>`; }
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    <p>${esc(m.ex)}</p>
+    ${cmpFb}
+    ${fbAnno(f, m)}
+    ${m.compare ? `<div class="sec"><h3>Zum Vergleich</h3>${m.compare.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join('')}</div>` : ''}
+    ${f ? profileHtml(f, m.unit || (m.img && m.img[0] === f.id ? unitOfImg(f, m.img[1]) : null)) : ''}
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const fb = $('#fb .btn.main'); if (fb) fb.focus({preventScroll:true});
+  $('#fb').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+/* Chips: rot = Gefahr bzw. Nachteil für dich, grün = Vorteil für dich */
+const RWRC = {radar:'1', mix:'?', ir:'0', none:'0'};
+function unitChips(u){
+  const f = FAM[u.fam];
+  if (IS2C){
+    const c = [];
+    if (u.rKm) c.push(`<li data-v="${u.hKm >= 10 ? '0' : u.hKm >= 4 ? '?' : '1'}">WEZ: ${esc(wezShort(u))}</li>`);
+    if (u.rwr) c.push(`<li data-v="${RWRC[u.rwr]}">RWR-Warnung: ${esc(DATA.rwrLab[u.rwr])}</li>`);
+    c.push(`<li>Schutz: ${esc(DATA.wlab[f.wcls])}</li>`);
+    return `<ul class="chips">${c.join('')}</ul>`;
+  }
+  const c = [];
+  if (f.rng) c.push(`<li>Reichweite: ${esc(rngShort(f))}</li>`);
+  c.push(`<li data-v="${f.pos === 'front' ? '0' : f.pos === 'near' ? '?' : '1'}">Hinter der Front: ${esc(DATA.posShort[f.pos])}</li>`);
+  c.push(`<li data-v="${f.wcls === 'mbt' ? '0' : f.wcls === 'spg' ? '?' : '1'}">Schutz: ${esc(DATA.wlab[f.wcls])}</li>`);
+  return `<ul class="chips">${c.join('')}</ul>`;
+}
+function unitsHtml(f, cur){
+  if (!multi(f)) return unitChips(f.vars[0]);
+  const list = cur ? [cur, ...f.vars.filter(u => u !== cur)] : f.vars;
+  return list.map(u => `<div class="unitrow${u === cur ? ' cur' : ''}"><strong>${esc(u.name)}${u === cur ? ' <span class="tag">im Bild</span>' : ''}</strong>${unitChips(u)}</div>`).join('');
+}
+function profileHtml(f, cur){
+  const title = cur && multi(f) ? cur.name : f.name;
+  const kv = IS2C
+    ? `<dt>Sensoren</dt><dd>${esc(f.weapons.join('; '))}</dd><dt>Schutz</dt><dd>${esc(f.protection)}</dd>`
+    : `${f.rng ? `<dt>Reichweite</dt><dd>${esc(f.rng)}</dd>` : ''}<dt>Bewaffnung</dt><dd>${esc(f.weapons.join('; '))}</dd><dt>Schutz</dt><dd>${esc(f.protection)}</dd>`;
+  return `<div class="profile">
+    <h3>${esc(title)}<small>${esc(CATS[f.cat].label)}</small></h3>
+    ${unitsHtml(f, cur)}
+    <dl class="kv">${kv}</dl>
+    <div class="row" style="margin-top:10px">${cur && multi(f) ? `<button class="linkbtn" data-card="${cur.key}">Steckbrief ${esc(cur.name)}</button>` : ''}<button class="linkbtn" data-card="${f.id}">${multi(f) ? `Familie ${esc(f.name)}` : 'Steckbrief öffnen'}</button></div>
+  </div>`;
+}
+function renderEnd(){
+  $('#bar').hidden = false;
+  setBar('Auswertung', {back:'home'});
+  const n = R.qs.length;
+  $('#app').innerHTML = `
+    <div class="score">${R.score}<span class="muted" style="font-size:.45em"> / ${n}</span></div>
+    <p class="muted">${MODES[R.mode].name} – ${Math.round(100 * R.score / n)} % richtig.</p>
+    ${R.missed.length ? `<h2 style="margin-top:22px">Nacharbeiten</h2><ul class="misslist">${R.missed.map(x => `<li><div>${esc(x.prompt)}</div><div class="small"><strong>${esc(x.correct)}</strong>${FAM[x.fam] ? ` – <button class="linkbtn" data-card="${x.fam}">Steckbrief ${esc(FAM[x.fam].name)}</button>` : ` – <button class="linkbtn" data-act="merk">Merkblatt</button>`}</div></li>`).join('')}</ul>` : '<p>Alles richtig.</p>'}
+    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+}
+function renderCards(){
+  $('#bar').hidden = false;
+  setBar('Steckbriefe', {back:'home'});
+  $('#app').innerHTML = `<div class="row" style="margin-top:6px"><button class="btn" data-act="merk">Merkblatt öffnen</button></div>` + GROUPS.map(([t, ids]) => `<section class="group"><h2>${esc(t)}</h2>
+      ${ids.map(id => FAM[id]).map(f => `<button class="fam" data-card="${f.id}"><span class="code">${esc(f.short)}</span><span class="nm">${esc(f.name)}${multi(f) ? ' <span class="small muted" style="font-weight:400">– Familie, Versionen im Vergleich</span>' : ''}<br><span class="small muted" style="font-weight:400">${esc(CATS[f.cat].label)}</span></span><span class="pct">${pct(f.id)}</span></button>`
+        + (multi(f) ? f.vars.map(u => `<button class="fam sub" data-card="${u.key}"><span class="code"></span><span class="nm">${esc(u.name)}<br><span class="small muted" style="font-weight:400">${esc(u.recog)}</span></span><span class="pct">${pct(u.key)}</span></button>`).join('') : '')).join('')}</section>`).join('');
+}
+let cardState = null;
+function openSheet(html){
+  $('#sheet').innerHTML = html;
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function openCard(id){
+  if (!FAM[id] && !UNIT[id]) return;
+  cardState = {id, i:0, pins:false};
+  drawCard();
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function cardImgs(){
+  const id = cardState.id;
+  if (UNIT[id]){ const {f, u} = UNIT[id]; return (IMG[f.id] || []).map((_, i) => i).filter(i => meta(f.id, i).v === u.v); }
+  return (IMG[id] || []).map((_, i) => i);
+}
+function carouselHtml(f){
+  const list = cardImgs(); if (!list.length) return '';
+  const k = cardState.i % list.length, i = list[k];
+  const iu = multi(f) ? unitOfImg(f, i) : null;
+  const E = elemOf(f.id, i);
+  const pins = pinsFor(f.id, i);
+  const parts = [];
+  if (multi(f)) parts.push(iu ? iu.name : 'Version nicht eindeutig erkennbar');
+  if (E) parts.push(E.name);
+  if (isAir(f.id, i)) parts.push('Luftbild');
+  const label = parts.join(' · ');
+  const onUnit = !!UNIT[cardState.id];
+  return `${feedHtml(f.id, i, {nav:list.length > 1, counter:`${k + 1}/${list.length}`, alt:label || f.name})}
+    <div class="imgcap">
+      ${label ? `<span class="vlabel${multi(f) && !iu && !E ? ' none' : ''}">${esc(label)}</span>` : '<span></span>'}
+      <span class="capbtns">${pins ? `<button class="btn sm" data-act="cardpins" aria-expanded="${cardState.pins ? 'true' : 'false'}">${cardState.pins ? 'Merkmale ausblenden' : 'Merkmale auf diesem Bild'}</button>` : ''}${multi(f) && iu && !onUnit ? `<button class="btn sm" data-card="${iu.key}">Steckbrief ${esc(iu.name)}</button>` : ''}</span>
+    </div>
+    ${pins && cardState.pins ? `<div class="pinwrap">${annoFig(f.id, i, pins, label || f.name)}</div>` : ''}`;
+}
+function elemsSec(f){
+  const m = DATA.elems && DATA.elems[f.id]; if (!m) return '';
+  return `<div class="sec"><h3>Elemente des Systems</h3>${Object.values(m).map(E => `<div class="vbox"><h4>${esc(E.name)}</h4><p style="margin:4px 0 0">${esc(E.txt)}</p></div>`).join('')}</div>`;
+}
+const CMP = DATA.compare || [];
+const cmpFor = fid => CMP.filter(c => c.a.fam === fid || c.b.fam === fid);
+const cmpPair = (x, y) => CMP.find(c => (c.a.fam === x && c.b.fam === y) || (c.a.fam === y && c.b.fam === x));
+function cmpSide(sd, pos, ci, side){
+  const ar = (ARS[sd.fam] || [])[sd.i] || 4/3;
+  const w = ar >= 4/3 ? 100 : Math.round(ar / (4/3) * 1000) / 10;
+  return `<figure class="cmpfig">
+    <span class="ctag">${pos}</span>
+    <div class="cmpbox" data-czoom="${ci}:${side}"><div class="cmpin" style="aspect-ratio:${ar};width:${w}%">
+      <img src="${IMG[sd.fam][sd.i]}" alt="${esc(sd.lab)}">
+      ${sd.pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </div></div>
+    <figcaption><b>${pos}: ${esc(sd.lab)}</b><ol class="legendlist">${sd.pins.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol></figcaption>
+  </figure>`;
+}
+function cmpHtml(c, focus){
+  const sw = c.b.fam === focus && c.a.fam !== focus, ci = CMP.indexOf(c);
+  const [L, Rt] = sw ? [c.b, c.a] : [c.a, c.b];
+  return `<div class="cmpwrap"><div class="cmp">${cmpSide(L, 'Links', ci, sw ? 'b' : 'a')}${cmpSide(Rt, 'Rechts', ci, sw ? 'a' : 'b')}</div><p class="cmpkey"><strong>${esc(c.keyLab || 'Sicherstes Merkmal:')}</strong> ${esc(c.key)}</p></div>`;
+}
+const cmpSec = f => cmpFor(f.id).length ? `<div class="sec"><h3>Direktvergleich</h3>${cmpFor(f.id).map(c => { const o = c.a.fam === f.id ? c.b.fam : c.a.fam; return `<p class="small muted" style="margin:12px 0 0">${esc(f.name)} oder ${esc(FAM[o].name)}?</p>` + cmpHtml(c, f.id); }).join('')}</div>` : '';
+function famByAnswer(t){
+  const f = FAMS.find(x => t === x.name || t.startsWith(x.name + ' – '));
+  if (f) return f;
+  const u = UNITS.find(x => x.name === t);
+  return u ? FAM[u.fam] : null;
+}
+function openCmpAll(){
+  cardState = null;
+  openSheet(`<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">Direktvergleiche</div></div></div>
+  <div class="wrap">
+    <h1 style="font-size:2.6rem;margin-top:16px">Direktvergleiche</h1>
+    <p class="muted" style="margin:6px 0 0">Systeme mit hoher Verwechslungsgefahr nebeneinander, mit den Merkmalen, die sie unterscheiden. Tippe auf ein Bild, um es zu vergrößern.</p>
+    ${CMP.map(c => `<div class="sec"><h3>${esc(FAM[c.a.fam].name)} oder ${esc(FAM[c.b.fam].name)}?</h3>${cmpHtml(c, c.a.fam)}</div>`).join('')}
+  </div>`);
+}
+const VERS = DATA.versions || {};
+function verSec(f){
+  const v = VERS[f.id]; if (!v) return '';
+  return `<div class="sec"><h3>Alle Versionen und NATO-Bezeichnungen</h3>${v.rows.map(r => `<div class="vbox"><h4>${esc(r.n)}${r.nato ? ` <span class="nato">${esc(r.nato)}</span>` : ''}</h4>${r.y || r.wez ? `<p class="small muted" style="margin:3px 0 0">${[r.y, r.wez].filter(Boolean).map(esc).join(' · ')}</p>` : ''}${r.m ? `<p style="margin:4px 0 0">${esc(r.m)}</p>` : ''}</div>`).join('')}${v.note ? `<p class="cmpkey"><strong>Unterscheiden:</strong> ${esc(v.note)}</p>` : ''}</div>`;
+}
+function drawCard(){
+  const id = cardState.id;
+  const isUnit = !!UNIT[id];
+  const f = isUnit ? UNIT[id].f : FAM[id];
+  const U = isUnit ? UNIT[id].u : null;
+  const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  const sec = (h, body) => `<div class="sec"><h3>${h}</h3>${body}</div>`;
+  const p = s => `<p style="margin:0">${esc(s)}</p>`;
+  const unitDetail = u => IS2C ? `<dl class="kv">
+        ${u.wez ? `<dt>WEZ</dt><dd>${esc(u.wez)}</dd>` : ''}
+        ${u.rwr ? `<dt>RWR</dt><dd>${esc(DATA.rwr[u.rwr])}</dd>` : ''}
+        <dt>Sensoren</dt><dd>${esc(u.sight || '')}</dd>
+      </dl>` : '';
+  const common = `
+    ${sec(IS2C ? 'Bewaffnung und Sensoren' : 'Bewaffnung', list(f.weapons))}
+    ${sec('Schutz', p(f.protection))}
+    ${sec('Wirkmittel und Schwachstellen', `<p style="margin:0 0 6px">${esc(DATA.wcls[f.wcls])}.</p>` + p(f.weak) + (f.wpnNote ? `<p style="margin:6px 0 0">${esc(f.wpnNote)}</p>` : ''))}
+    ${sec('Als JTAC beachten', list(f.jtac))}`;
+  const confBtns = (extra) => {
+    const b = [...extra, ...f.confuse.map(c => `<button class="btn" data-card="${c}">${esc(FAM[c].name)}</button>`)];
+    return b.length ? sec('Verwechslungsgefahr', `<div class="row" style="margin-top:4px">${b.join('')}</div>`) : '';
+  };
+  const reach2B = f.rng || f.ew ? sec(f.rng ? 'Reichweite und Stellung' : 'Aufgabe und Stellung', (f.rng ? `<p style="margin:0"><strong>Reichweite:</strong> ${esc(f.rng)}</p>` : '') + (f.ew ? `<p style="margin:0"><strong>Aufgabe:</strong> ${esc(f.ew)}</p>` : '') + `<p style="margin:6px 0 0"><strong>Stellung:</strong> ${esc(posTxt(f))}</p>${f.rng && posRuleOf(f) ? `<p class="small muted" style="margin:6px 0 0">${esc(posRuleOf(f))}</p>` : ''}`) : '';
+  let body;
+  if (isUnit){
+    const others = f.vars.filter(x => x !== U);
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(U.name)}</h1>
+    <div class="desig">Version der ${esc(f.name)}-Familie · ${esc(CATS[f.cat].label)} · <button class="linkbtn" data-card="${f.id}">alle ${esc(f.name)}-Versionen im Vergleich</button></div>
+    ${unitChips(U)}
+    ${sec(`Woran erkennst du den ${esc(U.name)}?`, unitAnno(f, U) + `<p style="margin:10px 0 0"><strong>${esc(U.recog)}</strong></p><p class="small muted" style="margin:6px 0 0">Gilt für alle ${esc(f.name)}: ${esc(f.recog)}</p>`)}
+    ${cmpSec(f)}
+    ${sec('Unterschied zu den anderen Versionen', others.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join(''))}
+    ${verSec(f)}
+    ${sec('Bekämpfungszone', p(U.wez || '–'))}
+    ${sec('Warnt dein Radarwarner?', p(rwrTxt(U)))}
+    ${common}
+    ${confBtns(others.map(x => `<button class="btn" data-card="${x.key}">${esc(x.name)}</button>`))}`;
+  } else if (multi(f)){
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
+    <div class="desig">${esc(f.designation)}</div>
+    <div class="row" style="margin-top:12px">${f.vars.map(u => `<button class="btn" data-card="${u.key}">Steckbrief ${esc(u.name)}</button>`).join('')}</div>
+    ${sec('Nutzer', p(f.users))}
+    ${pinsFor(f.id, 0) ? sec(`Merkmale aller ${esc(f.name)}`, annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
+    ${cmpSec(f)}
+    ${sec('Versionen unterscheiden', f.vars.map(u => `<div class="vbox">
+        <h4>${esc(u.name)}</h4>${unitChips(u)}
+        <div style="margin-top:8px">${unitAnno(f, u)}</div>
+        <p style="margin:8px 0 0"><strong>${esc(u.recog)}</strong></p>
+        ${unitDetail(u)}
+        <button class="btn" data-card="${u.key}" style="margin-top:8px">Steckbrief ${esc(u.name)}</button>
+      </div>`).join(''))}
+    ${verSec(f)}
+    ${elemsSec(f)}
+    ${common}
+    ${confBtns([])}`;
+  } else {
+    const u = f.vars[0];
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
+    <div class="desig">${esc(f.designation)}</div>
+    ${unitChips(u)}
+    ${sec('Nutzer', p(f.users))}
+    ${pinsFor(f.id, 0) ? sec('Erkennungsmerkmale', annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
+    ${cmpSec(f)}
+    ${IS2C ? sec(u.wez ? 'Bekämpfungszone und Radarwarner' : 'Radar', `<div class="vbox">${unitChips(u)}${unitDetail(u)}${u.rwr ? `<p class="small" style="margin:8px 0 0">${esc(rwrTxt(u))}</p>` : ''}</div>`) : reach2B}
+    ${verSec(f)}
+    ${elemsSec(f)}
+    ${common}
+    ${confBtns([])}`;
+  }
+  const title = isUnit ? U.name : f.name;
+  $('#sheet').innerHTML = `<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">${esc(title)}</div><span class="muted small">${pct(id)}</span></div></div>
+  <div class="wrap">
+    ${carouselHtml(f)}
+    ${body}
+  </div>`;
+}
+
+function openMerk(){
+  cardState = null;
+  openSheet(`<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">Merkblatt</div></div></div>
+  <div class="wrap">
+    <h1 style="font-size:2.6rem;margin-top:16px">Merkblatt</h1>
+    <p class="muted" style="margin:6px 0 0">Die wichtigsten Regeln aus der App auf einen Blick. Richtwerte aus öffentlichen Quellen – im Einsatz gilt die aktuelle Lage.</p>
+    ${DATA.merk.map(([h, items]) => `<div class="sec"><h3>${esc(h)}</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+  </div>`);
+}
+function closeCard(){ $('#sheet').hidden = true; document.body.style.overflow = ''; cardState = null; }
+
+function renderStats(){
+  $('#bar').hidden = false;
+  setBar('Statistik', {back:'home'});
+  const rows = FAMS.map(f => ({id:f.id, name:f.name, card:true, a:famAcc(f.id), s:S.fam[f.id] || {c:0, w:0}}));
+  UNITS.filter(u => UNIT[u.key] && S.fam[u.key]).forEach(u => rows.push({id:u.key, name:u.name + ' (Version)', card:true, a:famAcc(u.key), s:S.fam[u.key]}));
+  rows.push({id:'gen', name:'Grundlagen', card:false, a:famAcc('gen'), s:S.fam.gen || {c:0, w:0}});
+  rows.sort((x, y) => (x.a ?? -1) - (y.a ?? -1));
+  const flags = Object.entries(S.flags);
+  const flagText = flags.map(([id, v]) => `• [${id}] ${v.t}`).join('\n');
+  const bar = a => `<div class="sbar"><i style="width:${a === null ? 0 : a * 100}%;background:${a === null ? 'transparent' : a >= .8 ? 'var(--ok)' : a >= .5 ? 'var(--cta)' : 'var(--bad)'}"></i></div>`;
+  $('#app').innerHTML = `
+    <div class="stat-top"><div><b>${S.answered}</b><span class="muted small">Antworten</span></div><div><b>${S.answered ? Math.round(100 * S.correct / S.answered) + ' %' : '–'}</b><span class="muted small">richtig</span></div></div>
+    <p class="sync">${esc(syncLabel)}</p>
+    <h2 style="margin-top:18px">Je System, schwächste zuerst</h2>
+    <div style="margin-top:6px">${rows.map(r => `<div class="srow">${r.card ? `<button class="linkbtn" data-card="${r.id}" style="text-align:left">${esc(r.name)}</button>` : `<span>${esc(r.name)}</span>`}${bar(r.a)}<span class="small muted" style="text-align:right">${r.a === null ? '–' : Math.round(r.a * 100) + ' %'}<br>${r.s.c + r.s.w}×</span></div>`).join('')}</div>
+    <h2 style="margin-top:26px">Gemeldete Fragen</h2>
+    ${flags.length ? `<p class="small muted" style="margin:4px 0 8px">Kopiere die Liste und schick sie mir im Chat, dann prüfe und korrigiere ich die Fragen.</p><textarea readonly id="flagtxt">${esc(flagText)}</textarea><div class="row"><button class="btn" data-act="copyflags">Liste kopieren</button><button class="btn" data-act="clearflags">Meldungen löschen</button></div>` : '<p class="muted">Noch keine Frage gemeldet. Nach jeder Antwort kannst du eine Frage mit „Frage melden“ markieren.</p>'}
+    <h2 style="margin-top:26px">Zurücksetzen</h2>
+    <p class="small muted" style="margin:4px 0 8px">Löscht alle Antworten und Trefferquoten. Gemeldete Fragen bleiben erhalten.</p>
+    <button class="btn" data-act="reset">Statistik zurücksetzen</button>`;
+}
+function render(){
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'cards') renderCards();
+  else if (view === 'stats') renderStats();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-zoom],[data-czoom]');
+  if (!t) return;
+  if (t.dataset.img && cardState){
+    e.stopPropagation();
+    const n = cardImgs().length;
+    cardState.i = (cardState.i + Number(t.dataset.img) + n) % n; cardState.pins = false; drawCard(); return;
+  }
+  if (t.dataset.czoom){
+    const [ci, side] = t.dataset.czoom.split(':'); const sd = CMP[Number(ci)][side];
+    const ar = (ARS[sd.fam] || [])[sd.i] || 4/3;
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<div class="czoom"><div class="cmpin" style="aspect-ratio:${ar};width:min(100%, calc((100vh - 140px) * ${ar}))"><img src="${IMG[sd.fam][sd.i]}" alt="${esc(sd.lab)}">${sd.pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}</div>
+      <p class="czcap"><b>${esc(sd.lab)}</b>${sd.pins.map(([, , tx], k) => `<span><i>${k + 1}</i>${esc(tx)}</span>`).join('')}</p></div>`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.zoom){
+    const [fid, i] = t.dataset.zoom.split(':');
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<img src="${imgSrc(fid, Number(i))}" alt="Vergrößerte Ansicht">`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.start){ closeCard(); startRound(t.dataset.start); return; }
+  if (t.dataset.go){ view = t.dataset.go; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.card){ openCard(t.dataset.card); return; }
+  if (t.dataset.ans != null){ answer(Number(t.dataset.ans)); return; }
+  if (t.dataset.flag){
+    const id = t.dataset.flag;
+    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt : id, ts:Date.now()};
+    save();
+    t.classList.toggle('flagged', !!S.flags[id]); t.textContent = S.flags[id] ? 'Gemeldet' : 'Frage melden';
+    return;
+  }
+  const act = t.dataset.act;
+  if (act === 'home'){ closeCard(); view = 'home'; R = null; render(); window.scrollTo(0, 0); }
+  else if (act === 'next') nextQ();
+  else if (act === 'merk') openMerk();
+  else if (act === 'cmpall') openCmpAll();
+  else if (act === 'anno'){
+    const ar = $('#annoarea'); if (!ar) return;
+    S.annoOpen = ar.hidden; ar.hidden = !ar.hidden; save();
+    t.textContent = S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen';
+    t.setAttribute('aria-expanded', S.annoOpen ? 'true' : 'false');
+    if (S.annoOpen) ar.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  else if (act === 'closecard') closeCard();
+  else if (act === 'cardpins' && cardState){ cardState.pins = !cardState.pins; drawCard(); }
+  else if (act === 'copyflags'){
+    const ta = $('#flagtxt'); ta.select();
+    const done = () => { t.textContent = 'Kopiert'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, () => { try { document.execCommand('copy'); done(); } catch(_){} });
+    else { try { document.execCommand('copy'); done(); } catch(_){} }
+  }
+  else if (act === 'clearflags'){ S.flags = {}; save(); render(); }
+  else if (act === 'reset'){
+    if (t.dataset.confirm){ const fl = S.flags; S = blank(); S.flags = fl; save(); render(); }
+    else { t.dataset.confirm = '1'; t.textContent = 'Wirklich zurücksetzen? Erneut tippen'; t.classList.add('flagged'); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
+  if (!$('#sheet').hidden){ if (e.key === 'Escape') closeCard(); return; }
+  if (view !== 'quiz' || !R) return;
+  if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
+  else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
+});
+render();
+
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brevity-Trainer</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+/* Layout: eine Spalte (max. 720px) im Look der Trainer-Reihe; Codewörter in Funk-Schreibweise (Mono, Versalien) */
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --radio:#0F1A1C; --radio-ink:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-m:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --radio:#06090A; --radio-ink:#F2B632; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --radio:#06090A; --radio-ink:#F2B632; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-block:12px 56px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:600}
+.muted{color:var(--muted)}
+.code{font-family:var(--font-m);font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+
+/* Kopfleiste */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding-block:8px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500;white-space:nowrap}
+.tag{font-family:var(--font-d);font-size:1rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* Übersicht */
+.hero{padding:26px 0 14px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.radioline{display:inline-block;margin-top:14px;background:var(--radio);color:var(--radio-ink);font-family:var(--font-m);font-size:.82rem;font-weight:500;letter-spacing:.04em;padding:6px 12px;border-radius:6px;max-width:100%;overflow-wrap:anywhere}
+.board{margin:16px 0 22px}
+.board h3{font-size:1rem;color:var(--muted);margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase}
+.cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+@media (min-width:560px){.cells{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 9px 12px;overflow:hidden;min-width:0}
+.cell[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1;font-variant-numeric:tabular-nums}
+.cell span{display:block;font-size:.78rem;color:var(--muted);line-height:1.25;margin-top:3px}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.filtnote{font-size:.88rem;color:var(--muted);margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:20px;border-top:1px solid var(--line)}
+.modes h3{font-size:1rem;color:var(--muted);margin:16px 0 2px;letter-spacing:.06em;text-transform:uppercase}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 2px}
+.mode .mi{flex:1;min-width:0}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.05rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.mode[disabled]{opacity:.45;cursor:default}
+.foot{margin-top:26px;font-size:.84rem;color:var(--muted);max-width:42em}
+.foot p{margin:0 0 8px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* Frage */
+.qmeta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 10px;font-size:.9rem;color:var(--muted)}
+.chip-cat{display:inline-block;font-family:var(--font-d);font-weight:700;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--bg);border-radius:5px;padding:2px 9px}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:6px 0 14px}
+.bigcode{display:inline-block;background:var(--radio);color:var(--radio-ink);font-family:var(--font-m);font-weight:700;font-size:clamp(1.5rem,7vw,2.1rem);letter-spacing:.06em;padding:10px 18px;border-radius:8px;margin:4px 0 14px;max-width:100%;overflow-wrap:anywhere}
+.defbox{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:0 10px 10px 0;padding:12px 16px;margin:4px 0 14px;font-size:1.05rem}
+.lage{background:var(--radio);color:#DCE5E2;border-radius:10px;padding:12px 16px;margin:4px 0 12px}
+.lage .lh{font-family:var(--font-m);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--radio-ink)}
+.lage p{margin:4px 0 0}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt .ot{min-width:0;overflow-wrap:anywhere}
+.opt .ot.code{white-space:normal;font-size:1.02rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.seq{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.seq .code{font-size:.92rem}
+.seq .ar{color:var(--muted);font-weight:700}
+.inp{display:block;width:100%;font-family:var(--font-m);font-weight:700;font-size:1.15rem;letter-spacing:.05em;text-transform:uppercase;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:13px 14px}
+.inp:focus{border-color:var(--ink);outline:none}
+.inp[readonly]{border-style:dashed}
+.fhint{font-size:.86rem;color:var(--muted);margin-top:5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:11px 15px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.4rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.entry{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.entry .hd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.entry .hd .code{font-size:1.05rem}
+.entry .lf{font-family:var(--font-d);font-size:1.15rem;font-weight:600}
+.entry .en{font-size:.88rem;color:var(--muted);font-style:italic;margin-top:4px}
+.entry .nt{font-size:.94rem;margin-top:6px}
+.pill{display:inline-block;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:1px 9px;color:var(--muted)}
+
+/* Ergebnis */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:26px 0 4px;font-variant-numeric:tabular-nums}
+.score small{font-size:2rem;color:var(--muted);font-weight:600}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+.misslist .code{font-size:.95rem}
+
+/* Glossar */
+.seg{display:flex;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0 10px}
+.seg button{flex:1;border:0;background:var(--surface);padding:10px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.search{display:block;width:100%;font:inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:11px 14px}
+.gl h3{font-size:1rem;color:var(--muted);margin:20px 0 4px;letter-spacing:.06em;text-transform:uppercase}
+.gl dl{margin:0}
+.gl .it{padding:10px 0;border-bottom:1px solid var(--line)}
+.gl .it .hd{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.gl .it .code{font-size:1rem}
+.gl .it p{margin:3px 0 0}
+.gl .it .en{font-size:.86rem;color:var(--muted);font-style:italic}
+.gl .empty{color:var(--muted);margin-top:16px}
+
+/* Statistik */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px;flex-wrap:wrap}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.srow{display:grid;grid-template-columns:minmax(0,10em) 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+.confirm{margin-top:10px;padding:12px 14px;border:1px solid var(--bad);background:var(--bad-bg);border-radius:8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+
+<script>
+/* Brevity nach ATP 1-02.1 (Multi-Service Brevity Codes, April 2025) bzw. NATO APP-7 */
+const GROUPS = {
+  sicht:   {l:"Sicht und Erfassung", k:"b"},
+  laser:   {l:"Laser und IR-Pointer", k:"b"},
+  angriff: {l:"Angriff und Freigabe", k:"b"},
+  feuer:   {l:"Feuerkontrolle und Abbruch", k:"b"},
+  waffen:  {l:"Waffen und Wirkung", k:"b"},
+  bedr:    {l:"Bedrohung und Selbstschutz", k:"b"},
+  koord:   {l:"Treibstoff, Zeit, Koordination", k:"b"},
+  rollen:  {l:"Rollen und Stellen", k:"a"},
+  verf:    {l:"Verfahren und Planung", k:"a"},
+  raum:    {l:"Raumordnung (ACM, FSCM)", k:"a"},
+  wirk:    {l:"Waffen und Wirkung", k:"a"},
+  tech:    {l:"Sensoren und Technik", k:"a"},
+  threat:  {l:"Bedrohung und Luftverteidigung", k:"a"}
+};
+const G_ORDER_B = ["sicht","laser","angriff","feuer","waffen","bedr","koord"];
+const G_ORDER_A = ["rollen","verf","raum","wirk","tech","threat"];
+
+/* B(Wort, Gruppe, Bedeutung deutsch, Originaldefinition, Optionen)
+   o.opp = Gegenstück, o.conf = Verwechsler, o.note = JTAC-Hinweis, o.acc = akzeptierte Eingaben (Regex), o.near = [Regex, Hinweis] */
+const BR = [];
+const B = (w, g, de, en, o) => BR.push(Object.assign({w, g, de, en, conf:[]}, o || {}));
+
+/* ---- Sicht und Erfassung ---- */
+B("TALLY","sicht","Ziel, gegnerisches Lfz oder Feindstellung in Sicht.","Sighting of a target, non-friendly aircraft, or enemy position. Opposite of NO JOY.",
+  {opp:"NO JOY", conf:["VISUAL","CONTACT","CAPTURED"], note:"TALLY gilt für Ziel und Feind, VISUAL für Eigene, CONTACT für Bezugspunkte."});
+B("NO JOY","sicht","Ziel bzw. gegnerisches Lfz (BANDIT) nicht in Sicht.","Aircrew does not have visual contact with the TARGET or BANDIT. Opposite of TALLY.",
+  {opp:"TALLY", conf:["BLIND","LOOKING","NEGATIVE LASER"], note:"Für das Ziel heißt es NO JOY, für eigene Kräfte BLIND, für Bezugspunkte LOOKING."});
+B("VISUAL","sicht","Eigenes Lfz, Schiff oder eigene Bodenposition in Sicht.","Sighting of a FRIENDLY aircraft or ground position or ship. Opposite of BLIND.",
+  {opp:"BLIND", conf:["TALLY","CONTACT","FRIENDLY"], note:"Bei Type 1 muss der JTAC das angreifende Lfz sehen – auch das meldet man mit VISUAL."});
+B("BLIND","sicht","Keine Sicht auf eigenes Lfz, Schiff oder eigene Bodenposition.","No visual contact with FRIENDLY aircraft, ship, or ground position. Opposite of VISUAL.",
+  {opp:"VISUAL", conf:["NO JOY","LOOKING","POPEYE"], note:"Meldet der Pilot BLIND auf deine Position, hilft z. B. ROPE mit dem IR-Pointer oder eine Markierung."});
+B("CONTACT","sicht","Bezugspunkt in Sicht – mit dem Auge oder mit dem Sensor (allgemein: Sensorinformation an der genannten Position).","(A/S) Acknowledges sighting of a reference point, visually or via sensor. (General) Sensor information at the stated position.",
+  {opp:"LOOKING", conf:["TALLY","VISUAL","CAPTURED"], acc:[/^CONTACTS?( |$)/], note:"Im Talk-on: CONTACT für jeden Bezugspunkt, erst das Ziel selbst wird mit TALLY bestätigt."});
+B("LOOKING","sicht","Bezugspunkt, Bodenobjekt bzw. Ziel noch nicht gefunden.","Aircrew does not have the ground or surface object, reference point, or target in sight. Opposite of CONTACT.",
+  {opp:"CONTACT", conf:["NO JOY","BLIND","NEGATIVE LASER"], note:"Gegenstück zu CONTACT. Im Talk-on heißt LOOKING: Beschreibung vereinfachen oder größeren Bezugspunkt wählen."});
+B("CAPTURED","sicht","Objekt mit dem Bordsensor (z. B. Pod) erfasst und wird verfolgt.","Object has been acquired and is being tracked.",
+  {conf:["CONTACT","TALLY","SPOT"], note:"Typisch nach einem Koordinatenhinweis oder SPARKLE: „CAPTURED“ heißt, der Pod hält das Objekt."});
+B("SHADOW","sicht","Dem angegebenen Ziel folgen.","Follow indicated TARGET.",
+  {conf:["CAPTURED","ANCHOR","CONTINUE"], note:"Nützlich bei Bewegtzielen: Das Lfz bzw. UAS bleibt mit dem Sensor am Ziel."});
+
+/* ---- Laser und IR-Pointer ---- */
+B("LASER ON","laser","Aufforderung, mit der Laserbeleuchtung zu beginnen.","Directive call to start lasing.",
+  {opp:"CEASE LASER", conf:["LASING","SPARKLE","TEN SECONDS"], note:"Kommt meist vom Lfz an den Bodenlaser – du antwortest mit LASING."});
+B("LASING","laser","Ich beleuchte jetzt mit dem Laser (Antwort auf LASER ON).","The speaker is firing the laser in response to LASER ON.",
+  {conf:["LASER ON","SPOT","SPARKLE"], note:"Antwort des Lasernden auf LASER ON."});
+B("TEN SECONDS","laser","In ca. 10 Sekunden kommt der ON-Ruf (z. B. LASER ON) – bereithalten.","Standby for (weapon) ON call in approximately 10 seconds (e.g., LASER ON, TORCH ON).",
+  {conf:["LASER ON","PUSHING","ROLEX"], acc:[/^(TEN|10) SEC(ONDS?)?$/], note:"Gibt dir Zeit, den Laser aufs Ziel zu bringen."});
+B("CEASE LASER","laser","Laserbeleuchtung beenden (allgemein CEASE + Tätigkeit, z. B. CEASE SPARKLE).","CEASE [activity]: Discontinue stated activity (e.g., CEASE BUZZER, LASER, SPARKLE, TORCH).",
+  {opp:"LASER ON", conf:["ABORT","STEADY","CHECK FIRE"], acc:[/^CEASE LAS(ER|ING)$/], near:[[/^TERMINATE$/,"TERMINATE stand in älteren Ausgaben und Unterlagen für das Beenden des Lasers. Heute: CEASE LASER – TERMINATE gilt nur noch im Übungsbetrieb."]],
+   note:"Ältere Unterlagen nutzen dafür TERMINATE. Laser so kurz wie möglich – Fahrzeuge mit Laserwarner bemerken ihn."});
+B("SPOT","laser","Reflektierte Laserenergie erfasst (Laser Spot Tracker).","Acquisition of the reflected laser energy.",
+  {opp:"NEGATIVE LASER", conf:["CAPTURED","CONTACT","LASING"], note:"Das Lfz sieht deinen Laserpunkt – jetzt kann es Ziel und Laser abgleichen."});
+B("NEGATIVE LASER","laser","Keine Laserenergie erfasst.","Laser energy has not been acquired.",
+  {opp:"SPOT", conf:["DEADEYE","NO JOY","LOOKING"], acc:[/^NEG(ATIVE)? LASER$/], note:"Dann prüfen: Lasercode, Laser wirklich an, Sichtlinie, Geometrie (Safety Zone)."});
+B("SHIFT","laser","Laser, IR-Pointer, Radar oder Haltepunkt verlegen – mit Richtung bzw. neuem Ziel.","Shift laser, IR, radar, device energy, or aim point.",
+  {conf:["SNAKE","MATCH SPARKLE","RESET"], note:"Z. B. „SHIFT EAST 50“ – der Laserpunkt wandert auf das nächste Ziel."});
+B("DEADEYE","laser","Laserzielbeleuchter ausgefallen.","Laser designator system inoperative.",
+  {conf:["NEGATIVE LASER","WINCHESTER","BLIND"], note:"Dann Buddy-Lasing, dein Bodenlaser oder eine Waffe ohne Laser."});
+B("BUDDY LASE","laser","Lenkung der Waffe durch eine andere Quelle als das abwerfende Lfz (Anforderung oder Meldung).","Request or informative communication to have weapon guidance from a source other than delivering aircraft.",
+  {conf:["MATCH SPARKLE","LASING","SHIFT"], note:"Ein Lfz wirft, ein anderes (oder du) beleuchtet – Lasercode abstimmen."});
+B("SPARKLE","laser","Ziel mit dem IR-Pointer markieren bzw. ist markiert.","Mark or marking target by IR pointer.",
+  {conf:["LASING","ROPE","SMOKE"], note:"Nur mit NVG sichtbar – auch für einen Gegner mit Nachtsicht."});
+B("SNAKE","laser","IR-Pointer in einer Acht um das Ziel bewegen.","Oscillate an IR pointer in a figure eight about a target.",
+  {opp:"STEADY", conf:["ROPE","SHIFT","SPARKLE"], note:"Bewegung fällt im Nachtsichtgerät leichter auf. Danach STEADY."});
+B("STEADY","laser","Bewegung des IR-Pointers beenden – ruhig auf dem Ziel halten.","Stop oscillation of IR pointer.",
+  {opp:"SNAKE", conf:["CEASE LASER","ANCHOR","CAPTURED"], note:"Folgt auf SNAKE, sobald der Pilot den Pointer gefunden hat."});
+B("ROPE","laser","IR-Pointer kreisförmig um das Lfz führen, damit es die eigene Bodenposition findet.","Circling an IR pointer around an aircraft to help the aircraft identify the FRIENDLY ground position.",
+  {conf:["SNAKE","SPARKLE","ANCHOR"], note:"Markiert deine Position, nicht das Ziel. Nicht direkt ins Cockpit leuchten."});
+B("MATCH SPARKLE","laser","Eigene Markierung der genannten Art über die vorhandene legen – z. B. das Lfz legt seinen IR-Pointer auf deinen.","Overlay requested target designator type (e.g., MATCH SPARKLE, MATCH LASER).",
+  {conf:["BUDDY LASE","SHIFT","SPARKLE"], acc:[/^MATCH (SPARKLE|LASER)$/], note:"So prüfst du, ob Lfz und JTAC dasselbe Ziel meinen."});
+B("SMOKE","laser","Rauchmarkierung kennzeichnet eine Position.","Smoke marker used to mark a position.",
+  {conf:["SPARKLE","SPLASH","ROPE"], note:"Rauch zieht mit dem Wind – Ziel immer relativ zur Markierung beschreiben."});
+
+/* ---- Angriff und Freigabe ---- */
+B("IN","angriff","Lfz beginnt die Endphase des Luft-Boden-Angriffs (mit Richtung).","(A/S) Entering terminal phase of an air-to-ground attack. Opposite of OFF.",
+  {opp:"OFF", conf:["PUSHING","ATTACK","HOT"], acc:[/^IN( |$)/], note:"„IN FROM THE WEST“ – jetzt prüfst du Ausrichtung und Ziel und gibst ggf. die Freigabe."});
+B("OFF","angriff","Angriff beendet – Lfz dreht in die genannte Richtung ab.","Attack is terminated, and maneuvering to the indicated direction. Opposite of IN.",
+  {opp:"IN", conf:["BUGOUT","EXTEND","COLD"], acc:[/^OFF( |$)/], note:"„OFF SOUTH“ – das Lfz verlässt das Ziel, du planst den nächsten Anflug."});
+B("PUSHING","angriff","Lfz verlässt den festgelegten Punkt (z. B. IP oder CP).","Departing designated point.",
+  {conf:["IN","PUSH","TEN SECONDS"], note:"Nicht verwechseln mit PUSH (Frequenzwechsel)."});
+B("CLEARED HOT","angriff","Freigabe zum Waffeneinsatz durch JTAC bzw. FAC(A) bei Type 1 und 2.","Term used by a JTAC / FAC(A) during Type 1 and 2 control to authorize ordnance release.",
+  {conf:["CLEARED TO ENGAGE","CONTINUE","SMACK"], note:"Nur nach IN-Ruf und geprüfter Ausrichtung. Ohne CLEARED HOT kein Waffeneinsatz bei Type 1 und 2."});
+B("CLEARED TO ENGAGE","angriff","Type 3: Freigabe, Ziele innerhalb vorgegebener Einschränkungen selbstständig zu bekämpfen.","(A/S) JTAC / FAC(A) term for Type 3 control: attack targets within prescribed parameters.",
+  {conf:["CLEARED HOT","ATTACK","SMACK"], note:"Bei Type 3 gibst du keine einzelnen Angriffe frei, sondern Raum, Zeit und Ziele."});
+B("CONTINUE","angriff","Manöver fortsetzen – ändert nichts an der Freigabe.","Continue present maneuver, does not imply a change in clearance to engage or expend ordnance.",
+  {conf:["CONTINUE DRY","CLEARED HOT","WILCO"], note:"CONTINUE ist keine Freigabe zum Waffeneinsatz."});
+B("CONTINUE DRY","angriff","Manöver fortsetzen, Waffeneinsatz nicht erlaubt.","Continue present maneuver, ordnance release not authorized.",
+  {conf:["CONTINUE","ABORT","SKIP IT"], note:"Für Probeanflüge (Dry Pass), wenn Ziel oder eigene Kräfte noch nicht sicher identifiziert sind."});
+B("ABORT","angriff","Handlung abbrechen bzw. Angriff vor dem Waffeneinsatz beenden.","Cease action or terminate the attack prior to weapons release or event or mission.",
+  {conf:["CONTINUE DRY","CHECK FIRE","KNOCK IT OFF"], acc:[/^(ABORT ?)+$/], note:"Im CAS meist dreimal: „ABORT, ABORT, ABORT“. Darf jeder rufen, der eine Gefahr erkennt."});
+B("ATTACK","angriff","Lfz ist auf einen Luft-Boden-Angriff gegen ein bestimmtes Bodenziel festgelegt – nicht für CAS.","An informative call indicating aircraft are committed to air-to-surface delivery on a specific ground target. Not for CAS.",
+  {conf:["IN","CLEARED HOT","SMACK"], note:"Laut ATP 1-02.1 nicht im CAS verwenden – dort IN und OFF."});
+B("SMACK","angriff","Freigabe zum Waffeneinsatz auf Bodenzielkoordinaten – nicht für CAS.","Clearance to employ ordnance or fires on surface target coordinates. Not to be utilized in a CAS engagement.",
+  {conf:["CLEARED HOT","CLEARED TO ENGAGE","ATTACK"], note:"Im CAS gibst du mit CLEARED HOT bzw. CLEARED TO ENGAGE frei, nie mit SMACK."});
+
+/* ---- Feuerkontrolle und Abbruch ---- */
+B("HOT","feuer","Bereich, in den gefeuert wird bzw. werden soll – Waffeneinsatz beabsichtigt oder erfolgt.","Defined area is expected to receive fire; ordnance employment intended or completed.",
+  {opp:"COLD", conf:["CLEARED HOT","IN","SPIKE"], note:"Nicht verwechseln mit CLEARED HOT (Freigabe)."});
+B("COLD","feuer","Bereich, in den kein Feuer zu erwarten ist – weder eigenes noch feindliches.","Defined area is not expected to receive fire (enemy or FRIENDLY).",
+  {opp:"HOT", conf:["OFF","NAKED","CHECK FIRE"], note:"Z. B. „IP COLD“: Am IP ist kein Feuer zu erwarten."});
+B("CHECK FIRE","feuer","Sofortige Feuerpause für direktes und indirektes Feuer; Fortsetzung ggf. erst nach Koordination.","Immediate pause of direct or indirect fires. May require coordination to continue.",
+  {conf:["CEASE FIRE","HOLD FIRE","ABORT"], note:"Pause, kein endgültiger Abbruch."});
+B("CEASE FIRE","feuer","Feuer einstellen bzw. nicht eröffnen – Flugkörper im Flug fliegen weiter ins Ziel.","Stop firing, do not open fire. Missiles in flight will continue to intercept; continue to track.",
+  {conf:["HOLD FIRE","CHECK FIRE","ABORT"], note:"Unterschied zu HOLD FIRE: Flugkörper im Flug werden nicht zerstört."});
+B("HOLD FIRE","feuer","Notfall-Feuerbefehl: Feuer auf das bezeichnete Ziel einstellen und Flugkörper im Flug zerstören.","An emergency fire control order to stop firing on a designated target and destroy missiles in flight.",
+  {conf:["CEASE FIRE","CHECK FIRE","ABORT"], note:"Der härteste Feuerbefehl – auch Flugkörper im Flug werden zerstört."});
+B("SKIP IT","feuer","Eine bestimmte Plattform soll die angegebene Spur bzw. das Ziel nicht bekämpfen.","Directive call for a specific platform to not engage the indicated track.",
+  {conf:["CONTINUE DRY","ABORT","HOLD FIRE"], note:"Richtet sich an eine bestimmte Plattform und ein bestimmtes Ziel."});
+B("KNOCK IT OFF","feuer","Alle Manöver, Angriffe und Tätigkeiten der Übung sofort beenden (nur Ausbildung).","Cease all air combat maneuvers, attacks, activities, or exercises (training use only).",
+  {conf:["TERMINATE","ABORT","CEASE FIRE"], note:"Sicherheitsruf in der Ausbildung – jeder darf ihn rufen."});
+B("TERMINATE","feuer","Ausbildung: lokales Gefecht beenden, ohne die Übung insgesamt zu beeinflussen.","In training, cease local engagement without affecting the overall exercise.",
+  {conf:["KNOCK IT OFF","CEASE LASER","ABORT"], note:"Ältere Unterlagen nutzen TERMINATE auch für „Laser aus“ – heute CEASE LASER."});
+
+/* ---- Waffen und Wirkung ---- */
+B("AWAY","waffen","Waffe ausgelöst bzw. gestartet – mindestens mit Anzahl oder Waffenart („TWO AWAY“, „ONE PIG AWAY“).","Release or launch of specified weapon. At minimum, number or weapon type required.",
+  {conf:["RIFLE","PIG","SPLASH"], acc:[/(^| )AWAY$/], near:[[/^PICKLE$/,"PICKLE ist Pilotenjargon und kein Brevity-Wort. Der Abwurf wird mit AWAY gemeldet, z. B. „TWO AWAY“."]],
+   note:"Ab jetzt läuft die Flugzeit – bei Laserwaffen spätestens jetzt lasern."});
+B("PIG","waffen","Eigene Gleitwaffe(n) wie Lenkbombe (GBU), SDB oder Stand-off-Waffe.","FRIENDLY glide weapon(s) (e.g., standoff weapon, guided bomb unit, small diameter bomb).",
+  {conf:["RIFLE","BIRD","MAGNUM"], acc:[/^PIGS?$/], note:"Beim Abwurf z. B. „TWO PIGS AWAY“."});
+B("BIRD","waffen","Eigene Fla-Rakete(n) (Boden-Luft).","FRIENDLY surface-to-air missile(s).",
+  {conf:["PIG","SAM","RIFLE"], acc:[/^BIRDS?$/], note:"Nicht verwechseln mit SAM – das ist eine gesichtete (meist feindliche) Fla-Rakete."});
+B("RIFLE","waffen","Einsatz eines eigenen Luft-Boden-Flugkörpers kurzer Reichweite (unter ca. 185 km / 100 NM), z. B. Maverick oder Hellfire.","Employment of short range (e.g., < 100 NM maximum range) air-to-surface munition.",
+  {conf:["MAGNUM","PIG","GUNS"], note:"Anti-Radar-Flugkörper heißen MAGNUM, Gleitwaffen PIG."});
+B("GUNS","waffen","Bordkanone wird eingesetzt.","Aircraft gun is being employed.",
+  {conf:["RIFLE","MAGNUM","SPLASH"], acc:[/^GUNS?$/], note:"Bordkanone wirkt linear entlang der Anflugachse – Richtung so wählen, dass Streuung nicht zu eigenen Kräften geht."});
+B("MAGNUM","waffen","Start eines eigenen Anti-Radar-Flugkörpers (z. B. HARM).","Launch of FRIENDLY antiradiation missile.",
+  {conf:["RIFLE","SNIPER","ARIZONA"], note:"SEAD kann im Game Plan zeitlich auf deinen Angriff abgestimmt sein."});
+B("SNIPER","waffen","Auftrag: Anti-Radar-Flugkörper gegen eine bestimmte Bedrohung an bekannter Position einsetzen (mit Typ und Ort).","Aircraft to employ a range-known antiradiation missile against a specified threat at the specified location.",
+  {conf:["MAGNUM","RIFLE","MUD"], note:"SNIPER ist der Auftrag, MAGNUM die Meldung beim Start."});
+B("SPLASH","waffen","Treffer im Ziel beobachtet. Bei Artillerie: Meldung an den Beobachter ca. 5 Sekunden vor dem Einschlag.","Hit observed with valid DWE against a target. / Informative call to observer or spotter about 5 seconds before estimated impact.",
+  {conf:["AWAY","MILLER TIME","TRASHED"], acc:[/^SPLASH(ED)?$/], near:[[/^SHACK$/,"SHACK steht in der aktuellen Brevity-Publikation nicht mehr. Treffer im Ziel: SPLASH."]],
+   note:"Ältere Unterlagen unterscheiden noch SHACK (Treffer) – heute deckt SPLASH das ab."});
+B("TRASHED","waffen","Eigener Flugkörper wurde abgewehrt bzw. getäuscht.","FRIENDLY missile has been defeated.",
+  {conf:["SPLASH","ABORT","WINCHESTER"], note:"Gegenstück zum Treffer: Der eigene Flugkörper hat sein Ziel nicht erreicht."});
+B("MILLER TIME","waffen","Luft-Boden-Waffeneinsatz abgeschlossen.","Completion of A/S ordnance delivery.",
+  {conf:["WINCHESTER","SPLASH","OFF"], note:"Heißt nicht, dass keine Munition mehr da ist – das wäre WINCHESTER."});
+B("WINCHESTER","waffen","Keine Munition mehr.","No ordnance remaining.",
+  {conf:["SHOTGUN","ARIZONA","BINGO"], note:"Spätestens jetzt brauchst du die nächste Ablösung."});
+B("SHOTGUN","waffen","Vorab festgelegter Munitionsstand erreicht.","Prebriefed weapons state.",
+  {conf:["WINCHESTER","JOKER","BINGO"], note:"Gegenstück zu JOKER, nur für Munition statt Treibstoff."});
+B("ARIZONA","waffen","Keine Anti-Radar-Flugkörper mehr.","No antiradiation missile ordnance remaining.",
+  {conf:["WINCHESTER","MAGNUM","NAKED"], note:"Wichtig für die SEAD-Planung: Dieses Lfz kann keine Radare mehr bekämpfen."});
+
+/* ---- Bedrohung und Selbstschutz ---- */
+B("MUD","bedr","RWR zeigt eine Bodenbedrohung, aber keinen Start.","Radar warning receiver ground threat displayed with no launch indication.",
+  {conf:["SPIKE","NAKED","SAM"], note:"Z. B. „MUD SA-8, NORTH“ – mit Typ und Richtung."});
+B("NAKED","bedr","Keine Anzeigen auf dem RWR.","No radar warning receiver indications.",
+  {conf:["MUD","SPIKE","NO JOY"], note:"Heißt nicht „keine Bedrohung“: MANPADS und optisch gerichtete Kanonen zeigt das RWR nie."});
+B("SPIKE","bedr","RWR zeigt das Radar eines Abfangjägers in Verfolgung oder beim Start.","Radar warning receiver indication of an air interceptor threat in track or launch.",
+  {conf:["MUD","BUDDY SPIKE","SAM"], note:"SPIKE = Luftbedrohung, MUD = Bodenbedrohung."});
+B("BUDDY SPIKE","bedr","RWR zeigt die Aufschaltung durch ein eigenes Radar.","FRIENDLY system radar lock-on indication on radar warning receiver.",
+  {conf:["SPIKE","MUD","FRIENDLY"], note:"Fordert das eigene System auf, die Aufschaltung zu prüfen."});
+B("SAM","bedr","Fla-Rakete im Flug oder Start gesichtet – mit Position.","Visual acquisition of a SAM in flight or a SAM launch; should include position.",
+  {conf:["MUD","BIRD","TRACKING"], note:"Löst sofort Gegenmaßnahmen aus. BIRD wäre eine eigene Fla-Rakete."});
+B("TRACKING","bedr","Infrarot-Aufschaltung bzw. gegnerische Flugabwehr verfolgt das eigene Lfz ([System] TRACKING).","(1) IR lock-on. (2) Enemy air defense maintaining awareness on FRIENDLY.",
+  {conf:["SPIKE","MUD","CAPTURED"], note:"Mit Systemangabe, z. B. „SA-15 TRACKING“."});
+B("DEFENSIVE","bedr","Lfz wird angegriffen und fliegt Abwehrmanöver – Staffelung und gegenseitige Unterstützung nicht sichergestellt.","Aircraft is under attack, maneuvering defensively, and unable to ensure deconfliction or mutual support.",
+  {conf:["JINK","BUGOUT","SCRAM"], note:"Ein DEFENSIVE-Lfz achtet nicht auf Staffelung – andere Lfz und Steilfeuer berücksichtigen."});
+B("JINK","bedr","Unvorhersehbares Manöver, um die Zielverfolgung des Gegners zu stören.","Perform an unpredictable maneuver to negate a tracking solution.",
+  {conf:["DEFENSIVE","EXTEND","BUGOUT"], note:"Typisch gegen Rohrwaffen-Flugabwehr."});
+B("EXTEND","bedr","Kurzes Manöver, um Energie, Abstand oder Trennung zu gewinnen – mit Absicht, wieder anzugreifen.","Short-term maneuver to gain energy, distance, or separation with the intent of reengaging.",
+  {conf:["BUGOUT","OFF","RESET"], note:"Anders als BUGOUT kommt das Lfz zurück."});
+B("BUGOUT","bedr","Lösen aus Gefecht, Angriff oder Einsatz – ohne Absicht zurückzukehren.","Separation from a particular engagement, attack, or operation with no intent to reengage or return.",
+  {conf:["EXTEND","SCRAM","OFF"], note:"Plane ohne dieses Lfz weiter."});
+B("SCRAM","bedr","Eigenes Lfz in unmittelbarer Gefahr: sofort in die angegebene Richtung abfliegen, keine weitere Unterstützung.","FRIENDLY asset in immediate danger; withdraw in the indicated direction, with no further mission support expected.",
+  {conf:["BUGOUT","DEFENSIVE","ABORT"], note:"Dringender als BUGOUT – Gefahr unmittelbar."});
+B("BANDIT","bedr","Eindeutig als Feind identifiziert – nach den Identifizierungskriterien des Einsatzraums.","Positively identified as an enemy in accordance with theater ID criteria.",
+  {conf:["HOSTILE","BOGEY","OUTLAW"], note:"BANDIT allein ist noch keine Feuerfreigabe – die bringt HOSTILE."});
+B("HOSTILE","bedr","Als Feind identifiziert, Feuerfreigabe nach ROE erteilt.","A contact identified as enemy upon which clearance to fire is authorized IAW theater ROE.",
+  {conf:["BANDIT","OUTLAW","BOGEY"], note:"Unterschied zu BANDIT: Hier ist die Feuerfreigabe nach ROE eingeschlossen."});
+B("OUTLAW","bedr","Kontakt erfüllt die Herkunftskriterien der ROE (z. B. kommt aus feindlichem Gebiet).","CONTACT has met point of origin criteria for ROE.",
+  {conf:["BANDIT","HOSTILE","BOGEY"], note:"Ein Zwischenschritt der Identifizierung, noch keine Feuerfreigabe."});
+B("BOGEY","bedr","Kontakt mit unbekannter Identität.","A CONTACT whose identity is unknown.",
+  {conf:["BANDIT","NO FACTOR","HOSTILE"], note:"Unbekannt – weder Freund noch Feind bestätigt."});
+B("FRIENDLY","bedr","Eindeutig als eigen identifiziert (Lfz, Schiff, Raumfahrzeug oder Bodenposition).","A positively identified FRIENDLY aircraft, ship, spacecraft, or ground position.",
+  {conf:["VISUAL","BUDDY SPIKE","NO FACTOR"], note:"VISUAL heißt: ich sehe Eigene. FRIENDLY heißt: das ist eigen."});
+B("NO FACTOR","bedr","Das genannte Objekt ist keine Bedrohung.","Stated [object] is not a threat.",
+  {conf:["NAKED","BOGEY","FRIENDLY"], note:"Sagt nichts über die Identität, nur über die Bedrohung."});
+B("DECLARE","bedr","Anfrage nach der Identität einer Spur, eines Ziels oder einer Gruppe.","Inquiry as to the ID of specified track(s), target(s), or correlated GROUP.",
+  {conf:["STATUS","ALPHA CHECK","BOGEY"], note:"Antwort z. B. BANDIT, HOSTILE, FRIENDLY oder BOGEY."});
+B("GADGET","bedr","Radar- oder Strahlergerät.","Radar or emitter equipment.",
+  {conf:["BUZZER","MUD","SPIKE"], note:"Z. B. „GADGET BENT“: Radar ausgefallen."});
+B("BUZZER","bedr","Störung der Funkverbindungen (Kommunikationsstörung).","Electromagnetic communications jamming.",
+  {conf:["MUSIC","GADGET","STRANGLE"], note:"NATO-Gegenstück: CHATTER."});
+B("MUSIC","bedr","Elektronische Täuschstörung gegen Radar.","Radar electromagnetic deceptive jamming.",
+  {conf:["BUZZER","GADGET","MUD"], note:"BUZZER stört Funk, MUSIC stört Radar."});
+
+/* ---- Treibstoff, Zeit, Koordination ---- */
+B("BINGO","koord","Vorab festgelegter Treibstoffstand für den Rückflug erreicht.","Prebriefed fuel state needed for recovery.",
+  {conf:["JOKER","WINCHESTER","PLAYTIME"], note:"Das Lfz muss jetzt gehen – kein weiterer Anflug."});
+B("JOKER","koord","Treibstoffstand über BINGO, ab dem Lösen bzw. Einsatzende eingeleitet werden sollte.","Fuel state above BINGO at which separation, BUGOUT, or event termination should begin.",
+  {conf:["BINGO","SHOTGUN","PLAYTIME"], note:"Vorwarnung: Noch ein, vielleicht zwei Anflüge."});
+B("PLAYTIME","koord","Verbleibende Zeit im Einsatzraum, in Stunden plus Minuten („ONE PLUS THIRTY“ = 1 h 30 min).","Amount of time aircraft can remain on station, given in hours plus minutes.",
+  {conf:["JOKER","BINGO","ROLEX"], acc:[/^PLAYTIME( |$)/], note:"Kommt beim Check-in – bestimmt, wie viel du mit dem Lfz planen kannst."});
+B("FENCE IN","koord","Cockpitschalter vor dem Einflug ins Kampfgebiet einstellen.","Set cockpit switches as appropriate before entering the combat area.",
+  {opp:"FENCE OUT", conf:["FEET DRY","PUSHING","GOGGLES"]});
+B("FENCE OUT","koord","Cockpitschalter beim Verlassen des Kampfgebiets einstellen.","Set cockpit switches as appropriate before exiting the combat area.",
+  {opp:"FENCE IN", conf:["FEET WET","BUGOUT","OFF"]});
+B("PUSH","koord","Auf die genannte Frequenz wechseln – keine Bestätigung nötig.","Switch to designated frequency; no acknowledgment required.",
+  {conf:["PUSHING","SQUAWK","STRANGLE"], note:"Nicht verwechseln mit PUSHING (verlässt einen Punkt)."});
+B("WILCO","koord","Ich werde die Anweisung ausführen.","Will comply with received instructions.",
+  {conf:["CONTINUE","PUSH","STATUS"]});
+B("ALPHA CHECK","koord","Anfrage bzw. Bestätigung von Richtung und Entfernung vom Lfz zu einem beschriebenen Punkt.","Request for confirmation of bearing and range from aircraft to described point.",
+  {conf:["BULLSEYE","STATUS","DECLARE"], note:"Prüft, ob Lfz und JTAC denselben Punkt meinen."});
+B("BULLSEYE","koord","Festgelegter Bezugspunkt – Positionen als Richtung (magnetisch) und Entfernung (NM) davon.","An established reference point from which the position of an object can be referenced by bearing (magnetic) and range (NM).",
+  {conf:["ALPHA CHECK","ANCHOR","RESET"]});
+B("ANCHOR","koord","Um einen bestimmten Punkt kreisen (auch: Betankungsstrecke des Tankers).","Orbit about a specific point. / Refueling track flown by tanker.",
+  {conf:["ROPE","RESET","SAUNTER"], note:"Z. B. „ANCHOR OVER THE BRIDGE“ – Warteraum über einem Punkt."});
+B("BUSTER","koord","Mit maximaler Dauerleistung fliegen.","Fly at maximum continuous speed.",
+  {conf:["GATE","SAUNTER","PUSHING"]});
+B("GATE","koord","So schnell wie möglich fliegen – Nachbrenner bzw. Maximalleistung.","Fly as quickly as possible, using after-burner or maximum power.",
+  {conf:["BUSTER","SAUNTER","SCRAM"], note:"Schneller als BUSTER, kostet viel Treibstoff."});
+B("SAUNTER","koord","Mit bester Flugdauer (Endurance) fliegen.","Fly at best endurance.",
+  {conf:["BUSTER","GATE","ANCHOR"]});
+B("ROLEX","koord","Zeitverschiebung in Minuten für die ganze Mission – immer später.","A timeline adjustment in minutes for the entire mission; always means later.",
+  {conf:["PLAYTIME","RESET","TEN SECONDS"], acc:[/^ROLEX( |$)/], note:"Z. B. „ROLEX FIVE“ = alles 5 Minuten später."});
+B("STATUS","koord","Anfrage nach der taktischen Lage eines Einzelnen.","Request for an individual's tactical situation.",
+  {conf:["ALPHA CHECK","DECLARE","PLAYTIME"]});
+B("SQUAWK","koord","IFF bzw. SIF wie angegeben schalten (bzw. ist so geschaltet).","Operate IFF/selective ID feature as indicated.",
+  {conf:["STRANGLE","PUSH","GOGGLES"]});
+B("STRANGLE","koord","Angegebenes System abschalten (z. B. STRANGLE PARROT = IFF aus).","Turn off system indicated (e.g., STRANGLE PARROT).",
+  {conf:["SQUAWK","CEASE LASER","BENT"]});
+B("BENT","koord","Angegebenes System ist ausgefallen (aufgehoben durch SWEET).","System indicated is inoperative. Cancelled by SWEET.",
+  {conf:["DEADEYE","STRANGLE","WINCHESTER"], note:"Z. B. „POD BENT“."});
+B("POPEYE","koord","Fliegt in Wolken bzw. bei schlechter Sicht.","Flying in clouds or an area of reduced visibility.",
+  {conf:["BLIND","NO JOY","GOGGLES"], note:"Wichtig für Type 1: Ohne Sicht auf Ziel und Lfz geht nur Type 2 oder 3."});
+B("GOGGLES","koord","Nachtsichtbrillen auf bzw. ab (Information).","An informative call that night-vision goggles are on/off.",
+  {conf:["POPEYE","FENCE IN","SQUAWK"], acc:[/^GOGGLES?( ON| OFF)?$/]});
+B("DIVERT","koord","Zum Ausweichflugplatz fliegen.","Proceed to alternate base.",
+  {conf:["RESET","BUGOUT","PUSHING"]});
+B("RESET","koord","Zu einer vorab festgelegten Position bzw. in einen festgelegten Raum fliegen.","Proceed to a prebriefed position or area of operations.",
+  {conf:["DIVERT","ANCHOR","EXTEND"]});
+B("FEET DRY","koord","Fliegt über Land.","Flying over land.",
+  {opp:"FEET WET", conf:["FENCE IN","PUSHING","POPEYE"]});
+B("FEET WET","koord","Fliegt über Wasser.","Flying over water.",
+  {opp:"FEET DRY", conf:["FENCE OUT","POPEYE","DIVERT"]});
+
+/* ---- Lagen: Situation -> Funkspruch ---- */
+/* L(id, Lage, Frage, richtig, [3 falsch], Erklärung, Gruppe) */
+const LAGEN = [];
+const L = (id, lage, q, a, w, ex, g) => LAGEN.push({id, lage, q, a, w, ex, g});
+L("l01","Im Talk-on beschreibst du eine Brücke als Bezugspunkt. Der Pilot hat sie gefunden.","Was meldet er?","CONTACT",["TALLY","VISUAL","SPOT"],"CONTACT bestätigt einen Bezugspunkt – mit dem Auge oder dem Sensor. TALLY kommt erst, wenn er das Ziel selbst sieht.","sicht");
+L("l02","Der Pilot sieht jetzt die zwei BMP am Waldrand, die du beschrieben hast.","Was meldet er?","TALLY",["CONTACT","VISUAL","SPOT"],"TALLY = Ziel bzw. Feind in Sicht. VISUAL gilt nur für Eigene.","sicht");
+L("l03","Der Pilot sieht deine Stellung bzw. deine Markierung der eigenen Position.","Was meldet er?","VISUAL",["TALLY","CONTACT","FRIENDLY"],"VISUAL = eigenes Lfz bzw. eigene Bodenposition in Sicht. Gegenteil: BLIND.","sicht");
+L("l04","Trotz Talk-on findet der Pilot das Ziel nicht.","Was meldet er?","NO JOY",["BLIND","NEGATIVE LASER","NAKED"],"NO JOY = Ziel nicht in Sicht. BLIND gilt für eigene Kräfte, NEGATIVE LASER für fehlende Laserenergie.","sicht");
+L("l05","Der Pilot sucht den Kirchturm, den du als ersten Bezugspunkt genannt hast, und findet ihn noch nicht.","Was meldet er?","LOOKING",["NO JOY","BLIND","POPEYE"],"LOOKING ist das Gegenstück zu CONTACT. NO JOY bezieht sich auf das Ziel bzw. einen BANDIT.","sicht");
+L("l06","Der Pilot findet deine eigene Stellung nicht.","Was meldet er?","BLIND",["NO JOY","LOOKING","POPEYE"],"BLIND = keine Sicht auf Eigene. Helfen kann z. B. ROPE mit dem IR-Pointer.","sicht");
+L("l07","Nach deinem Koordinatenhinweis hat der Pilot das Fahrzeug im Pod erfasst und verfolgt es.","Was meldet er?","CAPTURED",["CONTACT","TALLY","SPOT"],"CAPTURED = Objekt mit dem Bordsensor erfasst und verfolgt.","sicht");
+L("l08","Laser-Handoff: Der Pilot will dein Bodenlaser-Signal in etwa 10 Sekunden.","Was funkt er?","TEN SECONDS",["LASER ON","PUSHING","ROLEX"],"TEN SECONDS kündigt den ON-Ruf in ca. 10 Sekunden an. Danach kommt LASER ON.","laser");
+L("l09","Jetzt soll dein Laser einschalten.","Was funkt der Pilot?","LASER ON",["LASING","SPARKLE","SPOT"],"LASER ON = Aufforderung zum Lasern. Du antwortest mit LASING.","laser");
+L("l10","Auf LASER ON hin beleuchtest du das Ziel mit deinem Bodenlaser.","Was meldest du?","LASING",["LASER ON","SPOT","SPARKLE"],"LASING = ich lasere jetzt. SPOT meldet das Lfz, wenn sein Laser Spot Tracker den Punkt erfasst.","laser");
+L("l11","Der Laser Spot Tracker des Lfz hat deinen Laserpunkt erfasst.","Was meldet der Pilot?","SPOT",["CAPTURED","CONTACT","LASING"],"SPOT = reflektierte Laserenergie erfasst. Gegenteil: NEGATIVE LASER.","laser");
+L("l12","Du lasert, aber der Laser Spot Tracker des Lfz findet nichts.","Was meldet der Pilot?","NEGATIVE LASER",["DEADEYE","NO JOY","LOOKING"],"NEGATIVE LASER: Code, Laser an, Sichtlinie und Geometrie prüfen.","laser");
+L("l13","Der Laserzielbeleuchter im Pod des Lfz ist ausgefallen.","Was meldet der Pilot?","DEADEYE",["NEGATIVE LASER","WINCHESTER","BLIND"],"DEADEYE = eigener Laser ausgefallen. Dann Buddy-Lasing oder eine Waffe ohne Laser.","laser");
+L("l14","Die Lenkbombe ist eingeschlagen, die Laserbeleuchtung soll enden.","Was wird gefunkt?","CEASE LASER",["ABORT","STEADY","MILLER TIME"],"CEASE LASER beendet die Beleuchtung. Ältere Unterlagen: TERMINATE.","laser");
+L("l15","Nacht. Du markierst das Ziel mit dem IR-Pointer.","Was funkst du?","SPARKLE",["LASING","ROPE","SMOKE"],"SPARKLE = Ziel mit IR-Pointer markiert. ROPE markiert deine eigene Position.","laser");
+L("l16","Der Pilot findet deinen IR-Pointer auf dem Ziel nicht und bittet dich, ihn zu bewegen.","Welches Wort?","SNAKE",["ROPE","SHIFT","SPARKLE"],"SNAKE = Pointer in einer Acht um das Ziel bewegen. Bewegung fällt im NVG leichter auf.","laser");
+L("l17","Der Pilot hat den bewegten Pointer gefunden. Er soll jetzt ruhig auf dem Ziel liegen.","Welches Wort?","STEADY",["CEASE LASER","ANCHOR","CAPTURED"],"STEADY beendet SNAKE: Der Pointer bleibt ruhig auf dem Ziel.","laser");
+L("l18","Nacht. Der Pilot findet deine Stellung nicht. Du hilfst ihm mit dem IR-Pointer.","Was tust du?","ROPE",["SNAKE","SPARKLE","VISUAL"],"ROPE = Pointer kreisförmig um das Lfz führen, damit es deine Position findet.","laser");
+L("l19","Du willst prüfen, ob das Lfz wirklich dein Ziel meint: Es soll seinen IR-Pointer auf deinen legen.","Was forderst du an?","MATCH SPARKLE",["BUDDY LASE","SHIFT","SPARKLE"],"MATCH SPARKLE = eigene Markierung über die vorhandene legen.","laser");
+L("l20","Der Laserpunkt soll auf das zweite Fahrzeug 50 m weiter östlich wandern.","Welches Wort?","SHIFT",["SNAKE","MATCH SPARKLE","RESET"],"SHIFT verlegt Laser, Pointer oder Haltepunkt – mit Richtung, z. B. „SHIFT EAST 50“.","laser");
+L("l21","Ein Lfz wirft eine Laserbombe, ein zweites Lfz soll sie mit seinem Laser ins Ziel führen.","Wie heißt das?","BUDDY LASE",["MATCH SPARKLE","SHIFT","LASING"],"BUDDY LASE = Lenkung durch eine andere Quelle als das abwerfende Lfz.","laser");
+L("l22","Der Pilot meldet den Beginn seines Angriffsanflugs aus Westen.","Was funkt er?","IN",["PUSHING","ATTACK","HOT"],"„IN FROM THE WEST“ – Endphase des Angriffs. ATTACK ist laut ATP 1-02.1 nicht für CAS.","angriff");
+L("l23","Type 2: Der Pilot meldet IN, Ausrichtung und Einschränkungen passen.","Was funkst du?","CLEARED HOT",["CLEARED TO ENGAGE","CONTINUE","SMACK"],"CLEARED HOT gibt bei Type 1 und 2 den Waffeneinsatz frei. CLEARED TO ENGAGE gilt für Type 3.","angriff");
+L("l24","Type 3: Das Lfz soll in einem Raum innerhalb deiner Einschränkungen selbst Ziele bekämpfen.","Was funkst du?","CLEARED TO ENGAGE",["CLEARED HOT","ATTACK","SMACK"],"CLEARED TO ENGAGE = Freigabe für Type 3 innerhalb vorgegebener Parameter.","angriff");
+L("l25","Du willst einen Probeanflug, damit der Pilot Ziel und eigene Kräfte sieht – ohne Waffeneinsatz.","Was funkst du nach dem IN-Ruf?","CONTINUE DRY",["ABORT","CONTINUE","SKIP IT"],"CONTINUE DRY = Manöver fortsetzen, kein Waffeneinsatz. CONTINUE allein ändert nichts an der Freigabe.","angriff");
+L("l26","Der Pilot meldet IN – sein Kurs zeigt aber über eigene Truppen.","Was funkst du sofort?","ABORT",["CONTINUE DRY","CHECK FIRE","HOLD FIRE"],"ABORT bricht den Angriff vor dem Waffeneinsatz ab – im CAS dreimal: „ABORT, ABORT, ABORT“.","angriff");
+L("l27","Das Lfz hat den Angriff beendet und dreht nach Süden ab.","Was funkt der Pilot?","OFF",["EXTEND","BUGOUT","COLD"],"„OFF SOUTH“ – Angriff beendet. EXTEND und BUGOUT sind Ausweichmanöver.","angriff");
+L("l28","Das Lfz verlässt den IP in Richtung Ziel.","Was meldet der Pilot?","PUSHING",["IN","PUSH","TEN SECONDS"],"PUSHING = verlässt den festgelegten Punkt. PUSH heißt Frequenzwechsel.","angriff");
+L("l29","Zwei Lenkbomben haben das Lfz verlassen.","Was meldet der Pilot?","AWAY",["RIFLE","SPLASH","PICKLE"],"„TWO AWAY“ bzw. „TWO PIGS AWAY“. PICKLE ist Pilotenjargon, kein Brevity-Wort.","waffen");
+L("l30","Die A-10 schießt eine Maverick.","Was meldet der Pilot?","RIFLE",["MAGNUM","GUNS","PIG"],"RIFLE = Luft-Boden-Flugkörper kurzer Reichweite. MAGNUM nur für Anti-Radar-Flugkörper.","waffen");
+L("l31","Ein Lfz startet einen HARM gegen ein Feuerleitradar.","Was meldet der Pilot?","MAGNUM",["RIFLE","SNIPER","ARIZONA"],"MAGNUM = Start eines Anti-Radar-Flugkörpers. SNIPER ist der Auftrag dazu.","waffen");
+L("l32","Der Pilot beobachtet den Treffer seiner Waffe im Ziel.","Was meldet er?","SPLASH",["MILLER TIME","AWAY","TRASHED"],"SPLASH = Treffer beobachtet. Das ältere SHACK steht nicht mehr in der Brevity-Publikation.","waffen");
+L("l33","Artillerie: Die Feuerstellung meldet dir als Beobachter, dass die Geschosse in ca. 5 Sekunden einschlagen.","Welches Wort?","SPLASH",["SHOT","TEN SECONDS","AWAY"],"SPLASH = Einschlag in ca. 5 Sekunden. SHOT meldet die Feuerstellung beim Abfeuern.","waffen");
+L("l34","Das Lfz hat keine Munition mehr.","Was meldet der Pilot?","WINCHESTER",["BINGO","SHOTGUN","ARIZONA"],"WINCHESTER = keine Munition. SHOTGUN = vorab festgelegter Munitionsstand, ARIZONA = keine Anti-Radar-Flugkörper.","waffen");
+L("l35","Das Lfz hat alle geplanten Luft-Boden-Waffeneinsätze abgeschlossen.","Was meldet der Pilot?","MILLER TIME",["WINCHESTER","SPLASH","OFF"],"MILLER TIME = Waffeneinsatz abgeschlossen. Es kann noch Munition an Bord sein.","waffen");
+L("l36","Beim Check-in: Das Lfz kann noch 1 Stunde 30 Minuten im Raum bleiben.","Welches Wort nutzt der Pilot?","PLAYTIME",["JOKER","BINGO","ROLEX"],"„PLAYTIME ONE PLUS THIRTY“.","koord");
+L("l37","Der Treibstoff erreicht den vorab festgelegten Stand für den Rückflug.","Was meldet der Pilot?","BINGO",["JOKER","WINCHESTER","PLAYTIME"],"BINGO = jetzt Rückflug. JOKER ist die Vorwarnung davor.","koord");
+L("l38","Das RWR zeigt das Radar einer SA-8, aber keinen Start.","Was meldet der Pilot?","MUD",["SPIKE","SAM","NAKED"],"MUD = Bodenbedrohung im RWR ohne Start, z. B. „MUD SA-8, NORTH“.","bedr");
+L("l39","Der Pilot sieht eine Fla-Rakete aus einem Waldstück starten.","Was ruft er?","SAM",["MUD","SPIKE","BIRD"],"SAM = Fla-Rakete im Flug bzw. Start gesichtet, mit Position. BIRD wäre eine eigene Fla-Rakete.","bedr");
+L("l40","Das Lfz muss den Einsatz abbrechen und kommt nicht zurück.","Was meldet der Pilot?","BUGOUT",["EXTEND","OFF","RESET"],"BUGOUT = Lösen ohne Rückkehr. EXTEND = Lösen mit Absicht, wieder anzugreifen.","bedr");
+L("l41","Ein Luftkontakt unbekannter Identität nähert sich.","Wie wird er bezeichnet?","BOGEY",["BANDIT","HOSTILE","NO FACTOR"],"BOGEY = Identität unbekannt. BANDIT = Feind, HOSTILE = Feind mit Feuerfreigabe.","bedr");
+L("l42","Übung: Ein Lfz kommt einem anderen gefährlich nahe. Alle sollen sofort alles einstellen.","Was wird gerufen?","KNOCK IT OFF",["TERMINATE","ABORT","CEASE FIRE"],"KNOCK IT OFF beendet in der Ausbildung alle Manöver und Angriffe. TERMINATE betrifft nur das lokale Gefecht.","feuer");
+L("l43","Eine eigene Patrouille bewegt sich unerwartet auf das Ziel zu. Alle direkten und indirekten Feuer sollen sofort pausieren, weiter erst nach Absprache.","Welches Kommando?","CHECK FIRE",["CEASE FIRE","HOLD FIRE","SKIP IT"],"CHECK FIRE = sofortige Feuerpause. HOLD FIRE ist der Notfallbefehl, bei dem auch Flugkörper im Flug zerstört werden.","feuer");
+L("l44","Ein Pilot meldet, dass er nachts seine Nachtsichtbrille aufsetzt.","Welches Wort?","GOGGLES",["POPEYE","FENCE IN","SQUAWK"],"„GOGGLES ON“ bzw. „GOGGLES OFF“.","koord");
+L("l45","Der Pilot fliegt in den Wolken und hat keine Bodensicht.","Was meldet er?","POPEYE",["BLIND","NO JOY","GOGGLES"],"POPEYE = in Wolken bzw. schlechter Sicht. Für Type 1 brauchst du Sicht auf Ziel und Lfz.","koord");
+L("l46","Der Gesamtablauf verschiebt sich: Alle geplanten Zeiten gelten 5 Minuten später.","Was funkst du?","ROLEX",["PLAYTIME","RESET","TEN SECONDS"],"„ROLEX FIVE“ – ROLEX heißt immer später.","koord");
+
+/* ---- Abläufe: richtige Reihenfolge ---- */
+const SEQ = [
+  {id:"s01", q:"Laser-Handoff an deinen Bodenlaser: In welcher Reihenfolge laufen die Funksprüche?",
+   a:["TEN SECONDS","LASER ON","LASING","SPOT","CEASE LASER"],
+   w:[["LASER ON","TEN SECONDS","LASING","SPOT","CEASE LASER"],["TEN SECONDS","LASING","LASER ON","SPOT","CEASE LASER"],["TEN SECONDS","LASER ON","SPOT","LASING","CEASE LASER"]],
+   ex:"Lfz: TEN SECONDS – Lfz: LASER ON – du: LASING – Lfz (Laser Spot Tracker): SPOT – nach dem Einschlag: CEASE LASER."},
+  {id:"s02", q:"Type-2-Angriff: In welcher Reihenfolge laufen die Funksprüche?",
+   a:["PUSHING","IN","CLEARED HOT","AWAY","OFF"],
+   w:[["IN","PUSHING","CLEARED HOT","AWAY","OFF"],["PUSHING","CLEARED HOT","IN","AWAY","OFF"],["PUSHING","IN","AWAY","CLEARED HOT","OFF"]],
+   ex:"PUSHING (verlässt den IP) – IN – du prüfst und gibst CLEARED HOT – AWAY beim Auslösen – OFF beim Abdrehen."},
+  {id:"s03", q:"Talk-on bis zum Ziel: In welcher Reihenfolge meldet der Pilot?",
+   a:["LOOKING","CONTACT","TALLY"],
+   w:[["CONTACT","LOOKING","TALLY"],["NO JOY","TALLY","CONTACT"],["LOOKING","TALLY","CONTACT"]],
+   ex:"Bezugspunkt noch nicht gefunden: LOOKING – gefunden: CONTACT – Ziel gefunden: TALLY."},
+  {id:"s04", q:"Zielmarkierung mit dem IR-Pointer: In welcher Reihenfolge laufen die Funksprüche?",
+   a:["SPARKLE","SNAKE","STEADY","CEASE SPARKLE"],
+   w:[["SNAKE","SPARKLE","STEADY","CEASE SPARKLE"],["SPARKLE","STEADY","SNAKE","CEASE SPARKLE"],["SPARKLE","SNAKE","CEASE SPARKLE","STEADY"]],
+   ex:"SPARKLE markiert – findet der Pilot den Pointer nicht, SNAKE – sobald er ihn hat, STEADY – zum Schluss CEASE SPARKLE."},
+  {id:"s05", q:"Treibstoff: In welcher Reihenfolge erreicht ein Lfz diese Stände?",
+   a:["JOKER","BINGO"],
+   w:[["BINGO","JOKER"],["JOKER","WINCHESTER"],["SHOTGUN","JOKER"]],
+   ex:"JOKER liegt über BINGO und ist die Vorwarnung. Bei BINGO muss das Lfz zurück."}
+];
+
+/* ---- Abkürzungen ---- */
+const AB = [];
+const A = (a, g, long, de, o) => AB.push(Object.assign({a, g, long, de}, o || {}));
+/* Rollen und Stellen */
+A("JTAC","rollen","Joint Terminal Attack Controller","Zertifizierter Fliegerleiter am Boden: steuert CAS-Lfz und gibt ihren Waffeneinsatz frei.");
+A("FAC(A)","rollen","Forward Air Controller (Airborne)","Fliegerleiter in der Luft mit denselben Befugnissen wie ein JTAC.");
+A("JFO","rollen","Joint Fires Observer","Beobachter, der Zieldaten für Steilfeuer und CAS liefert – die Freigabe gibt nur JTAC bzw. FAC(A).");
+A("TACP","rollen","Tactical Air Control Party","Fliegerleittrupp bei der Bodentruppe, berät den Führer zur Luftunterstützung.");
+A("ASOC","rollen","Air Support Operations Center","Leitstelle für die direkte Luftunterstützung beim Korps bzw. der Division.");
+A("DASC","rollen","Direct Air Support Center","Leitstelle des US Marine Corps für die direkte Luftunterstützung – Gegenstück zum ASOC.");
+A("CAOC","rollen","Combined Air Operations Centre","Gefechtsstand, der die Luftoperationen plant und führt und die ATO erstellt.");
+A("AWACS","rollen","Airborne Warning and Control System","Luftgestütztes Frühwarn- und Führungssystem, z. B. E-3.");
+A("JTAR","rollen","Joint Tactical Air Strike Request","Formular bzw. Format zur Anforderung von Luftunterstützung.");
+/* Verfahren und Planung */
+A("CAS","verf","Close Air Support","Luftnahunterstützung gegen Ziele nahe eigener Kräfte – jeder Angriff eng mit der Bodentruppe abgestimmt.");
+A("AI","verf","Air Interdiction","Abriegelung aus der Luft: Wirkung gegen Ziele, bevor sie eigene Kräfte erreichen – ohne Detailabstimmung mit der Bodentruppe.");
+A("CCA","verf","Close Combat Attack","Nahkampfunterstützung durch Heereshubschrauber (US Army), ohne JTAC-Freigabe.");
+A("SEAD","verf","Suppression of Enemy Air Defenses","Niederhalten der gegnerischen Luftverteidigung.");
+A("DEAD","verf","Destruction of Enemy Air Defenses","Zerstörung der gegnerischen Luftverteidigung.");
+A("BDA","verf","Battle Damage Assessment","Bewertung der Wirkung bzw. des Schadens nach dem Angriff.");
+A("CDE","verf","Collateral Damage Estimation","Abschätzung möglicher Kollateralschäden vor dem Angriff.");
+A("PID","verf","Positive Identification","Zweifelsfreie Identifizierung eines Ziels als legitimes Ziel.");
+A("ROE","verf","Rules of Engagement","Einsatzregeln für die Anwendung militärischer Gewalt.");
+A("SPINS","verf","Special Instructions","Besondere Anweisungen zur ATO: Verfahren, Codewörter, Einschränkungen.");
+A("ATO","verf","Air Tasking Order","Luftkriegsbefehl: legt Einsätze, Lfz, Zeiten und Aufträge fest.");
+A("ACO","verf","Airspace Control Order","Luftraumordnung, die zur ATO gehört.");
+A("TIC","verf","Troops in Contact","Eigene Truppen im Gefecht mit dem Gegner.");
+A("BOT","verf","Bomb on Target","Angriffsmethode: Der Pilot sieht das Ziel und wirkt darauf.");
+A("BOC","verf","Bomb on Coordinate","Angriffsmethode: Waffe auf eine Koordinate, der Pilot muss das Ziel nicht sehen.");
+A("TOT","verf","Time on Target","Uhrzeit, zu der die Waffe einschlagen soll.");
+A("TTT","verf","Time to Target","Minuten und Sekunden bis zum Einschlag ab einem Startsignal („hack“).");
+A("TOF","verf","Time of Flight","Flugzeit eines Geschosses bzw. einer Waffe bis zum Einschlag.");
+/* Raumordnung */
+A("IP","raum","Initial Point","Anfangspunkt des Angriffs: Ab hier fliegt das Lfz auf das Ziel zu.");
+A("BP","raum","Battle Position","Angriffs- bzw. Feuerstellung für Hubschrauber.");
+A("HA","raum","Holding Area","Warteraum für Hubschrauber.");
+A("CP","raum","Contact Point","Kontaktpunkt: Hier meldet sich das Lfz beim JTAC an.");
+A("ACA","raum","Airspace Coordination Area","Luftraum über dem Zielgebiet, in dem Lfz vor eigenem Steilfeuer geschützt sind.");
+A("ROZ","raum","Restricted Operations Zone","Für einen bestimmten Zweck reservierter Luftraum, z. B. für UAS.");
+A("ACM","raum","Airspace Coordinating Measure","Luftraumordnungsmaßnahme (Oberbegriff, z. B. ACA, ROZ).");
+A("FSCM","raum","Fire Support Coordination Measure","Koordinierungsmaßnahme der Feuerunterstützung (Oberbegriff, z. B. FSCL, NFA).");
+A("FSCL","raum","Fire Support Coordination Line","Koordinierungslinie: Diesseits steuert der Bodenführer alle Angriffe, jenseits genügt seine Unterrichtung.");
+A("CFL","raum","Coordinated Fire Line","Linie, jenseits der Steilfeuer ohne weitere Abstimmung wirken darf.");
+A("NFA","raum","No-Fire Area","Raum, in den nicht gefeuert werden darf – Ausnahmen genau geregelt.");
+A("RFA","raum","Restrictive Fire Area","Raum mit Feuerbeschränkungen; darüber hinaus nur nach Abstimmung.");
+A("FFA","raum","Free-Fire Area","Raum, in den ohne weitere Abstimmung gefeuert werden darf.");
+A("RFL","raum","Restrictive Fire Line","Linie zwischen zwei aufeinander zulaufenden eigenen Kräften – Feuer darüber nur abgestimmt.");
+A("FLOT","raum","Forward Line of Own Troops","Linie der vordersten eigenen Kräfte.");
+A("FEBA","raum","Forward Edge of the Battle Area","Vorderer Rand des Verteidigungsraums.");
+A("TRP","raum","Target Reference Point","Zielbezugspunkt für Feuer und Talk-on.");
+A("EA","raum","Engagement Area","Feuerraum, in dem der Gegner bekämpft werden soll.");
+A("AO","raum","Area of Operations","Einsatzraum bzw. Verantwortungsbereich eines Truppenteils.");
+A("MGRS","raum","Military Grid Reference System","UTM-basiertes Meldesystem für Koordinaten.");
+A("GARS","raum","Global Area Reference System","Weltweites Gitter zur Raumbezeichnung, z. B. für Kill Boxes.");
+/* Waffen und Wirkung */
+A("DMPI","wirk","Desired Mean Point of Impact","Gewünschter mittlerer Treffpunkt.");
+A("CEP","wirk","Circular Error Probable","Radius, in dem 50 % der Waffen einschlagen.");
+A("RED","wirk","Risk Estimate Distance","Abstand, bei dem für eigene Kräfte ein bestimmtes Risiko (z. B. 0,1 % PI) besteht – Grundlage für Danger Close.");
+A("MSD","wirk","Minimum Safe Distance","Mindestsicherheitsabstand zur Waffenwirkung, vor allem in der Ausbildung.");
+A("PI","wirk","Probability of Incapacitation","Wahrscheinlichkeit der Außergefechtsetzung – Maß für die RED.");
+A("GTL","wirk","Gun-Target Line","Linie vom Geschütz zum Ziel – Lfz kreuzen sie nur abgestimmt.");
+A("LTL","wirk","Laser-Target Line","Linie vom Laserzielbeleuchter zum Ziel.");
+A("FAH","wirk","Final Attack Heading","Endanflugkurs auf das Ziel.");
+A("LGB","wirk","Laser-Guided Bomb","Lasergelenkte Bombe, z. B. GBU-12.");
+A("JDAM","wirk","Joint Direct Attack Munition","GPS/INS-Lenkkit für Freifallbomben, z. B. GBU-38.");
+A("SDB","wirk","Small Diameter Bomb","Kleine 250-lb-Gleitbombe (GBU-39).");
+A("ARM","wirk","Anti-Radiation Missile","Anti-Radar-Flugkörper (Oberbegriff).");
+A("HARM","wirk","High-speed Anti-Radiation Missile","Anti-Radar-Flugkörper AGM-88.");
+A("WP","wirk","White Phosphorus","Weißer Phosphor, u. a. zur Zielmarkierung.");
+A("LOAL","wirk","Lock-On After Launch","Der Suchkopf erfasst das Ziel erst nach dem Start.");
+A("LOBL","wirk","Lock-On Before Launch","Der Suchkopf erfasst das Ziel vor dem Start.");
+/* Sensoren und Technik */
+A("TGP","tech","Targeting Pod","Zielbehälter mit EO/IR-Sensoren und Laser.");
+A("LST","tech","Laser Spot Tracker","Sucht und verfolgt reflektierte Laserenergie.");
+A("LTD","tech","Laser Target Designator","Laserzielbeleuchter für lasergelenkte Waffen.");
+A("LRF","tech","Laser Range Finder","Laser-Entfernungsmesser.");
+A("FMV","tech","Full Motion Video","Bewegtbild-Video, z. B. aus Pod oder UAS.");
+A("ROVER","tech","Remotely Operated Video Enhanced Receiver","Empfänger, mit dem du das Live-Video des Lfz am Boden siehst.");
+A("VDL","tech","Video Downlink","Videoübertragung vom Lfz zum Boden.");
+A("TLE","tech","Target Location Error","Fehler der Zielortung – eingeteilt in Kategorien CAT I bis VI.");
+A("NVG","tech","Night Vision Goggles","Nachtsichtbrille.");
+A("IFF","tech","Identification Friend or Foe","Freund-Feind-Kennung.");
+A("ISR","tech","Intelligence, Surveillance and Reconnaissance","Aufklärung, Überwachung und Nachrichtengewinnung.");
+A("UAS","tech","Unmanned Aircraft System","Unbemanntes Luftfahrzeugsystem.");
+A("AGL","tech","Above Ground Level","Höhe über Grund.");
+A("MSL","tech","Mean Sea Level","Höhe über dem mittleren Meeresspiegel.");
+/* Bedrohung und Luftverteidigung */
+A("RWR","threat","Radar Warning Receiver","Radarwarnempfänger.");
+A("MAWS","threat","Missile Approach Warning System","Raketenwarner – erkennt anfliegende Flugkörper, auch infrarotgelenkte.");
+A("DIRCM","threat","Directed Infrared Countermeasures","Gerichteter Laserstörer gegen Infrarot-Suchköpfe.",{alt:["Directional Infrared Countermeasures"]});
+A("SAM","threat","Surface-to-Air Missile","Boden-Luft-Flugkörper (Fla-Rakete).");
+A("AAA","threat","Anti-Aircraft Artillery","Fla-Rohrwaffen.");
+A("MANPADS","threat","Man-Portable Air-Defense System","Schultergestützte Fla-Rakete.");
+A("IADS","threat","Integrated Air Defense System","Vernetzte Luftverteidigung aus Radaren, Führung und Waffen.");
+A("SHORAD","threat","Short-Range Air Defense","Flugabwehr im Nah- und Nächstbereich.");
+A("WEZ","threat","Weapon Engagement Zone","Bekämpfungsbereich einer Waffe nach Entfernung und Höhe.");
+A("EW","threat","Electronic Warfare","Elektronische Kampfführung (EloKa).");
+A("EMCON","threat","Emission Control","Steuerung bzw. Begrenzung der eigenen Abstrahlung.");
+A("HVT","verf","High-Value Target","Hochwertziel – für den Gegner wichtig.");
+A("HPT","verf","High-Payoff Target","Ziel, dessen Bekämpfung den eigenen Auftrag am meisten fördert.");
+A("TST","verf","Time-Sensitive Target","Zeitkritisches Ziel, das sofort bekämpft werden muss.");
+
+</script>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const uniq = a => [...new Set(a)];
+const BW = {}; BR.forEach(b => BW[b.w] = b);
+const AA = {}; AB.forEach(a => AA[a.a] = a);
+const normW = s => String(s || '').toUpperCase().replace(/Ä/g,'AE').replace(/Ö/g,'OE').replace(/Ü/g,'UE').replace(/[^A-Z0-9]+/g, ' ').trim();
+const normA = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]+/g, '');
+const BWN = {}; BR.forEach(b => BWN[normW(b.w)] = b);
+const AAN = {}; AB.forEach(a => AAN[normA(a.a)] = a);
+
+/* ---------- Zustand und Speicherung ---------- */
+const KEY = 'brevitytrainer.v1';
+const blank = () => ({v:1, updated:0, q:{}, flags:{}, recent:[], answered:0, correct:0, filt:[]});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+let remote = null, syncLabel = 'Nur auf diesem Gerät gespeichert';
+let pushTimer = null;
+function save(){
+  S.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (remote){ clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 1200); }
+}
+async function pushRemote(){
+  if (!remote) return;
+  try { await remote.set(JSON.parse(JSON.stringify(S))); }
+  catch(e){ if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) { remote = null; syncLabel = 'Nur auf diesem Gerät gespeichert'; } }
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc('data/users/' + id + '/progress');
+    const snap = await ref.get();
+    remote = ref;
+    syncLabel = 'Fortschritt wird geräteübergreifend gespeichert';
+    if (snap.exists){
+      const r = JSON.parse(JSON.stringify(snap.data() || {}));
+      if ((r.updated || 0) > (S.updated || 0)){
+        S = Object.assign(blank(), r);
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+        if (view !== 'quiz') render();
+      } else if (S.updated) pushRemote();
+    } else if (S.updated) pushRemote();
+    if (view === 'home' || view === 'stats') render();
+  } catch(e){ remote = null; }
+})();
+
+/* ---------- Fragenbank ---------- */
+const KINDS = {
+  bm:{l:'Bedeutung'}, bc:{l:'Codewort'}, bo:{l:'Gegenstück'}, bi:{l:'Eingabe'},
+  lg:{l:'Lage'}, sq:{l:'Ablauf'}, am:{l:'Abkürzung'}, ad:{l:'Abkürzung'}, ai:{l:'Eingabe'}
+};
+const SEQG = {s01:'laser', s02:'angriff', s03:'sicht', s04:'laser', s05:'koord'};
+const BANK = [];
+BR.forEach(b => {
+  BANK.push({id:'bm:' + b.w, kind:'bm', g:b.g, ref:b.w});
+  BANK.push({id:'bc:' + b.w, kind:'bc', g:b.g, ref:b.w});
+  BANK.push({id:'bi:' + b.w, kind:'bi', g:b.g, ref:b.w});
+  if (b.opp) BANK.push({id:'bo:' + b.w, kind:'bo', g:b.g, ref:b.w});
+});
+LAGEN.forEach(l => BANK.push({id:'lg:' + l.id, kind:'lg', g:l.g, ref:l.id}));
+SEQ.forEach(s => BANK.push({id:'sq:' + s.id, kind:'sq', g:SEQG[s.id] || 'angriff', ref:s.id}));
+AB.forEach(a => {
+  BANK.push({id:'am:' + a.a, kind:'am', g:a.g, ref:a.a});
+  BANK.push({id:'ad:' + a.a, kind:'ad', g:a.g, ref:a.a});
+  BANK.push({id:'ai:' + a.a, kind:'ai', g:a.g, ref:a.a});
+});
+const QBYID = {}; BANK.forEach(q => QBYID[q.id] = q);
+
+const MODES = {
+  mix:{name:'Gemischte Runde', desc:'Alle Fragetypen – Brevity und Abkürzungen', kinds:['bm','bc','bo','lg','sq','am','ad','bi','ai'], n:20},
+  bm:{name:'Was bedeutet das Wort?', desc:'Brevity-Wort hören – Bedeutung wählen', kinds:['bm'], n:15},
+  bc:{name:'Welches Wort passt?', desc:'Bedeutung lesen – Brevity-Wort wählen', kinds:['bc'], n:15},
+  lg:{name:'Lagen und Abläufe', desc:'Was funkst du, was hörst du – und in welcher Reihenfolge?', kinds:['lg','sq','bo'], n:15},
+  bi:{name:'Brevity eintippen', desc:'Ohne Antwortvorgaben – das Wort selbst eingeben', kinds:['bi'], n:15},
+  abk:{name:'Abkürzungen', desc:'Langform und Bedeutung der CAS-Abkürzungen', kinds:['am','ad'], n:15},
+  ai:{name:'Abkürzungen eintippen', desc:'Bedeutung lesen – Abkürzung eingeben', kinds:['ai'], n:15},
+  weak:{name:'Fehler üben', desc:'Nur Fragen, die du zuletzt falsch hattest', kinds:null, n:15}
+};
+const isB = g => GROUPS[g] && GROUPS[g].k === 'b';
+function poolFor(mode){
+  const m = MODES[mode];
+  let p = BANK.filter(q => !m.kinds || m.kinds.includes(q.kind));
+  if (S.filt && S.filt.length) p = p.filter(q => S.filt.includes(q.g));
+  if (mode === 'weak') p = p.filter(q => S.q[q.id] && S.q[q.id].last === 0);
+  return p;
+}
+function pick(pool, n){
+  const recent = new Set(S.recent.slice(-40));
+  let cand = pool.filter(q => !recent.has(q.id));
+  if (cand.length < n) cand = pool.slice();
+  const wt = q => { const r = S.q[q.id]; if (!r) return 3; if (r.last === 0) return 5; return 1 / (1 + (r.streak || 0)); };
+  const out = [];
+  let bag = cand.map(q => ({q, w:wt(q) * (0.6 + Math.random() * 0.8)}));
+  while (out.length < n && bag.length){
+    const tot = bag.reduce((s, x) => s + x.w, 0);
+    let r = Math.random() * tot, i = 0;
+    for (; i < bag.length - 1; i++){ r -= bag[i].w; if (r <= 0) break; }
+    const q = bag[i].q; out.push(q);
+    /* nicht zweimal dasselbe Wort in einer Runde */
+    bag = bag.filter((x, j) => j !== i && x.q.ref !== q.ref);
+  }
+  return shuffle(out);
+}
+
+/* ---------- Distraktoren ---------- */
+function fillFrom(list, have, n, ex){
+  const out = have.slice();
+  for (const x of shuffle(list)) { if (out.length >= n) break; if (!out.includes(x) && !ex.includes(x)) out.push(x); }
+  return out;
+}
+function brWrongWords(b, extraEx){
+  const ex = [b.w].concat(extraEx || []);
+  let w = b.conf.filter(c => !ex.includes(c));
+  w = fillFrom(BR.filter(x => x.g === b.g).map(x => x.w), w, 3, ex);
+  w = fillFrom(BR.map(x => x.w), w, 3, ex);
+  return w.slice(0, 3);
+}
+function abWrong(a){
+  const same = AB.filter(x => x.g === a.g && x.a !== a.a);
+  const sim = same.filter(x => x.a[0] === a.a[0] || Math.abs(x.a.length - a.a.length) <= 1);
+  let w = fillFrom(sim, [], 2, []);
+  w = fillFrom(same, w, 3, []);
+  w = fillFrom(AB.filter(x => x.a !== a.a), w, 3, []);
+  return w.slice(0, 3);
+}
+
+/* ---------- Frage erzeugen ---------- */
+function materialize(q){
+  const m = {q, kind:q.kind};
+  if (q.kind === 'bm'){
+    const b = BW[q.ref];
+    m.html = `<p class="prompt">Was bedeutet dieses Brevity-Wort?</p><div class="bigcode">${esc(b.w)}</div>`;
+    m.plain = `Was bedeutet ${b.w}?`;
+    m.correct = b.de; m.wrong = brWrongWords(b).map(w => BW[w].de); m.optCode = false;
+    m.entries = [b];
+  } else if (q.kind === 'bc'){
+    const b = BW[q.ref];
+    m.html = `<p class="prompt">Welches Brevity-Wort passt?</p><div class="defbox">${esc(b.de)}</div>`;
+    m.plain = `Welches Wort: ${b.de}`;
+    m.correct = b.w; m.wrong = brWrongWords(b); m.optCode = true;
+    m.entries = [b];
+  } else if (q.kind === 'bo'){
+    const b = BW[q.ref], o = BW[b.opp];
+    m.html = `<p class="prompt">Was ist das Gegenstück zu</p><div class="bigcode">${esc(b.w)}</div>`;
+    m.plain = `Gegenstück zu ${b.w}?`;
+    m.correct = o.w;
+    let w = b.conf.filter(c => c !== o.w && c !== b.w);
+    w = fillFrom(BR.filter(x => x.opp && x.w !== b.w && x.w !== o.w).map(x => x.w), w, 3, [b.w, o.w]);
+    m.wrong = w.slice(0, 3); m.optCode = true;
+    m.entries = [b, o];
+  } else if (q.kind === 'bi'){
+    const b = BW[q.ref];
+    m.html = `<p class="prompt">Tippe das Brevity-Wort ein.</p><div class="defbox">${esc(b.de)}</div>`;
+    m.plain = `Eintippen: ${b.de}`;
+    m.typed = 'b'; m.correct = b.w; m.entries = [b];
+  } else if (q.kind === 'lg'){
+    const l = LAGEN.find(x => x.id === q.ref);
+    m.html = `<div class="lage"><div class="lh">Situation</div><p>${esc(l.lage)}</p></div><p class="prompt">${esc(l.q)}</p>`;
+    m.plain = l.lage + ' ' + l.q;
+    m.correct = l.a; m.wrong = l.w.slice(); m.optCode = true; m.ex = l.ex;
+    m.entries = [BW[l.a]].filter(Boolean);
+  } else if (q.kind === 'sq'){
+    const s = SEQ.find(x => x.id === q.ref);
+    m.html = `<p class="prompt">${esc(s.q)}</p>`;
+    m.plain = s.q;
+    const j = a => a.join(' → ');
+    m.correct = j(s.a); m.wrong = s.w.map(j); m.seq = true; m.ex = s.ex;
+    m.entries = [];
+  } else if (q.kind === 'am'){
+    const a = AA[q.ref];
+    m.html = `<p class="prompt">Wofür steht diese Abkürzung?</p><div class="bigcode">${esc(a.a)}</div>`;
+    m.plain = `Wofür steht ${a.a}?`;
+    m.correct = a.long; m.wrong = abWrong(a).map(x => x.long); m.optCode = false;
+    m.abk = [a];
+  } else if (q.kind === 'ad'){
+    const a = AA[q.ref];
+    m.html = `<p class="prompt">Welche Abkürzung passt?</p><div class="defbox">${esc(a.de)}</div>`;
+    m.plain = `Welche Abkürzung: ${a.de}`;
+    m.correct = a.a; m.wrong = abWrong(a).map(x => x.a); m.optCode = true;
+    m.abk = [a];
+  } else if (q.kind === 'ai'){
+    const a = AA[q.ref];
+    m.html = `<p class="prompt">Tippe die Abkürzung ein.</p><div class="defbox">${esc(a.de)}</div>`;
+    m.plain = `Abkürzung eintippen: ${a.de}`;
+    m.typed = 'a'; m.correct = a.a; m.abk = [a];
+  }
+  if (!m.typed){
+    m.opts = shuffle(uniq([m.correct].concat(m.wrong)).slice(0, 4));
+  }
+  return m;
+}
+
+/* ---------- Eingabe prüfen ---------- */
+function checkTyped(m, raw){
+  if (m.typed === 'b'){
+    const b = BW[m.correct], n = normW(raw);
+    if (!n) return {v:'bad', msg:'Keine Eingabe.'};
+    if (n === normW(b.w) || (b.acc || []).some(r => r.test(n))) return {v:'ok'};
+    for (const [r, msg] of (b.near || [])) if (r.test(n)) return {v:'near', msg};
+    const o = BWN[n];
+    if (o) return {v:'bad', msg:`${o.w} bedeutet: ${o.de}`};
+    if (n === 'PICKLE') return {v:'bad', msg:'PICKLE ist Pilotenjargon und kein Brevity-Wort.'};
+    if (n === 'SHACK') return {v:'bad', msg:'SHACK steht nicht mehr in der aktuellen Brevity-Publikation.'};
+    return {v:'bad'};
+  } else {
+    const a = AA[m.correct], n = normA(raw);
+    if (!n) return {v:'bad', msg:'Keine Eingabe.'};
+    if (n === normA(a.a)) return {v:'ok'};
+    const o = AAN[n];
+    if (o) return {v:'bad', msg:`${o.a} steht für ${o.long}: ${o.de}`};
+    return {v:'bad'};
+  }
+}
+
+/* ---------- Ablauf ---------- */
+let view = 'home', R = null, glossTab = 'b', glossQ = '', statsConfirm = false;
+
+function startRound(mode, list){
+  const pool = list || poolFor(mode);
+  if (!pool.length) return;
+  const qs = list ? shuffle(list).slice(0, 30) : pick(pool, Math.min(MODES[mode].n, pool.length));
+  R = {mode, qs, i:0, res:[], cur:materialize(qs[0]), answered:false, verdict:null};
+  view = 'quiz'; render(); window.scrollTo(0, 0);
+}
+function record(q, ok){
+  const r = S.q[q.id] || {n:0, ok:0, streak:0, last:null};
+  r.n++; if (ok) { r.ok++; r.streak = (r.streak || 0) + 1; r.last = 1; } else { r.streak = 0; r.last = 0; }
+  S.q[q.id] = r; S.answered++; if (ok) S.correct++;
+  S.recent.push(q.id); if (S.recent.length > 80) S.recent = S.recent.slice(-80);
+  save();
+}
+function answerMC(idx){
+  if (!R || R.answered) return;
+  const m = R.cur, chosen = m.opts[idx], ok = chosen === m.correct;
+  R.answered = true; R.chosen = chosen; R.verdict = ok ? 'ok' : 'bad';
+  R.res.push({q:m.q, ok, m, given:chosen});
+  record(m.q, ok); render();
+}
+function answerTyped(raw){
+  if (!R || R.answered) return;
+  const m = R.cur, r = checkTyped(m, raw);
+  R.answered = true; R.typedRaw = raw; R.verdict = r.v; R.vmsg = r.msg;
+  const ok = r.v === 'ok';
+  R.res.push({q:m.q, ok, m, given:raw});
+  record(m.q, ok); render();
+}
+function next(){
+  if (!R) return;
+  R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; render(); window.scrollTo(0, 0); return; }
+  R.cur = materialize(R.qs[R.i]); R.answered = false; R.verdict = null; R.chosen = null; R.vmsg = null; R.typedRaw = '';
+  render(); window.scrollTo(0, 0);
+}
+function toggleFlag(){
+  const m = R && R.cur; if (!m) return;
+  const id = m.q.id;
+  if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:m.plain.slice(0, 160), ts:Date.now()};
+  save(); render();
+}
+
+/* ---------- Darstellung ---------- */
+function entryHtml(b){
+  return `<div class="entry"><div class="hd"><span class="code">${esc(b.w)}</span><span class="pill">${esc(GROUPS[b.g].l)}</span>${b.opp ? `<span class="pill">Gegenstück: ${esc(b.opp)}</span>` : ''}</div>
+    <p style="margin:6px 0 0">${esc(b.de)}</p><p class="en">ATP 1-02.1: „${esc(b.en)}“</p>${b.note ? `<p class="nt">${esc(b.note)}</p>` : ''}</div>`;
+}
+function abkHtml(a){
+  return `<div class="entry"><div class="hd"><span class="code">${esc(a.a)}</span><span class="lf">${esc(a.long)}</span></div><p style="margin:6px 0 0">${esc(a.de)}</p></div>`;
+}
+function optLabel(m, t){
+  if (m.seq) return `<span class="ot seq">${t.split(' → ').map(x => `<span class="code">${esc(x)}</span>`).join('<span class="ar">→</span>')}</span>`;
+  return `<span class="ot${m.optCode ? ' code' : ''}">${esc(t)}</span>`;
+}
+function bar(){
+  const bi = $('#barin'), pg = $('#prog');
+  if (view === 'home'){
+    bi.innerHTML = `<span class="t">Brevity-Trainer</span><button class="iconbtn" data-go="gloss">Nachschlagen</button>`;
+    pg.hidden = true;
+  } else if (view === 'quiz' || view === 'end'){
+    const n = R ? R.qs.length : 0, i = R ? Math.min(R.i + (view === 'end' ? 0 : 1), n) : 0;
+    bi.innerHTML = `<button class="iconbtn" data-go="home" aria-label="Zur Übersicht">‹ Übersicht</button><span class="t">${esc(MODES[R.mode] ? MODES[R.mode].name : '')}</span><span class="tag">${view === 'end' ? n + '/' + n : i + '/' + n}</span>`;
+    pg.hidden = false; pg.firstChild.style.width = (n ? (view === 'end' ? 100 : (R.i / n) * 100) : 0) + '%';
+  } else {
+    bi.innerHTML = `<button class="iconbtn" data-go="home" aria-label="Zur Übersicht">‹ Übersicht</button><span class="t">${view === 'gloss' ? 'Nachschlagen' : 'Statistik'}</span>`;
+    pg.hidden = true;
+  }
+}
+function groupScore(g){
+  const qs = BANK.filter(q => q.g === g);
+  const seen = qs.filter(q => S.q[q.id]);
+  const good = qs.filter(q => S.q[q.id] && S.q[q.id].last === 1).length;
+  return {n:qs.length, seen:seen.length, good, frac: good / qs.length};
+}
+function cellHtml(g){
+  const s = groupScore(g), pct = Math.round(s.frac * 100);
+  const st = !s.seen ? 'none' : s.frac >= .8 ? 'ok' : s.frac >= .4 ? 'mid' : 'bad';
+  const pressed = S.filt.includes(g);
+  return `<button class="cell" data-s="${st}" data-filt="${g}" aria-pressed="${pressed}"><b>${s.seen ? pct + ' %' : '–'}</b><span>${esc(GROUPS[g].l)}</span><i style="width:${pct}%"></i></button>`;
+}
+function renderHome(){
+  const nF = Object.keys(S.flags).length;
+  const filt = S.filt.length ? `<div class="filtnote"><span>Nur ${S.filt.length === 1 ? 'Thema' : 'Themen'}: ${S.filt.map(g => esc(GROUPS[g].l)).join(', ')}</span><button class="linkbtn" data-act="clearfilt">Alle Themen</button></div>`
+    : `<div class="filtnote">Tippe auf Themen, um die Runden darauf zu beschränken.</div>`;
+  const modeBtn = k => { const n = poolFor(k).length; return `<button class="mode" data-start="${k}" ${n ? '' : 'disabled'}><span class="mi"><strong>${esc(MODES[k].name)}</strong><small>${esc(MODES[k].desc)}</small></span><span class="n">${n} Fragen</span></button>`; };
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a><h1>Brevity</h1>
+    <p>Codewörter nach ATP 1-02.1 und die Abkürzungen aus dem CAS-Alltag – Bedeutung, Codewort, Lagen und freie Eingabe.</p>
+    <span class="radioline">HOG 31: IN FROM THE WEST – JTAC: CLEARED HOT</span></section>
+  <section class="board">
+    <h3>Brevity</h3><div class="cells">${G_ORDER_B.map(cellHtml).join('')}</div>
+    <h3>Abkürzungen</h3><div class="cells">${G_ORDER_A.map(cellHtml).join('')}</div>
+    ${filt}
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde</strong><small>${Math.min(20, poolFor('mix').length)} Fragen aus allen Fragetypen</small></span><span class="go">→</span></button>
+  <nav class="modes">
+    <h3>Brevity</h3>${['bm','bc','lg','bi'].map(modeBtn).join('')}
+    <h3>Abkürzungen</h3>${['abk','ai'].map(modeBtn).join('')}
+    <h3>Wiederholen</h3>${modeBtn('weak')}
+    <button class="mode" data-go="gloss"><span class="mi"><strong>Nachschlagen</strong><small>Alle ${BR.length} Brevity-Wörter und ${AB.length} Abkürzungen mit Suche</small></span><span class="n">→</span></button>
+    <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Thema, markierte Fragen</small></span><span class="n">${nF ? nF + ' gemeldet' : ''}</span></button>
+  </nav>
+  <div class="foot">
+    <p>Brevity nach ATP 1-02.1 „Multi-Service Brevity Codes“ (Ausgabe April 2025) bzw. NATO APP-7. Nationale Lehrgangsunterlagen nutzen teils ältere Ausgaben – z. B. TERMINATE statt CEASE LASER oder SHACK für einen Treffer.</p>
+    <p>Weitere Trainer: <a href="../drill/">JTAC-Drill</a>, <a href="../waffen/">Waffen-Trainer</a>, <a href="../pods/">Pod-Trainer</a>, <a href="../manoever/">Manöver-Trainer</a>, <a href="../artillerie/">Artillerie-Trainer</a>, <a href="../flugabwehr/">Flugabwehr-Trainer</a> und <a href="https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS" target="_blank" rel="noopener">Sensor-to-Shooter-Guide</a>.</p>
+    <p>${esc(syncLabel)}.</p>
+  </div>`;
+}
+function renderQuiz(){
+  const m = R.cur, q = m.q, ans = R.answered;
+  let body = '';
+  if (m.typed){
+    const ph = m.typed === 'b' ? 'z. B. TALLY' : 'z. B. JTAC';
+    body = `<form id="tform" autocomplete="off"><label class="muted" for="tin" style="display:block;margin-bottom:5px;font-weight:600">${m.typed === 'b' ? 'Brevity-Wort' : 'Abkürzung'}</label>
+      <input class="inp" id="tin" name="tin" ${ans ? 'readonly' : ''} value="${esc(R.typedRaw || '')}" placeholder="${ph}" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      ${ans ? '' : `<div class="row"><button class="btn main" type="submit">Prüfen</button><button class="btn" type="button" data-act="giveup">Weiß ich nicht</button></div>`}</form>`;
+  } else {
+    body = `<div class="opts">${m.opts.map((o, i) => {
+      let cls = 'opt';
+      if (ans){ if (o === m.correct) cls += ' correct'; else if (o === R.chosen) cls += ' wrong'; else cls += ' dim'; }
+      return `<button class="${cls}" data-ans="${i}" ${ans ? 'disabled' : ''}><span class="k">${i + 1}</span>${optLabel(m, o)}</button>`;
+    }).join('')}</div>`;
+  }
+  let fb = '';
+  if (ans){
+    const v = R.verdict, col = v === 'ok' ? 'var(--ok)' : v === 'near' ? 'var(--unk)' : 'var(--bad)';
+    const head = v === 'ok' ? 'Richtig' : v === 'near' ? 'Fast – zählt als falsch' : 'Falsch';
+    let sol = '';
+    if (m.typed) sol = v === 'ok' ? '' : `<p>Richtig: <span class="code">${esc(m.correct)}</span></p>`;
+    else if (v !== 'ok') sol = `<p>Richtig: ${m.optCode || m.seq ? `<span class="code" style="white-space:normal">${esc(m.correct)}</span>` : esc(m.correct)}</p>`;
+    fb = `<div class="fb" style="--c:${col}"><div class="v">${head}</div>${sol}${R.vmsg ? `<p>${esc(R.vmsg)}</p>` : ''}${m.ex ? `<p>${esc(m.ex)}</p>` : ''}
+      ${(m.entries || []).map(entryHtml).join('')}${(m.abk || []).map(abkHtml).join('')}</div>
+      <div class="row"><button class="btn main" data-act="next">${R.i + 1 >= R.qs.length ? 'Auswertung' : 'Weiter'}</button>
+      <button class="btn${S.flags[q.id] ? ' flagged' : ''}" data-act="flag">${S.flags[q.id] ? 'Gemeldet' : 'Frage melden'}</button></div>`;
+  }
+  $('#app').innerHTML = `<div class="qmeta"><span class="chip-cat">${esc(KINDS[q.kind].l)}</span><span>${esc(GROUPS[q.g].l)}</span></div>${m.html}${body}${fb}`;
+  if (m.typed && !ans){ const t = $('#tin'); if (t) setTimeout(() => { try { t.focus({preventScroll:true}); } catch(e){} }, 30); }
+}
+function renderEnd(){
+  const ok = R.res.filter(r => r.ok).length, n = R.res.length;
+  const miss = R.res.filter(r => !r.ok);
+  $('#app').innerHTML = `<div class="score">${ok}<small> / ${n}</small></div>
+    <p class="muted">${ok === n ? 'Alles richtig.' : miss.length + (miss.length === 1 ? ' Fehler' : ' Fehler') + ' – unten mit Lösung.'}</p>
+    <div class="row"><button class="btn main" data-start="${R.mode}">Neue Runde</button>${miss.length ? `<button class="btn" data-act="retrymiss">Fehler wiederholen</button>` : ''}<button class="btn" data-go="home">Übersicht</button></div>
+    ${miss.length ? `<ul class="misslist">${miss.map(r => `<li><div>${esc(r.m.plain)}</div><div class="muted" style="font-size:.9rem">Deine Antwort: ${esc(r.given || '–')}</div><div>Richtig: <span class="code" style="white-space:normal">${esc(r.m.correct)}</span></div></li>`).join('')}</ul>` : ''}`;
+}
+function glossHtml(){
+  const ql = glossQ.trim().toLowerCase();
+  const hit = s => !ql || s.toLowerCase().includes(ql);
+  let out = '';
+  if (glossTab === 'b'){
+    for (const g of G_ORDER_B){
+      const items = BR.filter(b => b.g === g && (hit(b.w) || hit(b.de) || hit(b.en) || hit(b.note || ''))).sort((a, b) => a.w.localeCompare(b.w));
+      if (!items.length) continue;
+      out += `<h3>${esc(GROUPS[g].l)}</h3>` + items.map(b => `<div class="it"><div class="hd"><span class="code">${esc(b.w)}</span>${b.opp ? `<span class="pill">Gegenstück: ${esc(b.opp)}</span>` : ''}</div><p>${esc(b.de)}</p><p class="en">${esc(b.en)}</p>${b.note ? `<p style="font-size:.92rem">${esc(b.note)}</p>` : ''}</div>`).join('');
+    }
+  } else {
+    for (const g of G_ORDER_A){
+      const items = AB.filter(a => a.g === g && (hit(a.a) || hit(a.long) || hit(a.de))).sort((x, y) => x.a.localeCompare(y.a));
+      if (!items.length) continue;
+      out += `<h3>${esc(GROUPS[g].l)}</h3>` + items.map(a => `<div class="it"><div class="hd"><span class="code">${esc(a.a)}</span><strong>${esc(a.long)}</strong></div><p>${esc(a.de)}</p></div>`).join('');
+    }
+  }
+  return out || `<p class="empty">Nichts gefunden.</p>`;
+}
+function renderGloss(){
+  $('#app').innerHTML = `<div class="seg" role="group" aria-label="Liste wählen"><button data-tab="b" aria-pressed="${glossTab === 'b'}">Brevity (${BR.length})</button><button data-tab="a" aria-pressed="${glossTab === 'a'}">Abkürzungen (${AB.length})</button></div>
+    <input class="search" id="gsearch" type="search" placeholder="Suchen, z. B. Laser oder RED" value="${esc(glossQ)}" aria-label="Suchen">
+    <div class="gl" id="gl">${glossHtml()}</div>`;
+}
+function renderStats(){
+  const pct = S.answered ? Math.round(S.correct / S.answered * 100) : 0;
+  const rows = G_ORDER_B.concat(G_ORDER_A).map(g => {
+    const s = groupScore(g), p = Math.round(s.frac * 100);
+    const col = !s.seen ? 'var(--line)' : s.frac >= .8 ? 'var(--ok)' : s.frac >= .4 ? 'var(--cta)' : 'var(--bad)';
+    return `<div class="srow"><span>${esc(GROUPS[g].l)}${isB(g) ? '' : ' <span class="muted">(Abk.)</span>'}</span><span class="sbar"><i style="width:${p}%;background:${col}"></i></span><span class="muted" style="text-align:right">${s.good}/${s.n}</span></div>`;
+  }).join('');
+  const flags = Object.entries(S.flags).sort((a, b) => b[1].ts - a[1].ts);
+  $('#app').innerHTML = `<div class="stat-top"><div><b>${S.answered}</b><span class="muted">Antworten</span></div><div><b>${pct} %</b><span class="muted">richtig</span></div><div><b>${Object.keys(S.q).length}</b><span class="muted">von ${BANK.length} Fragen gesehen</span></div></div>
+    <h2 style="margin-top:18px">Je Thema <span class="muted" style="font-size:.95rem;font-weight:500">zuletzt richtig beantwortet</span></h2>${rows}
+    <h2 style="margin-top:24px">Gemeldete Fragen</h2>
+    ${flags.length ? `<ul class="misslist">${flags.map(([id, f]) => `<li><div>${esc(f.t)}</div><button class="linkbtn" data-unflag="${esc(id)}">Meldung entfernen</button></li>`).join('')}</ul>` : '<p class="muted">Keine. Melde eine Frage nach dem Beantworten mit „Frage melden“ – ich prüfe sie dann.</p>'}
+    <h2 style="margin-top:24px">Fortschritt</h2>
+    ${statsConfirm ? `<div class="confirm"><p style="margin:0 0 8px">Gesamten Fortschritt löschen? Gemeldete Fragen bleiben erhalten.</p><div class="row" style="margin-top:0"><button class="btn" data-act="resetyes" style="border-color:var(--bad);color:var(--bad)">Löschen</button><button class="btn" data-act="resetno">Abbrechen</button></div></div>`
+      : `<button class="btn" data-act="reset" style="margin-top:8px">Fortschritt zurücksetzen</button>`}
+    <p class="muted" style="font-size:.86rem;margin-top:14px">${esc(syncLabel)}.</p>`;
+}
+function render(){
+  bar();
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'gloss') renderGloss();
+  else if (view === 'stats') renderStats();
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.go){ view = t.dataset.go; statsConfirm = false; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.start){ startRound(t.dataset.start); return; }
+  if (t.dataset.ans != null){ answerMC(+t.dataset.ans); return; }
+  if (t.dataset.filt){ const g = t.dataset.filt; S.filt = S.filt.includes(g) ? S.filt.filter(x => x !== g) : S.filt.concat(g); save(); render(); return; }
+  if (t.dataset.tab){ glossTab = t.dataset.tab; render(); return; }
+  if (t.dataset.unflag){ delete S.flags[t.dataset.unflag]; save(); render(); return; }
+  const act = t.dataset.act;
+  if (act === 'next') next();
+  else if (act === 'flag') toggleFlag();
+  else if (act === 'giveup') answerTyped('');
+  else if (act === 'clearfilt'){ S.filt = []; save(); render(); }
+  else if (act === 'retrymiss'){ const miss = R.res.filter(r => !r.ok).map(r => r.q); startRound(R.mode, miss); }
+  else if (act === 'reset'){ statsConfirm = true; render(); }
+  else if (act === 'resetno'){ statsConfirm = false; render(); }
+  else if (act === 'resetyes'){ const fl = S.flags; S = blank(); S.flags = fl; statsConfirm = false; save(); render(); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id === 'tform'){ e.preventDefault(); const v = $('#tin') ? $('#tin').value : ''; answerTyped(v); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'gsearch'){ glossQ = e.target.value; const gl = $('#gl'); if (gl) gl.innerHTML = glossHtml(); }
+});
+document.addEventListener('keydown', e => {
+  if (view !== 'quiz' || !R) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (!R.answered && !R.cur.typed && /^[1-4]$/.test(e.key) && tag !== 'input'){ const i = +e.key - 1; if (i < R.cur.opts.length) answerMC(i); }
+  else if (R.answered && e.key === 'Enter'){ e.preventDefault(); next(); }
+});
+
+window.__bt = {BANK, materialize, checkTyped, MODES, poolFor, pick};
+render();
+})();
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

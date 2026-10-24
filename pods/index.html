@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pod-Trainer</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --feed:#0B1113; --hud:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 18px 48px}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0}
+h2{font-size:1.45rem;font-weight:600;letter-spacing:.005em}
+h3{font-size:1.25rem;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* home */
+.hero{padding:28px 0 20px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.board{margin:8px 0 24px}
+.board-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cells{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (min-width:600px){.cells{grid-template-columns:repeat(8,1fr)}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px 12px;min-height:66px;overflow:hidden}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1}
+.cell span{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.cell[data-s="none"]{border-style:dashed}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.legend em{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.legend em::before{content:"";width:12px;height:5px;background:var(--c)}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:22px;border-top:1px solid var(--line)}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px}
+.mode .mi{flex:1}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot{margin-top:28px;font-size:.82rem;color:var(--muted);max-width:40em}
+
+/* feed */
+.feed{position:relative;margin:0;background:var(--feed);border-radius:10px;overflow:hidden;aspect-ratio:4/3;cursor:zoom-in}
+.feed img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.feed .hud{position:absolute;font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.06em;color:var(--hud);opacity:.85;text-shadow:0 1px 2px #000}
+.feed .hud.tl{top:10px;left:14px} .feed .hud.tr{top:10px;right:14px} .feed .hud.bl{bottom:10px;left:14px}
+.feed .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+.feed .nav.l{left:8px} .feed .nav.r{right:8px}
+
+/* quiz */
+.qmeta{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 10px;font-size:.9rem;color:var(--muted)}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:14px 0 14px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.profile{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.profile h3 small{font-family:var(--font-b);font-size:.85rem;font-weight:500;color:var(--muted);margin-left:6px}
+.kv{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;margin:10px 0 0;font-size:.94rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.chips li{font-size:.82rem;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--surface2);border:1px solid var(--line)}
+.chips li[data-v="1"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.chips li[data-v="0"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.chips li[data-v="?"]{background:var(--unk-bg);border-color:var(--unk);color:var(--unk)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 14px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* end */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:24px 0 4px}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+
+/* cards list */
+.group{margin-top:24px}
+.group h2{margin-bottom:6px}
+.fam{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px}
+.fam .code{font-family:var(--font-d);font-weight:700;font-size:1.1rem;width:3em;color:var(--muted)}
+.fam .nm{flex:1;font-weight:600}
+.fam .pct{font-family:var(--font-d);font-size:1.05rem;color:var(--muted)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet[hidden]{display:none}
+.sec{margin-top:18px}
+.sec h3{font-size:1.1rem;margin-bottom:4px}
+.sec ul{margin:4px 0 0;padding-left:1.15em}
+.sec li{margin:2px 0}
+.desig{font-size:.95rem;color:var(--muted);margin-top:4px}
+.bw{margin-top:12px;border-left:4px solid var(--cta);background:var(--surface);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.95rem}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* stats */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1}
+.srow{display:grid;grid-template-columns:8.5em 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.sync{font-size:.8rem;color:var(--muted)}
+.annobox{margin-top:12px}
+.annobox #annoarea{margin-top:12px}
+.anno{position:relative;margin:0;max-width:100%;border-radius:10px;overflow:hidden;background:var(--feed);cursor:zoom-in}
+.anno img{display:block;width:100%;height:100%;object-fit:cover}
+.anno .pin{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.95rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.legendlist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.legendlist li{display:flex;gap:10px;align-items:flex-start;font-size:.94rem;line-height:1.35}
+.legendlist b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;font-family:var(--font-d);font-size:.85rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+</style>
+</head>
+<body>
+<header class="bar" id="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></div>
+<script>
+const DATA = {"types": {"tgp": {"label": "Targeting-Pod", "cap": "Ziel selbst lasern (LGB), Koordinaten für GPS-Waffen erzeugen, Ziel-ID per Pod-Bild"}, "recce": {"label": "Aufklärungspod", "cap": "Bildaufklärung mit Übertragung an die Auswertestation – kein Lasern, keine Waffenlenkung"}, "internal": {"label": "Integrierter Zielsensor", "cap": "Ziel lasern, Koordinaten erzeugen, Ziel-ID – Sensor fest im Rumpf, kein externer Pod"}, "heli": {"label": "Hubschrauber-Visier", "cap": "Ziel-ID und Wirkung mit Lenkflugkörpern, Raketen und Kanone aus dem Nahbereich"}, "uas": {"label": "UAS-Sensorturm", "cap": "Persistente Überwachung mit Live-Video (FMV), IR-Pointer, Lasern für Hellfire/GBU"}, "gimbal": {"label": "EO/IR-Gimbal (ISR)", "cap": "ISR-Video und Überwachung – Laserzielbeleuchtung nur in bestimmten Versionen"}}, "families": [{"id": "litening", "name": "Litening", "short": "LIT", "type": "tgp", "designation": "AN/AAQ-28(V) LITENING – US-Versionen II, AT, G4; Rafael-Bezeichnungen III/4/5", "maker": "Rafael (IL) / Northrop Grumman (US)", "primary": "F-16, Eurofighter, AV-8B", "platforms": ["F-16 (zahlreiche NATO-Staaten)", "Eurofighter Typhoon", "Tornado", "A-10C (ANG/AFRC)", "AV-8B Harrier II", "F/A-18C/D (USMC)", "B-52H", "Gripen"], "bw": "Luftwaffe: Eurofighter (dort „Laser Designator Pod“, LDP) und Tornado", "sensors": ["Wärmebild (FLIR)", "Tageslicht-TV (neuere Versionen HD)", "Laserzielbeleuchter und Laserentfernungsmesser", "Laser Spot Tracker (LST)", "IR-Marker (mit NVG sichtbar)"], "des": 1, "lst": 1, "ir": 1, "vdl": "AT/G4", "vdlText": "Mit Datenlink-Modul (AT/G4): Pod-Video zum ROVER-Terminal. Ausstattung im Check-in abfragen.", "coords": "Ja – Zielkoordinaten für GPS-Waffen", "effects": "Selbstbeleuchtung für LGB (GBU-12/16/24, GBU-54 LJDAM), Laser-Maverick, Buddy-Lasing für andere Lfz, Koordinaten für JDAM", "recon": "Ziel-ID und PID-Unterstützung, Pattern of Life (NTISR), Wirkungsaufklärung (BDA), Talk-on per Video", "range": "Typisch aus mittlerer Höhe; Ziel-ID und Lasern aus mehreren NM Schrägentfernung. Genaue Werte versionsabhängig und nicht öffentlich.", "jtac": ["Häufigster Pod im NATO-Rahmen, aber stark versionsabhängig: Version, VDL und Lasercode im Check-in abfragen.", "Mit LST findet das Lfz deine Bodenlaser-Markierung („SPOT“).", "Mit IR-Marker bestätigt dir der Pilot nachts per SPARKLE das Ziel."], "recog": "Langer, zylindrischer Pod mit abgerundetem, drehbarem Sensorkopf und großem dunklem Fenster; hinten Kühlluftöffnung. Fast baugleich mit RecceLite.", "confuse": ["reccelite", "sniper", "atflir"], "plat": ["Eurofighter (Luftwaffe)", ["F-35A", "Rafale", "AH-64E", "MQ-9A"]]}, {"id": "sniper", "name": "Sniper", "short": "SNP", "type": "tgp", "designation": "AN/AAQ-33 Sniper – XR / ATP, ATP-SE", "maker": "Lockheed Martin (US)", "primary": "F-16, F-15E, A-10C, B-1B", "platforms": ["F-16 (u. a. USA, POL, ROU)", "F-15E Strike Eagle", "A-10C", "B-1B", "B-52H", "CF-18 (CAN)"], "bw": null, "sensors": ["Mittelwellen-FLIR", "HD-Tageslicht-TV", "Laserzielbeleuchter und Entfernungsmesser", "Laser Spot Tracker", "IR-Marker"], "des": 1, "lst": 1, "ir": 1, "vdl": "ATP-SE", "vdlText": "ATP-SE: integrierter Video-Downlink, ROVER-kompatibel.", "coords": "Ja – präzise Koordinaten für GPS-Waffen", "effects": "Selbstbeleuchtung LGB (GBU-12/24, GBU-54 LJDAM), Buddy-Lasing, Koordinaten für JDAM (GBU-31/38) und SDB; an B-1B/B-52 sehr große Waffenzuladung", "recon": "Ziel-ID aus großer Stand-off-Entfernung, NTISR, Pattern of Life, BDA, Talk-on per Video", "range": "Für große Stand-off-Entfernungen aus mittlerer bis großer Höhe ausgelegt; konkrete Werte nicht öffentlich.", "jtac": ["Bomber mit Sniper (B-1B, B-52H): lange Verweildauer und viele GPS-/LGB-Waffen – gut für mehrere Ziele nacheinander.", "ATP-SE bringt fast immer Video-Downlink mit – gemeinsames Bild für den Talk-on.", "LST und IR-Marker vorhanden: SPOT- und SPARKLE-Verfahren möglich."], "recog": "Schlanker Pod mit kantiger, facettierter Frontscheibe aus flachen Glasflächen statt runder Kuppel.", "confuse": ["litening", "atflir", "lantirn"], "plat": ["F-15E Strike Eagle", ["Rafale", "F-35A", "Tiger", "AH-64E"]]}, {"id": "atflir", "name": "ATFLIR", "short": "ATF", "type": "tgp", "designation": "AN/ASQ-228 ATFLIR (Advanced Targeting Forward-Looking Infrared)", "maker": "Raytheon (US)", "primary": "F/A-18E/F Super Hornet (US Navy)", "platforms": ["F/A-18E/F Super Hornet (US Navy)", "F/A-18C/D (US Navy)", "F/A-18F (RAAF)"], "bw": null, "sensors": ["Mittelwellen-FLIR (Ziel- und Navigationsfunktion)", "EO-Tageslichtkamera", "Laserzielbeleuchter und Entfernungsmesser", "Laser Spot Tracker"], "des": 1, "lst": 1, "ir": null, "vdl": null, "vdlText": "Nicht gesichert – im Check-in abfragen.", "coords": "Ja", "effects": "Selbstbeleuchtung LGB (GBU-12/16), LJDAM, Laser-Maverick, Koordinaten für JDAM", "recon": "Ziel-ID, NTISR, BDA – trägergestützte Einsätze, oft auch maritime Lage", "range": "Mittlere Höhe; Werte nicht öffentlich.", "jtac": ["Typisch für US-Navy-CAS vom Träger: Treibstoff und Time on Station oft knapp.", "IR-Marker und Video-Downlink nicht voraussetzen – abfragen."], "recog": "Gedrungener Pod mit großem, rundem, drehbarem Sensorkopf; an der Rumpfstation neben dem Lufteinlauf der Hornet.", "confuse": ["sniper", "litening", "sharp"], "plat": ["F/A-18E/F Super Hornet", ["Eurofighter", "Rafale", "A-10C", "F-35C"]]}, {"id": "damocles", "name": "Damocles", "short": "DAM", "type": "tgp", "designation": "Damocles, mit NAVFLIR im Pylon", "maker": "Thales (FR)", "primary": "Mirage 2000D, Rafale (frühe Standards)", "platforms": ["Mirage 2000D / 2000-5", "Rafale (vor Einführung von Talios)", "Super Étendard Modernisé (außer Dienst)", "Su-30MKM (MYS, außerhalb NATO)"], "bw": null, "sensors": ["Wärmebildkamera (MWIR)", "Laserzielbeleuchter und Entfernungsmesser", "NAVFLIR: Weitwinkel-Navigations-FLIR im Pylon"], "des": 1, "lst": null, "ir": null, "vdl": null, "vdlText": "Nicht gesichert – im Check-in abfragen.", "coords": "Ja", "effects": "Selbstbeleuchtung LGB (GBU-12/16/24/49), AASM mit Laserlenkung, Koordinaten für GPS-Waffen", "recon": "Ziel-ID im Wärmebild, Nachtnavigation im Tiefflug (NAVFLIR), NTISR", "range": "Mittlere Höhe; Werte nicht öffentlich.", "jtac": ["Französischer Standard der vorherigen Generation – an der Rafale zunehmend durch Talios ersetzt, an Mirage 2000D weiter üblich.", "LST, IR-Marker und VDL im Check-in klären."], "recog": "Pod mit gerundetem Kopf und zwei getrennten dunklen Fenstern; kantiger Pylon mit eigenem NAVFLIR-Fenster.", "confuse": ["talios", "reco_ng"], "plat": ["Mirage 2000D", ["F-16", "A-10C", "F/A-18E/F", "Eurofighter"]]}, {"id": "talios", "name": "Talios", "short": "TAL", "type": "tgp", "designation": "TALIOS (TArgeting Long-range Identification Optronic System)", "maker": "Thales (FR)", "primary": "Rafale (FRA)", "platforms": ["Rafale B/C/M (FRA)"], "bw": null, "sensors": ["Hochauflösende Wärmebildkamera", "HD-Farb-Tageslichtkamera", "Laserzielbeleuchter und Entfernungsmesser", "Weitwinkel-Daueraufklärung zusätzlich zum Zoom („vision permanente“)"], "des": 1, "lst": null, "ir": null, "vdl": null, "vdlText": "Nicht gesichert – im Check-in abfragen.", "coords": "Ja", "effects": "Selbstbeleuchtung LGB (GBU-12/16/24), AASM Hammer mit Laserlenkung, Koordinaten für GPS-Waffen", "recon": "Ziel-ID auf große Entfernung, Farbbild am Tag, NTISR, BDA", "range": "Für große Entfernungen ausgelegt („long-range“); konkrete Werte nicht öffentlich.", "jtac": ["Moderne Rafale checkt meist mit Talios ein, ältere evtl. noch mit Damocles.", "LST, IR-Marker und VDL abfragen."], "recog": "Pod mit großer, runder Kugelkopf-Optik, oft gelblich-goldenes Fenster; unter dem Lufteinlauf der Rafale.", "confuse": ["damocles", "reco_ng"], "plat": ["Rafale", ["F-16", "Eurofighter", "F-15E", "A-10C"]]}, {"id": "lantirn", "name": "LANTIRN", "short": "LAN", "type": "tgp", "designation": "LANTIRN: AN/AAQ-14 Targeting-Pod + AN/AAQ-13 Navigationspod", "maker": "Lockheed Martin (US)", "primary": "F-15E, F-16C/D (Altbestand und Exportnutzer)", "platforms": ["F-15E (Targeting-Pod durch Sniper ersetzt)", "F-16C/D Block 40/42", "F-14 (außer Dienst)", "Exportnutzer (u. a. TUR, GRC)"], "bw": null, "sensors": ["Targeting-Pod: FLIR, Laserzielbeleuchter und Entfernungsmesser", "Navigationspod: Geländefolgeradar (TFR) und Weitwinkel-FLIR für das HUD"], "des": 1, "lst": null, "ir": null, "vdl": 0, "vdlText": "Nein – Altsystem ohne Video-Downlink.", "coords": "Eingeschränkt (Altsystem)", "effects": "Selbstbeleuchtung LGB (GBU-10/12/24), Zielübergabe an Maverick", "recon": "Nur Wärmebild in geringer Auflösung – Ziel-ID eingeschränkt", "range": "Für Nacht- und Tiefflug ausgelegt; heute veraltet.", "jtac": ["Altsystem: nur IR, geringe Auflösung, kein Video-Downlink – PID-Unterstützung begrenzt.", "Bei US-Lfz weitgehend durch Sniper ersetzt, bei Exportnutzern noch anzutreffen."], "recog": "An der F-16 zwei Pods unter dem Lufteinlauf: Nav-Pod mit eckigem Frontfenster, Targeting-Pod mit drehbarem Kopf. An der F-14 ein Pod unter dem Flügelhandschuh.", "confuse": ["sniper", "litening"], "plat": ["F-15E / F-16 (Altbestand)", ["Rafale", "Eurofighter", "F-35A", "AH-64E"]]}, {"id": "db110", "name": "DB-110", "short": "DB", "type": "recce", "designation": "DB-110 Dual-Band Reconnaissance System (RAF-Bezeichnung am Tornado: RAPTOR)", "maker": "Goodrich, heute Collins Aerospace (US)", "primary": "F-16 (u. a. POL), F-15 (SAU)", "platforms": ["F-16 (u. a. POL)", "F-15 (Saudi-Arabien)", "Tornado GR4 als RAPTOR (RAF, außer Dienst)"], "bw": null, "sensors": ["Tageslichtkamera (sichtbares Spektrum)", "Infrarotkamera", "Lange Brennweite für Schrägaufnahmen auf große Distanz", "Datenlink zur Bodenauswertestation"], "des": 0, "lst": 0, "ir": 0, "vdl": "nein", "vdlText": "Bilddaten per Datenlink an die Auswertestation – kein Live-Video zum JTAC.", "coords": "Georeferenzierte Bilder nach Auswertung", "effects": "Keine – weder Zielbeleuchtung noch Waffenlenkung", "recon": "Großflächige Bildaufklärung aus großem Stand-off-Abstand, Zielaufklärung, BDA, Lagebild", "range": "Lange Brennweite für sehr große Schrägentfernungen, auch aus großer Höhe; Werte nicht öffentlich.", "jtac": ["Lfz mit DB-110 fliegt Aufklärung: kein Lasern, kein Talk-on per Pod-Video.", "Das Produkt läuft über die Auswertung – nützlich für Zielentwicklung und BDA, nicht für den laufenden Angriff."], "recog": "Großer, langer Pod an der Rumpfmittelstation mit Fenstern in der Nasensektion.", "confuse": ["sharp", "reccelite", "reco_ng"], "plat": ["F-16 (Polen)", ["Rafale", "AH-64E", "F-35A", "A-10C"]]}, {"id": "sharp", "name": "SHARP", "short": "SHP", "type": "recce", "designation": "SHARP (Shared Reconnaissance Pod)", "maker": "Raytheon (US)", "primary": "F/A-18F Super Hornet (US Navy)", "platforms": ["F/A-18E/F Super Hornet (US Navy)"], "bw": null, "sensors": ["EO/IR-Digitalkameras für mittlere und große Höhe", "Datenlink zur Schiffs- bzw. Bodenstation"], "des": 0, "lst": 0, "ir": 0, "vdl": "nein", "vdlText": "Bilddaten per Datenlink an die Auswertestation – kein Live-Video zum JTAC.", "coords": "Georeferenzierte Bilder", "effects": "Keine", "recon": "Taktische Bildaufklärung, Zielaufklärung, BDA – Nachfolger des TARPS-Pods der F-14", "range": "Mittlere bis große Höhe, Stand-off; Werte nicht öffentlich.", "jtac": ["Reiner Aufklärer – kein Lasern.", "Sieht an der Rumpfmittelstation aus wie ein Zusatztank – auf die Kamerafenster achten."], "recog": "Tankähnliche Form an der Rumpfmittelstation der Super Hornet, Kamerafenster im Mittelteil.", "confuse": ["db110", "atflir"], "plat": ["F/A-18F Super Hornet", ["Eurofighter", "Rafale", "A-10C", "F-15E"]]}, {"id": "reco_ng", "name": "Reco NG", "short": "RNG", "type": "recce", "designation": "Reco NG (Reconnaissance New Generation), auch AREOS", "maker": "Thales (FR)", "primary": "Rafale (FRA)", "platforms": ["Rafale B/C/M (FRA)"], "bw": null, "sensors": ["Hochauflösende EO-Kamera", "IR-Kamera", "Datenlink zur Bodenstation"], "des": 0, "lst": 0, "ir": 0, "vdl": "nein", "vdlText": "Bilddaten per Datenlink an die Auswertestation – kein Live-Video zum JTAC.", "coords": "Georeferenzierte Bilder", "effects": "Keine", "recon": "Taktische und strategische Bildaufklärung aus niedriger bis großer Höhe, Zielaufklärung, BDA", "range": "Stand-off-fähig über eine große Höhenspanne; Werte nicht öffentlich.", "jtac": ["Rafale mit Reco NG fliegt Aufklärung – keine Zielbeleuchtung.", "Konfiguration der Rafale im Check-in klären."], "recog": "Langer Pod an der Rumpfmittelstation der Rafale mit großem, seitlichem Fenster.", "confuse": ["db110", "talios", "damocles"], "plat": ["Rafale", ["F-16", "Eurofighter", "F/A-18F", "Tornado"]]}, {"id": "reccelite", "name": "RecceLite", "short": "RCL", "type": "recce", "designation": "RecceLite („Reconnaissance Litening“), Luftwaffe: RecceLite II", "maker": "Rafael (IL)", "primary": "Eurofighter und Tornado (Luftwaffe), Tornado (ITA)", "platforms": ["Eurofighter (DEU, seit 2021)", "Tornado (DEU seit 2009, ITA)", "F-16 (diverse Nutzer)"], "bw": "Luftwaffe: Tornado seit 2009, Eurofighter seit 2021 (erster Einsatz: Hochwasser-Amtshilfe)", "sensors": ["EO-Kamera (sichtbares Licht)", "IR-Kamera", "Stabilisierter, schwenkbarer Sensorkopf – kann ein Ziel dauerhaft verfolgen", "Datenlink zur Bodenstation (nahezu Echtzeit)", "2,18 m lang, Ø 40,6 cm, 215 kg"], "des": 0, "lst": 0, "ir": 0, "vdl": "nein", "vdlText": "Bilder in nahezu Echtzeit an die Bodenstation (Auswertung) – kein Live-Video zum JTAC als Standard.", "coords": "Georeferenzierte Bilder", "effects": "Keine", "recon": "Taktische Bildaufklärung bei Tag und Nacht aus niedriger bis großer Höhe, Punktzielverfolgung, Lagebild, BDA", "range": "Einsatz in niedrigen, mittleren und großen Höhen; Werte nicht öffentlich.", "jtac": ["Deutscher Eurofighter mit RecceLite statt Litening fliegt Aufklärung – kein Lasern. Pod genau ansehen.", "Unterschied zum Litening: sichtbare Datenlink-Antenne am RecceLite."], "recog": "Litening-Bauweise (zylindrisch, runder Sensorkopf), aber mit Datenlink-Antenne; unter dem Rumpf.", "confuse": ["litening", "db110"], "plat": ["Eurofighter und Tornado (Luftwaffe)", ["F-35A", "Rafale", "F/A-18E/F", "A-10C"]]}, {"id": "eots", "name": "EOTS", "short": "EOT", "type": "internal", "designation": "AN/AAQ-40 EOTS (Electro-Optical Targeting System)", "maker": "Lockheed Martin (US)", "primary": "F-35A/B/C", "platforms": ["F-35A (u. a. USA, ITA, NLD, NOR, DNK)", "F-35B", "F-35C"], "bw": "Luftwaffe beschafft F-35A", "sensors": ["Mittelwellen-FLIR", "IRST-Funktion (Luftziele)", "Laserzielbeleuchter und Entfernungsmesser", "Laser Spot Tracker", "Advanced EOTS (Block 4): zusätzlich u. a. HD-TV und SWIR"], "des": 1, "lst": 1, "ir": null, "vdl": null, "vdlText": "Bei frühen Software-Blöcken kein Video-Downlink zum JTAC – aktuellen Stand im Check-in abfragen.", "coords": "Ja", "effects": "Selbstbeleuchtung LGB (GBU-12), JDAM (GBU-31/32), SDB (GBU-39); in Stealth-Konfiguration nur interne, begrenzte Zuladung", "recon": "Ziel-ID, NTISR in bedrohter Umgebung, Sensorfusion mit Radar und DAS", "range": "Mittlere bis große Höhe; Werte nicht öffentlich.", "jtac": ["Kein externer Pod – der Sensor sitzt unter der Nase.", "In Stealth-Konfiguration nur wenige Waffen intern: Munition und Playtime früh abfragen.", "IR-Marker und VDL nicht voraussetzen – abfragen."], "recog": "Facettiertes, saphirfarbenes Fenster unter der Rumpfnase der F-35; kein Pod sichtbar.", "confuse": ["sniper"], "plat": ["F-35", ["F-16", "Eurofighter", "Rafale", "F-15E"]]}, {"id": "tads", "name": "TADS", "short": "TAD", "type": "heli", "designation": "AN/ASQ-170 M-TADS / AN/AAQ-11 PNVS („Arrowhead“)", "maker": "Lockheed Martin (US)", "primary": "AH-64D/E Apache", "platforms": ["AH-64D/E (u. a. USA, GBR, NLD; POL in Beschaffung)"], "bw": null, "sensors": ["TADS: Ziel-FLIR, Farb-Tageslichtkamera, Laserzielbeleuchter und Entfernungsmesser, Laser Spot Tracker", "PNVS: Nachtsicht-FLIR für den Piloten (oberer Turm)"], "des": 1, "lst": 1, "ir": null, "vdl": "AH-64E", "vdlText": "AH-64E: Video an Bodenterminals möglich, dazu Manned-Unmanned Teaming mit UAS. Im Check-in abfragen.", "coords": "Ja", "effects": "AGM-114 Hellfire / AGM-179 JAGM (Laser, ca. 8 km), APKWS-Laserraketen, Hydra-70-Raketen, 30-mm-Kanone M230; Lasern für andere Lfz", "recon": "Ziel-ID im Nahbereich, Gefechtsfeldaufklärung, Zusammenarbeit mit UAS", "range": "Hellfire/JAGM ca. 8 km; Raketen und Kanone deutlich kürzer – Einsatz aus Battle Position oder Holding Area.", "jtac": ["Rotary-Wing-CAS: kürzere Entfernungen, stärker durch MANPADS und Rohrwaffen bedroht – Bedrohungslage betonen.", "Apache kann für Fast-Jets lasern (Buddy-Lasing) und Hellfire auch auf deinen Bodenlaser einsetzen – Lasercode abstimmen."], "recog": "Zweiteiliger Sensorturm an der Nase: TADS unten (zwei Halbkugeln mit Fenstern), PNVS oben.", "confuse": ["strix", "mts"], "plat": ["AH-64 Apache", ["Tiger UHT (Bundeswehr)", "Eurofighter", "MQ-9A", "NH90"]]}, {"id": "strix", "name": "Strix", "short": "STX", "type": "heli", "designation": "Strix – Dachvisier des Tiger HAP/HAD", "maker": "Safran (ex-Sagem, FR)", "primary": "Tiger HAP/HAD (FRA), Tiger HAD-E (ESP)", "platforms": ["Tiger HAP/HAD (FRA)", "Tiger HAD-E (ESP)", "Tiger ARH (AUS, Ausmusterung läuft)"], "bw": "Nicht am deutschen Tiger UHT – der trägt das Mastvisier Osiris.", "sensors": ["Tageslicht-TV", "Wärmebildkamera", "Laserentfernungsmesser", "Laserfunktion für Lenkflugkörper versionsabhängig (HAD)"], "des": null, "lst": null, "ir": null, "vdl": null, "vdlText": "Nicht gesichert – im Check-in abfragen.", "coords": "Versionsabhängig", "effects": "30-mm-Kanone im Turm, 68-mm-Raketen, Mistral (Luft-Luft); HAD (FRA): Hellfire II; HAD-E (ESP): Spike-ER", "recon": "Ziel-ID und Aufklärung im Nahbereich", "range": "Lenkflugkörper ca. 8 km (Hellfire bzw. Spike-ER); Raketen und Kanone kürzer.", "jtac": ["Französische und spanische Tiger in NATO-Einsätzen: Bewaffnung variiert je Nation.", "Deutscher Tiger UHT: Osiris-Mastvisier – anderes Einsatzprofil (aus der Deckung heraus beobachten)."], "recog": "Kugelförmiges Visier auf dem Kabinendach vor dem Rotormast – nicht auf dem Mast.", "confuse": ["tads", "safire"], "plat": ["Tiger HAP/HAD (Frankreich)", ["Tiger UHT (Bundeswehr)", "AH-64E", "MQ-9A", "Rafale"]]}, {"id": "mts", "name": "MTS", "short": "MTS", "type": "uas", "designation": "Multi-Spectral Targeting System: MTS-A (AN/AAS-52), MTS-B (AN/DAS-1), MTS-D (AN/DAS-4)", "maker": "Raytheon (US)", "primary": "MQ-9A Reaper (MTS-B)", "platforms": ["MQ-9A Reaper (u. a. USA, GBR, FRA, ITA, NLD, ESP)", "MQ-1 Predator (MTS-A, außer Dienst)", "MQ-1C Gray Eagle (Ableitung: AN/AAS-53 CSP)"], "bw": null, "sensors": ["Wärmebildkamera (MWIR)", "Farb-/Mono-Tageslicht-TV", "Restlichtverstärker-TV", "Laserzielbeleuchter und Entfernungsmesser", "Laser-Illuminator (IR-Pointer)"], "des": 1, "lst": null, "ir": 1, "vdl": "ja (FMV)", "vdlText": "Full Motion Video (FMV) – Downlink zum ROVER ist Standard.", "coords": "Ja", "effects": "MQ-9: AGM-114 Hellfire, GBU-12, GBU-38 JDAM (u. a.); Buddy-Lasing für andere Lfz", "recon": "Persistente Überwachung mit langer Verweildauer, Pattern of Life, PID, BDA", "range": "Verweildauer deutlich über 20 h möglich (bewaffnet weniger); langsam, meist mittlere Höhe; Hellfire ca. 8 km.", "jtac": ["Ideal für den Talk-on: FMV am ROVER, IR-Pointer für SPARKLE.", "Langsame Plattform: Positionswechsel und Re-Attack brauchen Zeit; ferngesteuert mit Signalverzögerung.", "Zuladung begrenzt, typisch Hellfire plus einige 500-lb-Bomben."], "recog": "Großer, kugelförmiger Sensorturm unter der Nase der MQ-9 mit mehreren unterschiedlich großen Fenstern.", "confuse": ["mx", "safire", "tads"], "plat": ["MQ-9A Reaper", ["Eurofighter", "Rafale", "AH-64E", "F-35A"]]}, {"id": "mx", "name": "MX-15 / MX-20", "short": "MX", "type": "gimbal", "designation": "L3Harris WESCAM MX-15 / MX-20 (u. a. HD- und D-Versionen)", "maker": "L3Harris WESCAM (CAN)", "primary": "Leichte Kampf- und ISR-Flugzeuge (A-29, AT-802U), P-8A (MX-20HD)", "platforms": ["A-29 Super Tucano (MX-15)", "AT-802U Sky Warden", "MD 530F (leichter Kampfhubschrauber)", "P-8A Poseidon (MX-20HD)", "MQ-9 (MX-20 als Option)", "Diverse ISR-Flugzeuge und Hubschrauber"], "bw": null, "sensors": ["HD-Wärmebildkamera", "HD-Tageslicht- und Zoomkamera", "Restlicht/SWIR (versionsabhängig)", "Laserentfernungsmesser", "Laser-Illuminator (IR-Pointer)", "D-Versionen (z. B. MX-15D): Laserzielbeleuchter"], "des": null, "lst": null, "ir": null, "vdl": "plattformabh.", "vdlText": "Plattformabhängig – auf ISR-Plattformen meist FMV-Downlink.", "coords": "Ja (Geolokalisierung)", "effects": "D-Version: LGB/Hellfire/APKWS lasern (z. B. auf Light-Attack-Plattformen); sonst Aufklärung und Markierung", "recon": "ISR, Überwachung, PID, Pattern of Life; maritime Aufklärung (P-8A)", "range": "Plattformabhängig; MX-20 ist größer und hat mehr Brennweite als MX-15.", "jtac": ["Typisch auf SOF-, ISR- und Light-Attack-Plattformen. „D“ in der Bezeichnung = Designator.", "Im Check-in klären: Laserzielbeleuchtung ja/nein, IR-Pointer, FMV-Downlink."], "recog": "Kugelförmiger Gimbal-Turm unter Rumpf oder Nase; MX-20 deutlich größer als MX-15.", "confuse": ["safire", "mts"], "plat": ["A-29 Super Tucano / AT-802U", ["Eurofighter", "F-35A", "Rafale", "F-15E"]]}, {"id": "safire", "name": "Star SAFIRE", "short": "SAF", "type": "gimbal", "designation": "Teledyne FLIR Star SAFIRE (u. a. III, 380-HD, 380X-HDx)", "maker": "Teledyne FLIR (US)", "primary": "Hubschrauber und Überwachungsflugzeuge (Behörden, Küstenwache, Militär)", "platforms": ["Behörden- und Grenzschutzhubschrauber (z. B. AS350/H125)", "Küstenwachen und SAR", "Militärhubschrauber und ISR-Flugzeuge"], "bw": null, "sensors": ["Wärmebildkamera", "HD-Farb-Tageslichtkamera", "Restlicht/SWIR (380X)", "Laserentfernungsmesser und Laser-Pointer je nach Konfiguration"], "des": null, "lst": null, "ir": null, "vdl": "plattformabh.", "vdlText": "Plattformabhängig.", "coords": "Ja (Geolokalisierung)", "effects": "Primär Aufklärung und Markierung – Laserzielbeleuchtung für Waffen nicht voraussetzen", "recon": "Überwachung, Personen- und Fahrzeugverfolgung, SAR, PID-Unterstützung", "range": "Plattformabhängig.", "jtac": ["Oft auf Koalitions-, Behörden- oder SAR-Plattformen: gute ISR-Quelle, Wirkung meist über andere Lfz.", "Fähigkeiten im Check-in klären."], "recog": "Kompakter Kugel-Gimbal mit mehreren runden Fenstern, meist dunkel; unter der Nase von Hubschraubern.", "confuse": ["mx", "mts"], "plat": ["Hubschrauber von Behörden und Küstenwache", ["F-35A", "Eurofighter", "F-15E", "Rafale"]]}], "curated": [["c-lit1", "litening", "Ein deutscher Eurofighter meldet im Check-in „LDP“. Welcher Pod ist gemeint?", ["Litening", "RecceLite", "Sniper", "Damocles"], "Die Luftwaffe bezeichnet den Litening am Eurofighter als Laser Designator Pod (LDP). RecceLite ist der Aufklärungspod ohne Laser."], ["c-lit2", "litening", "Der Pilot meldet Litening G4 mit VDL. Was bringt dir das?", ["Pod-Video live am ROVER – gemeinsames Bild für Talk-on und Ziel-ID", "Lenkung der Waffe über deinen Bodenlaser", "Automatischen Abgleich der Lasercodes", "Nur Aufzeichnung für die BDA nach der Landung"], "VDL (Video Downlink) überträgt das Pod-Bild an dein ROVER-Terminal. Ihr schaut auf dasselbe Bild – das beschleunigt Talk-on und Ziel-ID."], ["c-lit3", "litening", "Mit welcher Funktion findet ein Lfz mit Litening deine Bodenlaser-Markierung?", ["Laser Spot Tracker (LST)", "IR-Marker", "NAVFLIR", "IRST"], "Der LST sucht nach Laserenergie mit dem eingestellten Code. Erfasst er sie, meldet der Pilot „SPOT“."], ["c-snp1", "sniper", "Welche Plattform mit Sniper-Pod bietet dir die größte Waffenzuladung und Verweildauer?", ["B-1B", "A-10C", "F-16", "F-15E"], "Der B-1B trägt Sniper und eine sehr große Zuladung an GPS- und Lasermunition bei langer Verweildauer – gut für mehrere Ziele nacheinander."], ["c-snp2", "sniper", "Woran erkennst du den Sniper gegenüber dem Litening?", ["Kantige, facettierte Frontscheibe", "Runder Kugelkopf mit gelblicher Optik", "Sichtbare Datenlink-Antenne", "Sitzt immer an der Rumpfmittelstation"], "Der Sniper hat eine Front aus flachen Glasflächen. Litening und RecceLite haben einen runden, drehbaren Kopf."], ["c-atf1", "atflir", "Ein Super Hornet der US Navy checkt ein. Welcher Targeting-Pod ist am wahrscheinlichsten?", ["ATFLIR", "Talios", "Damocles", "LANTIRN"], "Der ATFLIR ist der Standard-Targeting-Pod der US-Navy-Hornets."], ["c-atf2", "atflir", "Was solltest du beim ATFLIR nicht ungeprüft voraussetzen?", ["IR-Marker und Video-Downlink", "Laserzielbeleuchtung", "Laserentfernungsmessung", "Wärmebild"], "Laser, Entfernungsmesser und FLIR gehören zum ATFLIR. IR-Marker und VDL solltest du im Check-in abfragen."], ["c-dam1", "damocles", "Wozu dient das NAVFLIR im Damocles-Pylon?", ["Weitwinkel-Wärmebild zur Navigation bei Nacht und im Tiefflug", "Laser Spot Tracker", "Datenlink-Antenne", "Zielbeleuchtung für Raketen"], "Das NAVFLIR liefert dem Piloten ein Weitwinkel-Wärmebild für die Navigation; das Zielen übernimmt der Pod selbst."], ["c-dam2", "damocles", "Welcher Pod löst Damocles an der Rafale ab?", ["Talios", "Reco NG", "Litening", "Sniper"], "Talios ist der moderne Thales-Targeting-Pod der Rafale."], ["c-tal1", "talios", "Was ist für Talios charakteristisch?", ["Weitwinkel-Daueraufklärung zusätzlich zum Zoom", "Integrierter Geländefolgeradar", "Reiner Aufklärungspod ohne Laser", "Nur Nacht-FLIR ohne Tageslichtkamera"], "Talios kombiniert Zoom-Optik mit permanenter Weitwinkelsicht („vision permanente“), dazu HD-Farbbild und Laser."], ["c-lan1", "lantirn", "Ein Lfz checkt mit LANTIRN-Targeting-Pod ein. Was bedeutet das für dich?", ["Nur Wärmebild in geringer Auflösung, kein Video-Downlink – PID-Unterstützung begrenzt", "Bestes HD-Bild mit ROVER-Downlink", "Keine Laserfähigkeit", "Reine Aufklärungsmission"], "LANTIRN ist ein Altsystem: Lasern ja, aber nur IR in geringer Auflösung und ohne VDL."], ["c-lan2", "lantirn", "Was steckt im LANTIRN-Navigationspod AN/AAQ-13?", ["Geländefolgeradar und Weitwinkel-FLIR", "Laserzielbeleuchter", "Aufklärungskamera", "Datenlink zum JTAC"], "Der Nav-Pod dient dem Nacht- und Tiefflug: Terrain-Following-Radar und FLIR-Bild fürs HUD. Gelasert wird mit dem AAQ-14."], ["c-db1", "db110", "Ein polnischer F-16 trägt den DB-110. Kann er deine GBU-12 lasern?", ["Nein – reiner Aufklärungspod", "Ja, mit jedem gültigen Lasercode", "Nur mit IR-Marker", "Nur bei Tag"], "Der DB-110 ist ein Aufklärungssystem ohne Laserzielbeleuchter. Für eine GBU-12 brauchst du ein anderes Lfz oder einen Bodenlaser."], ["c-db2", "db110", "Wie hieß das DB-110-System am Tornado GR4 der RAF?", ["RAPTOR", "SHARP", "TARPS", "RecceLite"], "Die RAF nutzte den DB-110 als RAPTOR (Reconnaissance Airborne Pod for Tornado)."], ["c-shp1", "sharp", "Womit wird der SHARP an der Super Hornet leicht verwechselt?", ["Mit einem Zusatztank", "Mit einer GBU-31", "Mit einem Störsender-Pod", "Mit dem Tankschlauch-Pod"], "Der SHARP hat eine tankähnliche Form an der Rumpfmittelstation. Unterscheidungsmerkmal sind die Kamerafenster."], ["c-shp2", "sharp", "SHARP ist der Nachfolger von …", ["TARPS der F-14", "LANTIRN", "RAPTOR", "ATFLIR"], "SHARP ersetzte das Tactical Airborne Reconnaissance Pod System (TARPS) der F-14 Tomcat."], ["c-rng1", "reco_ng", "Rafale mit großem Fensterpod an der Rumpfmittelstation checkt ein. Was erwartest du?", ["Aufklärung (Reco NG) – keine Zielbeleuchtung", "Laser-Targeting für LGB", "Elektronischen Kampf", "Luftbetankung"], "Reco NG ist ein Aufklärungspod. Ob die Rafale zusätzlich einen Targeting-Pod trägt, klärst du im Check-in."], ["c-rcl1", "reccelite", "Woran unterscheidest du RecceLite optisch vom Litening?", ["Datenlink-Antenne", "Farbe", "Zwei getrennte Fenster", "Kantige Frontscheibe"], "RecceLite basiert auf der Litening-Bauweise. Die Datenlink-Antenne ist die auffälligste bauliche Abweichung."], ["c-rcl2", "reccelite", "Seit wann setzt die Luftwaffe RecceLite am Eurofighter ein?", ["Seit 2021", "Seit 2009", "Seit 2015", "Seit 2003"], "Erster Einsatz am Eurofighter war 2021 die Hochwasser-Amtshilfe. 2009 begann die Nutzung am Tornado; der Laser Designator Pod fliegt seit 2015 am Eurofighter."], ["c-rcl3", "reccelite", "Ein Eurofighter mit RecceLite meldet sich zur CAS. Was kannst du nicht erwarten?", ["Laserzielbeleuchtung für LGB", "Bildaufklärung bei Tag und Nacht", "Verfolgung eines Punktziels", "Datenübertragung an die Bodenstation"], "RecceLite hat keinen Laserzielbeleuchter. Wirkung mit LGB braucht Litening oder einen Bodenlaser."], ["c-eot1", "eots", "Wo sitzt der Zielsensor der F-35?", ["Intern unter der Rumpfnase", "Als Pod unter dem Lufteinlauf", "An der Rumpfmittelstation", "Im Seitenleitwerk"], "Der EOTS ist hinter einem facettierten Fenster unter der Nase integriert – kein externer Pod, um die Tarnung nicht zu stören."], ["c-eot2", "eots", "Was fragst du bei einer F-35 im Check-in besonders ab?", ["Interne Munition und Playtime sowie VDL und IR-Marker", "Ob der Pod montiert ist", "Ob sie überhaupt lasern kann – die F-35 hat keinen Laser", "Den Lasercode – die F-35 hat keinen LST"], "EOTS hat Laser und LST. Kritisch sind die begrenzte interne Zuladung und Fähigkeiten wie VDL und IR-Marker."], ["c-tad1", "tads", "Welche Waffe nutzt der Apache primär mit dem TADS-Laser?", ["AGM-114 Hellfire / AGM-179 JAGM", "GBU-31 JDAM", "AIM-9X", "Mistral"], "Hellfire und JAGM sind halbaktiv lasergelenkt – der TADS beleuchtet das Ziel, alternativ ein anderes Lfz oder ein Bodenlaser."], ["c-tad2", "tads", "Was ist das PNVS am Apache?", ["Nachtsicht-FLIR für den Piloten im oberen Turm", "Laser Spot Tracker", "Datenlink", "Raketenwarnsystem"], "PNVS (Pilot Night Vision Sensor) ist der obere Teil des Nasenturms; das Zielen erfolgt über das TADS darunter."], ["c-tad3", "tads", "Welche Reichweite hat Hellfire/JAGM vom Hubschrauber etwa?", ["Ca. 8 km", "Ca. 2 km", "Ca. 25 km", "Ca. 70 km"], "Rund 8 km – deutlich weniger als Bomben vom Fast-Jet, daher näher an der Bedrohung."], ["c-stx1", "strix", "Welches Visier hat der deutsche Tiger UHT?", ["Mastvisier Osiris", "Strix (Dachvisier)", "TADS/PNVS", "MTS-B"], "Der Tiger UHT trägt das Osiris-Mastvisier über dem Rotor. Strix sitzt auf dem Kabinendach der französischen und spanischen Tiger."], ["c-stx2", "strix", "Welchen Lenkflugkörper trägt der spanische Tiger HAD-E?", ["Spike-ER", "Hellfire", "PARS 3 LR", "JAGM"], "Spanien nutzt Spike-ER, Frankreich am HAD Hellfire II."], ["c-mts1", "mts", "Was macht eine MQ-9 mit MTS-B für dich besonders wertvoll?", ["Lange Verweildauer mit FMV am ROVER und IR-Pointer", "Hohe Geschwindigkeit für schnelle Re-Attacks", "Große Bombenlast", "Tarnkappeneigenschaften"], "Persistenz und Live-Video machen die Reaper zur Talk-on- und PID-Plattform; Wirkung und Geschwindigkeit sind begrenzt."], ["c-mts2", "mts", "Welche Kombination bietet der MTS-B?", ["IR, TV, Restlicht-TV, Laserzielbeleuchter und IR-Illuminator", "Nur Wärmebild", "Radar und Wärmebild", "Nur Tageslicht-TV"], "MTS-B vereint mehrere Kameras mit Laserzielbeleuchter, Entfernungsmesser und Illuminator (IR-Pointer)."], ["c-mx1", "mx", "Was bedeutet das „D“ in MX-15D?", ["Version mit Laserzielbeleuchter (Designator)", "Digitaler Datenlink", "Nur Tageslicht (Day)", "Dual-Band-Radar"], "D-Versionen können Ziele für lasergelenkte Waffen beleuchten. Ohne „D“ nicht voraussetzen."], ["c-mx2", "mx", "Welche Plattform trägt einen MX-20HD?", ["P-8A Poseidon", "Eurofighter", "AH-64E", "F-35A"], "Der MX-20HD sitzt u. a. am Seefernaufklärer P-8A."], ["c-saf1", "safire", "Ein Lfz mit Star SAFIRE checkt ein. Was setzt du nicht voraus?", ["Laserzielbeleuchtung für Waffen", "Wärmebild", "Tageslichtkamera", "Video-Aufklärung"], "Star SAFIRE ist primär ein Aufklärungs-Gimbal. Laserfähigkeiten hängen von der Konfiguration ab."], ["g-code", "gen", "Welcher Lasercode ist gültig?", ["1688", "1291", "2111", "1811"], "NATO-Lasercodes: erste Ziffer 1, zweite 1–7, dritte und vierte 1–8. 1291 (9 unzulässig), 2111 (erste Ziffer 2) und 1811 (zweite Ziffer 8) sind ungültig."], ["g-code2", "gen", "Du beleuchtest das Ziel mit deinem Bodenlaser für eine LGB. Was muss übereinstimmen?", ["Lasercode der Bombe und Code deines Bodenlasers", "Code des Pods und Code der Bombe des anderen Lfz", "Frequenz des ROVER und Lasercode", "Nichts – LGB folgen jedem Laser"], "Die LGB folgt nur Laserenergie mit ihrem eingestellten Code. Bei vielen LGB wird er am Boden eingestellt – früh abstimmen."], ["g-nvg", "gen", "Warum siehst du mit NVG den IR-Pointer, aber nicht den Laserzielbeleuchter?", ["Der Designator arbeitet bei ca. 1064 nm, außerhalb der NVG-Empfindlichkeit", "Der Designator ist zu schwach", "Der Designator ist nur gepulst", "NVG filtern Laser aktiv heraus"], "IR-Pointer arbeiten im Bereich, den NVG verstärken. Der 1064-nm-Designator liegt außerhalb – er dient der Waffenlenkung, nicht der Sichtmarkierung."], ["g-ntisr", "gen", "Was bedeutet NTISR?", ["Aufklärung mit Kampf-Lfz und Targeting-Pod (Non-Traditional ISR)", "Nachtaufklärung mit Spezial-UAS", "Funkaufklärung", "Satellitenaufklärung"], "Non-Traditional ISR: Kampfflugzeuge nutzen ihren Targeting-Pod für Aufklärungsaufträge."], ["g-buddy", "gen", "Was ist Buddy-Lasing?", ["Ein Lfz lasert für die Waffe eines anderen Lfz", "Zwei Bodenlaser auf dasselbe Ziel", "Pilot und WSO lasern abwechselnd", "Laser-Markierung des eigenen Standorts"], "Typisch z. B. Apache oder Reaper lasert für die GBU-12 eines Fast-Jets – Lasercode abstimmen."], ["g-recce", "gen", "Welcher Pod kann keine LGB beleuchten?", ["RecceLite", "Litening", "Sniper", "Talios"], "RecceLite, DB-110, SHARP und Reco NG sind Aufklärungspods ohne Laserzielbeleuchter."], ["g-zone", "gen", "Laser-Ziel-Linie: Was ist die Safety Zone?", ["Ein 20°-Kegel (±10°) um die Linie Ziel–Designator, in dem das Lfz nicht anfliegen soll", "Ein 120°-Sektor, in dem der Angriff optimal ist", "Der Bereich hinter dem Ziel", "Ein Mindestabstand von 1 NM zum Designator"], "Aus der Safety Zone könnte die Waffe den Designator statt der Reflexion am Ziel erfassen. Der optimale Angriffssektor ist ein 120°-Kegel (±60°) um die Laser-Ziel-Linie auf der Designator-Seite."]], "brevity": [["CAPTURED", "Ziel oder Objekt ist mit dem Bordsensor (Pod) erfasst und wird verfolgt"], ["SPOT", "Lfz hat deine Lasermarkierung mit dem Laser Spot Tracker erfasst"], ["NEGATIVE LASER", "Lfz hat keine Laserenergie erfasst"], ["DEADEYE", "Laserzielbeleuchter an Bord ist ausgefallen"], ["LASER ON", "Aufforderung: Laserbeleuchtung des Ziels beginnen"], ["LASING", "Der Sprecher beleuchtet das Ziel gerade mit dem Laser"], ["SHIFT", "Laser- oder IR-Markierung auf einen neuen Punkt verschieben"], ["CEASE LASER", "Laserbeleuchtung des Ziels beenden (ältere Unterlagen: TERMINATE)"], ["TEN SECONDS", "„LASER ON“ in etwa zehn Sekunden erwarten"], ["SPARKLE", "Ziel mit dem IR-Pointer markieren"], ["SNAKE", "IR-Pointer in einer Acht um das Ziel bewegen"], ["STEADY", "IR-Pointer ruhig halten, Bewegung beenden"], ["ROPE", "Lfz mit dem IR-Pointer kreisförmig anstrahlen"]]};
+const IMG = {
+"litening": ["img/litening-0.jpg", "img/litening-1.jpg", "img/litening-2.jpg", "img/litening-3.jpg", "img/litening-4.jpg", "img/litening-5.jpg"],
+"sniper": ["img/sniper-0.jpg", "img/sniper-1.jpg", "img/sniper-2.jpg", "img/sniper-3.jpg", "img/sniper-4.jpg", "img/sniper-5.jpg"],
+"atflir": ["img/atflir-0.jpg", "img/atflir-1.jpg", "img/atflir-2.jpg"],
+"damocles": ["img/damocles-0.jpg", "img/damocles-1.jpg", "img/damocles-2.jpg", "img/damocles-3.jpg"],
+"talios": ["img/talios-0.jpg", "img/talios-1.jpg", "img/talios-2.jpg", "img/talios-3.jpg", "img/talios-4.jpg"],
+"lantirn": ["img/lantirn-0.jpg", "img/lantirn-1.jpg", "img/lantirn-2.jpg", "img/lantirn-3.jpg"],
+"db110": ["img/db110-0.jpg", "img/db110-1.jpg", "img/db110-2.jpg", "img/db110-3.jpg", "img/db110-4.jpg"],
+"sharp": ["img/sharp-0.jpg", "img/sharp-1.jpg", "img/sharp-2.jpg", "img/sharp-3.jpg"],
+"reco_ng": ["img/reco_ng-0.jpg", "img/reco_ng-1.jpg", "img/reco_ng-2.jpg", "img/reco_ng-3.jpg", "img/reco_ng-4.jpg", "img/reco_ng-5.jpg"],
+"reccelite": ["img/reccelite-0.jpg", "img/reccelite-1.jpg", "img/reccelite-2.jpg", "img/reccelite-3.jpg", "img/reccelite-4.jpg"],
+"eots": ["img/eots-0.jpg", "img/eots-1.jpg", "img/eots-2.jpg"],
+"tads": ["img/tads-0.jpg", "img/tads-1.jpg", "img/tads-2.jpg"],
+"strix": ["img/strix-0.jpg", "img/strix-1.jpg", "img/strix-2.jpg"],
+"mts": ["img/mts-0.jpg", "img/mts-1.jpg", "img/mts-2.jpg", "img/mts-3.jpg"],
+"mx": ["img/mx-0.jpg", "img/mx-1.jpg", "img/mx-2.jpg", "img/mx-3.jpg", "img/mx-4.jpg", "img/mx-5.jpg"],
+"safire": ["img/safire-0.jpg", "img/safire-1.jpg", "img/safire-2.jpg"]
+};
+const ANNO = {"litening": {"i": 2, "p": [[82, 62, "Runder, drehbarer Sensorkopf (Fenster hier weggedreht)"], [45, 62, "Langer, zylindrischer Körper"], [21, 58, "Kühlluftöffnung am hinteren Ende"], [55, 30, "Pylon-Adapter unter dem Rumpf"]], "ar": 1.499}, "sniper": {"i": 0, "p": [[68, 45, "Kantige, facettierte Frontscheibe aus flachen Glasflächen – das Sniper-Merkmal"], [30, 52, "Schlanker, zylindrischer Körper"]], "ar": 1.499}, "atflir": {"i": 0, "p": [[22, 62, "Großer, runder Sensorkopf (Fenster hier weggedreht)"], [55, 63, "Gedrungener, kurzer Körper"], [50, 32, "Sitzt an der Rumpfstation neben dem Lufteinlauf der Hornet"]], "ar": 1.7757}, "damocles": {"i": 0, "p": [[96, 58, "Gerundeter Kopf mit dunklem Sensorfenster"], [92, 79, "Zweites, getrenntes Fenster"], [40, 30, "Kantiger, hoher Pylon"], [50, 62, "Langer Pod-Körper"]], "ar": 1.499}, "talios": {"i": 3, "p": [[85, 55, "Große, runde Kugelkopf-Optik mit gelblich-goldenem Fenster"], [30, 58, "Schlanker Körper, nach hinten verjüngt"]], "ar": 1.5054}, "lantirn": {"i": 1, "p": [[72, 57, "Drehbarer Sensorkopf"], [45, 58, "Targeting-Pod AN/AAQ-14"], [35, 45, "Pylon unter dem Flügelhandschuh – typische Position an der F-14"]], "ar": 1.5261}, "db110": {"i": 1, "p": [[48, 41, "Großes Kamerafenster"], [13, 42, "Abgerundete Nase"], [70, 46, "Langer, großer Pod an der Rumpfmittelstation"]], "ar": 1.617}, "sharp": {"i": 0, "p": [[66, 76, "Tankähnliche, abgerundete Nase"], [45, 65, "Langer Körper wie ein Zusatztank – Kamerafenster im Mittelteil an der Unterseite (hier nicht sichtbar)"]], "ar": 1.523}, "reco_ng": {"i": 0, "p": [[65, 58, "Großes, seitliches Kamerafenster"], [30, 55, "Langer Pod für die Rumpfmittelstation der Rafale"], [94, 57, "Spitz zulaufende Nase"]], "ar": 1.505}, "reccelite": {"i": 2, "p": [[84, 62, "Runder Sensorkopf mit Fenstern (hier abgedeckt)"], [40, 60, "Litening-Bauweise – von außen kaum vom Litening zu unterscheiden, im Check-in klären"]], "ar": 1.8537}, "eots": {"i": 2, "p": [[82, 93, "Facettiertes, saphirfarbenes Fenster unter der Rumpfnase"], [60, 72, "Kein Pod: Sensor fest im Rumpf der F-35"]], "ar": 1.5109}, "tads": {"i": 1, "p": [[45, 74, "TADS unten: zwei Halbkugeln mit Sensorfenstern (Wärmebild, TV, Laser)"], [65, 72, "Zweite TADS-Halbkugel"], [57, 12, "PNVS oben: Nachtsicht-FLIR für den Piloten"]], "ar": 1.3333}, "strix": {"i": 1, "p": [[60, 30, "Kugelförmiges Visier auf dem Kabinendach"], [40, 62, "Darunter das Cockpit – das Visier sitzt vor dem Rotormast, nicht auf dem Mast"]], "ar": 1.5}, "mts": {"i": 1, "p": [[55, 82, "Kugelförmiger Sensorturm mit mehreren Fenstern"], [50, 20, "Rumpfnase der MQ-9"]], "ar": 0.6667}, "mx": {"i": 2, "p": [[50, 45, "Mehrere Sensorfenster im Kugelkopf (TV, Wärmebild, je nach Version Laser)"], [55, 80, "Kugelförmiger Gimbal-Turm"], [45, 10, "Befestigung unter Rumpf oder Nase"]], "ar": 0.8528}, "safire": {"i": 0, "p": [[38, 65, "Mehrere runde Fenster im Kugelkopf"], [45, 22, "Kompakter, meist dunkler Gimbal"]], "ar": 1.5}};
+const FAMS = DATA.families;
+const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
+const TYPES = DATA.types;
+const TYPE_ORDER = ['tgp','internal','recce','heli','uas','gimbal'];
+const ROUND_LEN = 12;
+const MODES = {
+  mix:   {name:'Gemischte Runde', kinds:['img','cap','type','plat','laser','cur','brev','brevr']},
+  img:   {name:'Bilderkennung', kinds:['img']},
+  use:   {name:'Fähigkeiten und Einsatz', kinds:['cap','type','plat','laser','cur'], noGen:true},
+  conf:  {name:'Verwechslungsgefahr', kinds:['img'], confusion:true},
+  laser: {name:'Laser und Brevity', kinds:['brev','brevr','cur'], onlyGen:true},
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+
+/* ---------- state & persistence ---------- */
+const KEY = 'podtrainer.v1';
+const blank = () => ({v:1, updated:0, fam:{}, q:{}, flags:{}, recent:[], lastImg:{}, answered:0, correct:0, annoOpen:false});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+let remote = null, syncLabel = 'Nur auf diesem Gerät gespeichert';
+let pushTimer = null;
+function save(){
+  S.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (remote){ clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 1200); }
+}
+async function pushRemote(){
+  if (!remote) return;
+  try { await remote.set(JSON.parse(JSON.stringify(S))); }
+  catch(e){ if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) { remote = null; syncLabel = 'Nur auf diesem Gerät gespeichert'; } }
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc('data/users/' + id + '/progress');
+    const snap = await ref.get();
+    remote = ref;
+    syncLabel = 'Fortschritt wird geräteübergreifend gespeichert';
+    if (snap.exists){
+      const r = JSON.parse(JSON.stringify(snap.data() || {}));
+      if ((r.updated || 0) > (S.updated || 0)){
+        S = Object.assign(blank(), r);
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+        if (view === 'home' || view === 'stats' || view === 'cards') render();
+      } else if (S.updated) pushRemote();
+    } else if (S.updated) pushRemote();
+    if (view === 'stats') render();
+  } catch(e){ remote = null; }
+})();
+
+/* ---------- question bank ---------- */
+const famIdOf = q => q.fam;
+function buildBank(){
+  const bank = [];
+  for (const f of FAMS){
+    (IMG[f.id] || []).forEach((_, i) => bank.push({id:`img:${f.id}:${i}`, kind:'img', fam:f.id, i}));
+    bank.push({id:`cap:${f.id}`, kind:'cap', fam:f.id});
+    bank.push({id:`type:${f.id}`, kind:'type', fam:f.id});
+    bank.push({id:`plat:${f.id}`, kind:'plat', fam:f.id});
+    if (f.des === 0 || f.des === 1) bank.push({id:`laser:${f.id}`, kind:'laser', fam:f.id});
+  }
+  for (const [id, fam, q, opts, ex] of DATA.curated) bank.push({id, kind:'cur', fam, q, opts, ex});
+  DATA.brevity.forEach(([t, d], i) => {
+    bank.push({id:`brev:${i}`, kind:'brev', fam:'gen', t, d});
+    bank.push({id:`brevr:${i}`, kind:'brevr', fam:'gen', t, d});
+  });
+  return bank;
+}
+const BANK = buildBank();
+const BANK_BY_ID = Object.fromEntries(BANK.map(q => [q.id, q]));
+
+function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+function weight(q, prevFam){
+  const fa = famAcc(q.fam);
+  const weak = fa === null ? 0.45 : 1 - fa;
+  const s = S.q[q.id];
+  let w = (1 + 2 * weak) * (s ? Math.max(0.25, 1 + 1.6 * (s.w / Math.max(1, s.c + s.w)) - 0.08 * Math.min(s.c, 6)) : 1.35);
+  if (S.recent.includes(q.id)) w *= 0.12;
+  if (q.fam === prevFam) w *= 0.25;
+  if (q.kind === 'img') w *= 0.9;
+  return w;
+}
+function pickRound(mode){
+  const M = MODES[mode];
+  let pool = BANK.filter(q => M.kinds.includes(q.kind));
+  if (M.noGen) pool = pool.filter(q => q.fam !== 'gen');
+  if (M.onlyGen) pool = pool.filter(q => q.fam === 'gen');
+  if (M.confusion) pool = pool.filter(q => FAM[q.fam] && FAM[q.fam].confuse.length);
+  const out = []; let prevFam = null;
+  const n = Math.min(ROUND_LEN, pool.length);
+  const usedImgFam = {};
+  while (out.length < n && pool.length){
+    const ws = pool.map(q => weight(q, prevFam) * (q.kind === 'img' && usedImgFam[q.fam] ? 0.2 : 1));
+    let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
+    while (k < ws.length - 1 && (r -= ws[k]) > 0) k++;
+    const q = pool.splice(k, 1)[0];
+    if (q.kind === 'img') usedImgFam[q.fam] = true;
+    out.push(q); prevFam = q.fam;
+  }
+  return out;
+}
+
+/* distractor helpers */
+// type pairs too close to each other to serve as clean distractors
+const TYPE_EXCLUDE = {gimbal:['uas','heli'], uas:['gimbal'], heli:['gimbal'], tgp:['internal'], internal:['tgp']};
+const typeAlternatives = t => Object.keys(TYPES).filter(x => x !== t && !(TYPE_EXCLUDE[t] || []).includes(x));
+function nameDistractors(f, strict){
+  const conf = shuffle(f.confuse.map(id => FAM[id]).filter(Boolean));
+  const same = shuffle(FAMS.filter(x => x.type === f.type && x.id !== f.id && !f.confuse.includes(x.id)));
+  const rest = shuffle(FAMS.filter(x => x.id !== f.id && x.type !== f.type && !f.confuse.includes(x.id)));
+  let list = strict ? [...conf, ...same, ...rest] : [...conf.slice(0, 2), ...shuffle([...conf.slice(2), ...same, ...rest])];
+  return list.slice(0, 3).map(x => x.name);
+}
+function materialize(q, mode){
+  const f = FAM[q.fam];
+  const strict = MODES[mode].confusion;
+  if (q.kind === 'img'){
+    return {prompt:'Welcher Pod bzw. Sensor ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict),
+      ex:`${f.name}: ${TYPES[f.type].label}. Erkennung: ${f.recog}` + (f.confuse.length ? ` Verwechslungsgefahr mit ${f.confuse.map(c => FAM[c].name).join(', ')}.` : '')};
+  }
+  if (q.kind === 'cap'){
+    const imgs = IMG[f.id]; let i = Math.floor(Math.random() * imgs.length);
+    if (imgs.length > 1 && S.lastImg[f.id] === i) i = (i + 1) % imgs.length;
+    const others = shuffle(typeAlternatives(f.type));
+    const anchor = f.type === 'recce' ? 'tgp' : 'recce';
+    const pickTypes = [anchor, ...others.filter(t => t !== anchor)].slice(0, 3);
+    return {prompt:'Was kann ein Lfz mit diesem Sensor für dich leisten?', img:[f.id, i], correct:TYPES[f.type].cap, wrong:pickTypes.map(t => TYPES[t].cap),
+      ex:`Das ist ${f.name} (${TYPES[f.type].label}). Wirkung: ${f.effects}. Aufklärung: ${f.recon}.`};
+  }
+  if (q.kind === 'type'){
+    const wrong = shuffle(typeAlternatives(f.type)).slice(0, 3).map(t => TYPES[t].label);
+    return {prompt:`Was ist ${f.name}?`, correct:TYPES[f.type].label, wrong, ex:`${f.name} ist ein ${TYPES[f.type].label}. ${TYPES[f.type].cap}.`};
+  }
+  if (q.kind === 'plat'){
+    return {prompt:`An welcher Plattform triffst du ${f.name} typischerweise?`, correct:f.plat[0], wrong:shuffle(f.plat[1]).slice(0, 3),
+      ex:`Typisch: ${f.primary}. Plattformen: ${f.platforms.join('; ')}.` + (f.bw ? ` ${f.bw}` : '')};
+  }
+  if (q.kind === 'laser'){
+    const yes = 'Ja – eigener Laserzielbeleuchter', no = 'Nein – kein Laserzielbeleuchter';
+    return {prompt:`Kann ein Lfz mit ${f.name} ein Ziel selbst für LGB oder Hellfire beleuchten?`, correct:f.des ? yes : no, wrong:[f.des ? no : yes, 'Nur über den IR-Marker', 'Nur bei Tageslicht'],
+      ex:f.des ? `${f.name} hat einen Laserzielbeleuchter. Wirkung: ${f.effects}.` : `${f.name} ist ein reiner Aufklärungspod ohne Laserzielbeleuchter. ${f.jtac[0]}`};
+  }
+  if (q.kind === 'cur'){
+    return {prompt:q.q, correct:q.opts[0], wrong:q.opts.slice(1), ex:q.ex};
+  }
+  if (q.kind === 'brev'){
+    const others = shuffle(DATA.brevity.filter(b => b[0] !== q.t)).slice(0, 3).map(b => b[1]);
+    return {prompt:`Was bedeutet „${q.t}“?`, correct:q.d, wrong:others, ex:`${q.t}: ${q.d}.`};
+  }
+  if (q.kind === 'brevr'){
+    const others = shuffle(DATA.brevity.filter(b => b[0] !== q.t)).slice(0, 3).map(b => b[0]);
+    return {prompt:`Welches Brevity-Wort passt? „${q.d}“`, correct:q.t, wrong:others, ex:`${q.t}: ${q.d}.`};
+  }
+}
+
+/* ---------- views ---------- */
+let view = 'home';
+let R = null; // round
+
+function setBar(title, opts = {}){
+  const b = $('#barin');
+  b.innerHTML = (opts.back ? `<button class="iconbtn" data-act="${opts.back}" aria-label="Zurück">‹ Zurück</button>` : '') +
+    `<div class="t">${esc(title)}</div>` + (opts.right || '');
+  const p = $('#prog');
+  if (opts.progress != null){ p.hidden = false; p.firstElementChild.style.width = (opts.progress * 100) + '%'; } else p.hidden = true;
+}
+function famState(id){ const a = famAcc(id); if (a === null) return 'none'; return a >= .8 ? 'ok' : a >= .5 ? 'mid' : 'bad'; }
+function pct(id){ const a = famAcc(id); return a === null ? '–' : Math.round(a * 100) + ' %'; }
+
+function renderHome(){
+  setBar('Pod-Trainer');
+  $('#bar').style.display = 'none';
+  const nImg = BANK.filter(q => q.kind === 'img').length;
+  const nUse = BANK.filter(q => ['cap','type','plat','laser'].includes(q.kind) || (q.kind === 'cur' && q.fam !== 'gen')).length;
+  const nGen = BANK.filter(q => q.fam === 'gen').length;
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a>
+    <h1>Pod-Trainer</h1>
+    <p>Targeting- und Aufklärungspods aus JTAC-Sicht: erkennen, Plattform zuordnen, wissen, was das Lfz damit für dich leisten kann.</p>
+  </section>
+  <section class="board" aria-label="Lagebild">
+    <div class="board-h"><h2>Lagebild</h2><span class="small muted">${S.answered ? `${S.answered} Antworten, ${Math.round(100 * S.correct / Math.max(1, S.answered))} % richtig` : 'Noch keine Antworten'}</span></div>
+    <div class="cells">${FAMS.map(f => `<button class="cell" data-s="${famState(f.id)}" data-card="${f.id}" title="${esc(f.name)}: ${pct(f.id)}"><b>${esc(f.short)}</b><span>${esc(f.name)}</span><i style="width:${famAcc(f.id) === null ? 0 : Math.max(8, famAcc(f.id) * 100)}%"></i></button>`).join('')}</div>
+    <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Familien kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <nav class="modes" aria-label="Trainingsarten">
+    <button class="mode" data-start="img"><span class="mi"><strong>Bilderkennung</strong><small>Pod oder Sensor am Bild erkennen – mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
+    <button class="mode" data-start="use"><span class="mi"><strong>Fähigkeiten und Einsatz</strong><small>Plattform, Laser, Wirkung, Aufklärung, Check-in-Wissen</small></span><span class="n">${nUse} Fragen</span></button>
+    <button class="mode" data-start="conf"><span class="mi"><strong>Verwechslungsgefahr</strong><small>Bilder nur gegen ähnliche Systeme, z. B. Litening und RecceLite</small></span><span class="n">${nImg} Bilder</span></button>
+    <button class="mode" data-start="laser"><span class="mi"><strong>Laser und Brevity</strong><small>Lasercodes, Safety Zone, SPOT, SPARKLE, CAPTURED …</small></span><span class="n">${nGen} Fragen</span></button>
+    <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle 16 Familien zum Nachlesen, mit Bildern</small></span><span class="n">16</span></button>
+    <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Familie, markierte Fragen zum Prüfen</small></span><span class="n">${Object.keys(S.flags).length ? Object.keys(S.flags).length + ' gemeldet' : ''}</span></button>
+  </nav>
+  <a class="guide-link" href="https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS#k5" target="_blank" rel="noopener"><span class="mi"><strong>Sensor-to-Shooter-Guide</strong><small>Hintergrund zu K5 und K6: wie Pod, Laser und Spot Tracker ein Ziel finden, verfolgen und markieren</small></span><span class="n">Guide ›</span></a>
+  <a class="guide-link" href="../brevity/"><span class="mi"><strong>Brevity-Trainer</strong><small>Brevity-Codewörter nach ATP 1-02.1 und CAS-Abkürzungen üben</small></span><span class="n">Trainer ›</span></a>
+  <p class="foot">Alle Leistungsangaben stammen aus öffentlichen Quellen. Wo Fähigkeiten versions- oder nationsabhängig sind, steht „erfragen“ – im Einsatz gilt, was im Check-in gemeldet wird. Falsche oder unklare Fragen kannst du nach der Antwort melden. Teil der Reihe mit dem <a href="../waffen/">Waffen-Trainer</a>, dem <a href="../manoever/">Manöver-Trainer</a>, dem <a href="../artillerie/">Artillerie-Trainer</a>, dem <a href="../flugabwehr/">Flugabwehr-Trainer</a>, dem <a href="../brevity/">Brevity-Trainer</a> und dem <a href="https://claude.ai/artifact/Vzk2Qy8udnfbJcAvjCMLSS" target="_blank" rel="noopener">Sensor-to-Shooter-Guide</a>.</p>`;
+}
+
+function hudSvg(){
+  return `<svg viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="var(--hud)" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".9">
+  <path d="M14 46V14h32M354 14h32v32M386 254v32h-32M46 286H14v-32"/>
+  <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
+}
+function feedHtml(famId, i, opts = {}){
+  const src = IMG[famId][i];
+  return `<figure class="feed" data-zoom="${famId}:${i}">
+    <img src="${src}" alt="${opts.alt ? esc(opts.alt) : 'Bild eines Pods oder Sensors'}">${hudSvg()}
+    <span class="hud tl">TV</span><span class="hud tr">NAR</span>${opts.counter ? `<span class="hud bl">${opts.counter}</span>` : ''}
+    ${opts.nav ? `<button class="nav l" data-img="-1" aria-label="Vorheriges Bild">‹</button><button class="nav r" data-img="1" aria-label="Nächstes Bild">›</button>` : ''}
+  </figure>`;
+}
+
+function startRound(mode){
+  const qs = pickRound(mode);
+  R = {mode, qs, i:0, score:0, missed:[], cur:null, answered:false};
+  view = 'quiz'; nextQ(true);
+}
+function nextQ(first){
+  if (!first) R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; return render(); }
+  const q = R.qs[R.i];
+  const m = materialize(q, R.mode);
+  const opts = shuffle([m.correct, ...m.wrong.slice(0, 3)]);
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct)};
+  R.answered = false;
+  render();
+  window.scrollTo(0, 0);
+}
+function renderQuiz(){
+  $('#bar').style.display = '';
+  const {q, m, opts} = R.cur;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  $('#app').innerHTML = `
+    ${m.img ? feedHtml(m.img[0], m.img[1]) : ''}
+    <h2 class="prompt">${esc(m.prompt)}</h2>
+    <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
+    <div id="fb"></div>`;
+}
+function answer(k){
+  if (R.answered) return;
+  R.answered = true;
+  const {q, m, opts, ci} = R.cur;
+  const ok = k === ci;
+  document.querySelectorAll('.opt').forEach((b, j) => {
+    b.disabled = true;
+    if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
+  });
+  // stats
+  const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
+  ok ? qs.c++ : qs.w++;
+  const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
+  ok ? fs.c++ : fs.w++;
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  if (m.img) S.lastImg[m.img[0]] = m.img[1];
+  save();
+  if (ok) R.score++; else R.missed.push({fam:q.fam, prompt:m.prompt, correct:m.correct});
+  const f = FAM[q.fam];
+  const flagged = !!S.flags[q.id];
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    <p>${esc(m.ex)}</p>
+    ${f && ANNO[f.id] ? `<div class="annobox"><button class="btn" data-act="anno" aria-expanded="${S.annoOpen ? 'true' : 'false'}">${S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen'}</button><div id="annoarea"${S.annoOpen ? '' : ' hidden'}>${annoHtml(f)}</div></div>` : ''}
+    ${f ? profileHtml(f) : ''}
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const fb = $('#fb .btn.main'); if (fb) fb.focus({preventScroll:true});
+  $('#fb').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function annoHtml(f){
+  const a = ANNO[f.id]; if (!a || !IMG[f.id] || !IMG[f.id][a.i]) return '';
+  return `<figure class="anno" style="aspect-ratio:${a.ar};width:min(100%, ${Math.round(540 * a.ar)}px)" data-zoom="${f.id}:${a.i}">
+      <img src="${IMG[f.id][a.i]}" alt="${esc(f.name)} mit markierten Erkennungsmerkmalen">
+      ${a.p.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </figure>
+    <ol class="legendlist">${a.p.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol>`;
+}
+function chipVal(v){ return v === 1 ? '1' : v === 0 ? '0' : '?'; }
+function chipsHtml(f){
+  const lab = (n, v) => `<li data-v="${chipVal(v)}">${n}: ${v === 1 ? 'ja' : v === 0 ? 'nein' : 'erfragen'}</li>`;
+  const vdlV = f.vdl === 0 || f.vdl === 'nein' ? 0 : f.vdl == null ? null : 1;
+  const vdlTxt = f.vdl === 0 || f.vdl === 'nein' ? 'nein' : f.vdl == null ? 'erfragen' : f.vdl;
+  return `<ul class="chips">${lab('Laser', f.des)}${lab('LST', f.lst)}${lab('IR-Marker', f.ir)}<li data-v="${chipVal(vdlV)}">VDL: ${esc(vdlTxt)}</li></ul>`;
+}
+function profileHtml(f){
+  return `<div class="profile">
+    <h3>${esc(f.name)}<small>${esc(TYPES[f.type].label)}</small></h3>
+    ${chipsHtml(f)}
+    <dl class="kv"><dt>Plattform</dt><dd>${esc(f.primary)}</dd><dt>Wirkung</dt><dd>${esc(f.effects)}</dd><dt>Reichweite</dt><dd>${esc(f.range)}</dd></dl>
+    <div class="row" style="margin-top:10px"><button class="linkbtn" data-card="${f.id}">Steckbrief öffnen</button></div>
+  </div>`;
+}
+function renderEnd(){
+  $('#bar').style.display = '';
+  setBar('Auswertung', {back:'home'});
+  const n = R.qs.length;
+  const byFam = {};
+  R.missed.forEach(x => { byFam[x.fam] = (byFam[x.fam] || 0) + 1; });
+  $('#app').innerHTML = `
+    <div class="score">${R.score}<span class="muted" style="font-size:.45em"> / ${n}</span></div>
+    <p class="muted">${MODES[R.mode].name} – ${Math.round(100 * R.score / n)} % richtig.</p>
+    ${R.missed.length ? `<h2 style="margin-top:22px">Nacharbeiten</h2><ul class="misslist">${R.missed.map(x => `<li><div>${esc(x.prompt)}</div><div class="small"><strong>${esc(x.correct)}</strong>${FAM[x.fam] ? ` – <button class="linkbtn" data-card="${x.fam}">Steckbrief ${esc(FAM[x.fam].name)}</button>` : ''}</div></li>`).join('')}</ul>` : '<p>Alles richtig.</p>'}
+    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+}
+function renderCards(){
+  $('#bar').style.display = '';
+  setBar('Steckbriefe', {back:'home'});
+  $('#app').innerHTML = TYPE_ORDER.map(t => {
+    const fs = FAMS.filter(f => f.type === t); if (!fs.length) return '';
+    return `<section class="group"><h2>${esc(TYPES[t].label)}</h2><p class="small muted" style="margin:0 0 4px">${esc(TYPES[t].cap)}</p>
+      ${fs.map(f => `<button class="fam" data-card="${f.id}"><span class="code">${esc(f.short)}</span><span class="nm">${esc(f.name)}<br><span class="small muted" style="font-weight:400">${esc(f.primary)}</span></span><span class="pct">${pct(f.id)}</span></button>`).join('')}</section>`;
+  }).join('');
+}
+let cardState = null;
+function openCard(id){
+  const f = FAM[id]; if (!f) return;
+  cardState = {id, i:0};
+  drawCard();
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function drawCard(){
+  const f = FAM[cardState.id]; const n = IMG[f.id].length;
+  const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  $('#sheet').innerHTML = `<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">${esc(f.name)}</div><span class="muted small">${pct(f.id)}</span></div></div>
+  <div class="wrap">
+    ${feedHtml(f.id, cardState.i, {nav:n > 1, counter:`${cardState.i + 1}/${n}`, alt:f.name})}
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
+    <div class="desig">${esc(f.designation)} – ${esc(f.maker)}</div>
+    ${chipsHtml(f)}
+    ${f.bw ? `<div class="bw"><strong>Bundeswehr:</strong> ${esc(f.bw)}</div>` : ''}
+    <div class="sec"><h3>Plattformen</h3>${list(f.platforms)}</div>
+    <div class="sec"><h3>Sensoren</h3>${list(f.sensors)}</div>
+    <div class="sec"><h3>Wirkung</h3><p style="margin:0">${esc(f.effects)}</p></div>
+    <div class="sec"><h3>Aufklärung</h3><p style="margin:0">${esc(f.recon)}</p></div>
+    <div class="sec"><h3>Reichweite und Einsatzprofil</h3><p style="margin:0">${esc(f.range)}</p></div>
+    <div class="sec"><h3>Video-Downlink und Koordinaten</h3><p style="margin:0">${esc(f.vdlText)} Koordinaten: ${esc(f.coords)}.</p></div>
+    <div class="sec"><h3>Als JTAC beachten</h3>${list(f.jtac)}</div>
+    ${ANNO[f.id] ? `<div class="sec"><h3>Erkennungsmerkmale</h3>${annoHtml(f)}<p style="margin:10px 0 0">${esc(f.recog)}</p></div>` : `<div class="sec"><h3>Erkennung</h3><p style="margin:0">${esc(f.recog)}</p></div>`}
+    ${f.confuse.length ? `<div class="sec"><h3>Verwechslungsgefahr</h3><div class="row" style="margin-top:4px">${f.confuse.map(c => `<button class="btn" data-card="${c}">${esc(FAM[c].name)}</button>`).join('')}</div></div>` : ''}
+  </div>`;
+}
+function closeCard(){ $('#sheet').hidden = true; document.body.style.overflow = ''; cardState = null; }
+
+function renderStats(){
+  $('#bar').style.display = '';
+  setBar('Statistik', {back:'home'});
+  const rows = FAMS.map(f => ({f, a:famAcc(f.id), s:S.fam[f.id] || {c:0, w:0}})).sort((x, y) => (x.a ?? -1) - (y.a ?? -1));
+  const gen = S.fam.gen || {c:0, w:0};
+  const flags = Object.entries(S.flags);
+  const flagText = flags.map(([id, v]) => `• [${id}] ${v.t}`).join('\n');
+  $('#app').innerHTML = `
+    <div class="stat-top"><div><b>${S.answered}</b><span class="muted small">Antworten</span></div><div><b>${S.answered ? Math.round(100 * S.correct / S.answered) + ' %' : '–'}</b><span class="muted small">richtig</span></div></div>
+    <p class="sync">${esc(syncLabel)}</p>
+    <h2 style="margin-top:18px">Je Familie, schwächste zuerst</h2>
+    <div style="margin-top:6px">${rows.map(({f, a, s}) => `<div class="srow"><button class="linkbtn" data-card="${f.id}" style="text-align:left">${esc(f.name)}</button><div class="sbar"><i style="width:${a === null ? 0 : a * 100}%;background:${a === null ? 'transparent' : a >= .8 ? 'var(--ok)' : a >= .5 ? 'var(--cta)' : 'var(--bad)'}"></i></div><span class="small muted" style="text-align:right">${a === null ? '–' : Math.round(a * 100) + ' %'} <br>${s.c + s.w}×</span></div>`).join('')}
+    <div class="srow"><span>Laser und Brevity</span><div class="sbar"><i style="width:${gen.c + gen.w ? 100 * gen.c / (gen.c + gen.w) : 0}%;background:var(--cta)"></i></div><span class="small muted" style="text-align:right">${gen.c + gen.w ? Math.round(100 * gen.c / (gen.c + gen.w)) + ' %' : '–'}<br>${gen.c + gen.w}×</span></div></div>
+    <h2 style="margin-top:26px">Gemeldete Fragen</h2>
+    ${flags.length ? `<p class="small muted" style="margin:4px 0 8px">Kopiere die Liste und schick sie mir im Chat, dann prüfe und korrigiere ich die Fragen.</p><textarea readonly id="flagtxt">${esc(flagText)}</textarea><div class="row"><button class="btn" data-act="copyflags">Liste kopieren</button><button class="btn" data-act="clearflags">Meldungen löschen</button></div>` : '<p class="muted">Noch keine Frage gemeldet. Nach jeder Antwort kannst du eine Frage mit „Frage melden“ markieren.</p>'}
+    <h2 style="margin-top:26px">Zurücksetzen</h2>
+    <p class="small muted" style="margin:4px 0 8px">Löscht alle Antworten und die Trefferquoten. Gemeldete Fragen bleiben erhalten.</p>
+    <button class="btn" data-act="reset">Statistik zurücksetzen</button>`;
+}
+function render(){
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'cards') renderCards();
+  else if (view === 'stats') renderStats();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-zoom]');
+  if (!t) return;
+  if (t.dataset.img && cardState){
+    e.stopPropagation();
+    const n = IMG[cardState.id].length;
+    cardState.i = (cardState.i + Number(t.dataset.img) + n) % n; drawCard(); return;
+  }
+  if (t.dataset.zoom){
+    const [fid, i] = t.dataset.zoom.split(':');
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<img src="${IMG[fid][Number(i)]}" alt="Vergrößerte Ansicht">`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.start){ closeCard(); startRound(t.dataset.start); return; }
+  if (t.dataset.go){ view = t.dataset.go; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.card){ openCard(t.dataset.card); return; }
+  if (t.dataset.ans != null){ answer(Number(t.dataset.ans)); return; }
+  if (t.dataset.flag){
+    const id = t.dataset.flag;
+    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt : id, ts:Date.now()};
+    save();
+    t.classList.toggle('flagged', !!S.flags[id]); t.textContent = S.flags[id] ? 'Gemeldet' : 'Frage melden';
+    return;
+  }
+  const act = t.dataset.act;
+  if (act === 'home'){ closeCard(); view = 'home'; R = null; render(); window.scrollTo(0, 0); }
+  else if (act === 'next') nextQ();
+  else if (act === 'anno'){
+    const ar = $('#annoarea'); if (!ar) return;
+    S.annoOpen = ar.hidden; ar.hidden = !ar.hidden; save();
+    t.textContent = S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen';
+    t.setAttribute('aria-expanded', S.annoOpen ? 'true' : 'false');
+    if (S.annoOpen) ar.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  else if (act === 'closecard') closeCard();
+  else if (act === 'copyflags'){
+    const ta = $('#flagtxt'); ta.select();
+    const done = () => { t.textContent = 'Kopiert'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, () => { try { document.execCommand('copy'); done(); } catch(_){} });
+    else { try { document.execCommand('copy'); done(); } catch(_){} }
+  }
+  else if (act === 'clearflags'){ S.flags = {}; save(); render(); }
+  else if (act === 'reset'){
+    if (t.dataset.confirm){ const fl = S.flags; S = blank(); S.flags = fl; save(); render(); }
+    else { t.dataset.confirm = '1'; t.textContent = 'Wirklich zurücksetzen? Erneut tippen'; t.classList.add('flagged'); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
+  if (!$('#sheet').hidden){ if (e.key === 'Escape') closeCard(); return; }
+  if (view !== 'quiz' || !R) return;
+  if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
+  else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
+});
+render();
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
