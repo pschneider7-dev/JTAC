@@ -1,12 +1,13 @@
 # JTAC-Trainer
 
-Web-App (PWA) mit sieben Trainern für CAS aus JTAC-Sicht. Installierbar auf dem Home-Bildschirm, läuft nach dem ersten Aufruf vollständig offline.
+Web-App (PWA) mit acht Trainern für CAS aus JTAC-Sicht. Installierbar auf dem Home-Bildschirm, läuft nach dem ersten Aufruf vollständig offline.
 
 | Ordner | Trainer |
 |---|---|
 | `manoever/` | Manöver-Trainer |
 | `artillerie/` | Artillerie-Trainer |
 | `flugabwehr/` | Flugabwehr-Trainer |
+| `blau/` | Blau-Trainer (Fahrzeuge KR Blau, Freund oder Feind) |
 | `waffen/` | Waffen-Trainer |
 | `pods/` | Pod-Trainer |
 | `drill/` | JTAC-Drill |

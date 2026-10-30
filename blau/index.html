@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Blau-Trainer</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --feed:#0B1113; --hud:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 18px 48px}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0}
+h2{font-size:1.45rem;font-weight:600;letter-spacing:.005em}
+h3{font-size:1.25rem;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* home */
+.hero{padding:28px 0 20px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.board{margin:8px 0 24px}
+.board-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cells{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.board h3{font-size:1.05rem;color:var(--muted);margin:14px 0 6px;letter-spacing:.04em;text-transform:uppercase}
+@media (min-width:600px){.cells{grid-template-columns:repeat(8,minmax(0,1fr))}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px 12px;min-height:66px;overflow:hidden}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1}
+.cell span{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.cell[data-s="none"]{border-style:dashed}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.legend em{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.legend em::before{content:"";width:12px;height:5px;background:var(--c)}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:22px;border-top:1px solid var(--line)}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px}
+.mode .mi{flex:1}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot{margin-top:28px;font-size:.82rem;color:var(--muted);max-width:40em}
+
+/* feed */
+.feed{position:relative;margin:0;background:var(--feed);border-radius:10px;overflow:hidden;aspect-ratio:4/3;cursor:zoom-in}
+.feed img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.feed .hud{position:absolute;font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.06em;color:var(--hud);opacity:.85;text-shadow:0 1px 2px #000}
+.feed .hud.tl{top:10px;left:14px} .feed .hud.tr{top:10px;right:14px} .feed .hud.bl{bottom:10px;left:14px}
+.feed .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+.feed .nav.l{left:8px} .feed .nav.r{right:8px}
+
+/* quiz */
+.qmeta{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 10px;font-size:.9rem;color:var(--muted)}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:14px 0 14px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.profile{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.profile h3 small{font-family:var(--font-b);font-size:.85rem;font-weight:500;color:var(--muted);margin-left:6px}
+.kv{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;margin:10px 0 0;font-size:.94rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.chips li{font-size:.82rem;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--surface2);border:1px solid var(--line)}
+.chips li[data-v="1"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.chips li[data-v="0"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.chips li[data-v="?"]{background:var(--unk-bg);border-color:var(--unk);color:var(--unk)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 14px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* end */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:24px 0 4px}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+
+/* cards list */
+.group{margin-top:24px}
+.group h2{margin-bottom:6px}
+.fam{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px}
+.fam .code{font-family:var(--font-d);font-weight:700;font-size:1.1rem;width:3em;color:var(--muted)}
+.fam .nm{flex:1;font-weight:600}
+.fam .pct{font-family:var(--font-d);font-size:1.05rem;color:var(--muted)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet[hidden]{display:none}
+.sec{margin-top:18px}
+.sec h3{font-size:1.1rem;margin-bottom:4px}
+.sec ul{margin:4px 0 0;padding-left:1.15em}
+.sec li{margin:2px 0}
+.desig{font-size:.95rem;color:var(--muted);margin-top:4px}
+.bw{margin-top:12px;border-left:4px solid var(--cta);background:var(--surface);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.95rem}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* stats */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1}
+.srow{display:grid;grid-template-columns:8.5em 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.sync{font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.annobox{margin-top:12px}
+.annobox #annoarea{margin-top:12px}
+.anno{position:relative;margin:0;max-width:100%;border-radius:10px;overflow:hidden;background:var(--feed);cursor:zoom-in}
+.anno img{display:block;width:100%;height:100%;object-fit:cover}
+.anno .pin{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.95rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.legendlist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.legendlist li{display:flex;gap:10px;align-items:flex-start;font-size:.94rem;line-height:1.35}
+.legendlist b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;font-family:var(--font-d);font-size:.85rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.unitrow{margin-top:10px}
+.unitrow strong{font-family:var(--font-d);font-size:1.08rem;font-weight:600}
+.unitrow .chips{margin-top:4px}
+.vbox{margin-top:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.vbox h4{margin:0;font-family:var(--font-d);font-size:1.2rem;font-weight:600}
+.vbox .kv{grid-template-columns:6.8em 1fr}
+.sec h3 + .vbox{margin-top:6px}
+.imgcap{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+.vlabel{font-family:var(--font-d);font-weight:700;font-size:1.25rem;background:var(--ink);color:var(--bg);border-radius:6px;padding:2px 10px}
+.vlabel.none{background:var(--surface2);color:var(--muted);font-weight:600;font-size:1rem}
+.capbtns{display:flex;gap:6px;flex-wrap:wrap}
+.btn.sm{padding:6px 10px;font-size:.88rem}
+.pinwrap{margin-top:10px}
+.fam.sub{padding-left:18px;background:var(--surface)}
+.fam.sub .nm{font-weight:600}
+.unitrow.cur{border-left:4px solid var(--cta);padding-left:8px}
+.tag{font-family:var(--font-b);font-size:.75rem;font-weight:600;background:var(--cta);color:var(--cta-ink);border-radius:999px;padding:1px 8px;vertical-align:middle}
+.guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+</style>
+<style>
+.cmpwrap{margin-top:8px}
+.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cmpfig{margin:0;min-width:0}
+.cmpfig>.ctag{display:inline-block;margin-bottom:4px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;padding:1px 8px;border-radius:5px}
+.cmpbox{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;max-width:100%;background:var(--feed);border-radius:8px;overflow:hidden;cursor:zoom-in}
+.cmpin{position:relative;max-height:100%}
+.cmpin img{display:block;width:100%;height:100%;object-fit:cover}
+.cmpin .pin{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.85rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.czoom{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-height:100%}
+.czoom .cmpin{max-width:100%}
+.czoom .pin{width:28px;height:28px;font-size:1rem}
+.czcap{margin:0;color:#eee;font-size:.92rem;line-height:1.35;display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;max-width:720px}
+.czcap b{width:100%;text-align:center;font-family:var(--font-d);font-size:1.05rem}
+.czcap i{font-style:normal;font-weight:700;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--hud);color:#111;margin-right:6px;font-size:.8rem}
+.cmpfig figcaption{margin-top:6px;font-size:.88rem;line-height:1.3}
+.cmpfig figcaption>b{font-family:var(--font-d);font-size:1.02rem;font-weight:600}
+.cmpfig .legendlist{margin-top:4px;gap:4px}
+.cmpfig .legendlist li{font-size:.84rem;gap:6px}
+.cmpfig .legendlist b{width:19px;height:19px;font-size:.78rem}
+.vbox h4 .nato{display:inline-block;vertical-align:middle;margin-left:4px;background:var(--ink);color:var(--bg);font-family:var(--font-d);font-weight:600;font-size:.8rem;letter-spacing:.02em;padding:1px 7px;border-radius:5px}
+.cmpkey{margin:10px 0 0;padding:8px 12px;border-left:4px solid var(--cta);background:var(--surface);border-radius:0 8px 8px 0;font-size:.95rem}
+.confint{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.vbox .cmpwrap{margin-top:6px}
+</style>
+</head>
+<body>
+<header class="bar" id="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></div>
+<script>
+const DATA = {"cats": {"kpz": {"label": "Kampfpanzer", "cap": "Schwer gepanzert, große Kanone im Drehturm"}, "spz": {"label": "Schützenpanzer (Kette)", "cap": "Transportiert Infanterie, Maschinenkanone im Turm"}, "rpz": {"label": "Radpanzer (6×6 bzw. 8×8)", "cap": "Transport- oder Schützenpanzer auf Rädern"}, "tpzk": {"label": "Transportpanzer (Kette)", "cap": "Leicht gepanzerter Kasten auf Ketten, meist nur MG"}, "gfz": {"label": "Geschütztes Fahrzeug bzw. Spähwagen (4×4)", "cap": "Geschützte Kabine auf Rädern, Waffenstation oder MG"}, "art": {"label": "Rohrartillerie (Panzer- bzw. Radhaubitze)", "cap": "Selbstfahrende Haubitze, schießt indirekt aus großer Entfernung"}, "rak": {"label": "Raketenartillerie", "cap": "Raketenwerfer mit geschlossenen Behältern für Lenkraketen"}}, "catOrder": ["kpz", "spz", "rpz", "tpzk", "gfz", "art", "rak"], "catExcl": {"spz": ["tpzk"], "tpzk": ["spz"], "rpz": ["gfz"], "gfz": ["rpz"]}, "catX": {}, "origins": ["Deutschland", "Frankreich", "USA", "Großbritannien", "Schweden", "Deutschland und Niederlande"], "families": [{"id": "leo2", "name": "Leopard 2", "short": "LEO2", "cat": "kpz", "origin": "Deutschland", "designation": "Leopard 2 – deutscher Kampfpanzer (1979), der verbreitetste westliche Kampfpanzer in Europa. 2A4 mit senkrechter Turmfront, ab 2A5 mit keilförmiger Zusatzpanzerung, 2A6 und 2A7 mit langer L55-Kanone", "users": "Deutschland, Polen, Spanien, Norwegen, Finnland, Schweden, Dänemark, Österreich, Kanada, Griechenland, Ukraine u. a.", "weapons": ["120-mm-Glattrohrkanone (L44, ab 2A6 L55)", "2 × 7,62-mm-MG"], "recog": "Sieben Laufrollen unter Seitenschürzen, großer, kantiger Turm mit senkrechten Seiten und flachem Heck.", "confuse": ["m1", "leclerc"], "jtac": ["Laufrollen zählen: sieben haben Leopard 2 und M1, sechs haben Leclerc, Challenger 2 und alle T-Panzer.", "Auch die Ukraine fährt Leopard 2 – erbeutete Fahrzeuge zeigt Russland als Trophäen. Freund oder Feind immer über die Lage bestätigen."], "vars": [{"v": null, "name": "Leopard 2"}]}, {"id": "m1", "name": "M1 Abrams", "short": "M1", "cat": "kpz", "origin": "USA", "designation": "M1A1/M1A2 Abrams – US-Kampfpanzer (1980) mit Gasturbine; in Europa auch bei Polen und der Ukraine", "users": "USA, Polen, Ukraine, Australien und weitere Staaten", "weapons": ["120-mm-Glattrohrkanone M256", "12,7-mm-MG und 2 × 7,62-mm-MG"], "recog": "Sehr flacher, breiter und kantiger Turm mit Staukorb am Heck, sieben Laufrollen unter Seitenschürzen.", "confuse": ["leo2"], "jtac": ["Gasturbine: sehr heißes Heck im Wärmebild – wie beim russischen T-80.", "Flacher als der Leopard 2: Turmseiten schräg, Turm wirkt wie eine flache Platte."], "vars": [{"v": null, "name": "M1 Abrams"}]}, {"id": "leclerc", "name": "Leclerc", "short": "LEC", "cat": "kpz", "origin": "Frankreich", "designation": "Leclerc – französischer Kampfpanzer (1992) mit Ladeautomat, modernisiert als Leclerc XLR", "users": "Frankreich, Vereinigte Arabische Emirate, Jordanien", "weapons": ["120-mm-Glattrohrkanone mit Ladeautomat", "12,7-mm-MG koaxial, 7,62-mm-MG"], "recog": "Sechs Laufrollen, kastenförmiger Turm mit flacher Front und langem Heck (Ladeautomat), Optiken oben auf dem Turm.", "confuse": ["leo2", "chall"], "jtac": ["Sechs Laufrollen wie die T-Panzer – hier entscheidet der hohe, kastige Turm.", "Im Lehrgang in Frankreich der Kampfpanzer, den du am ehesten siehst."], "vars": [{"v": null, "name": "Leclerc"}]}, {"id": "chall", "name": "Challenger 2", "short": "CR2", "cat": "kpz", "origin": "Großbritannien", "designation": "Challenger 2 – britischer Kampfpanzer (1998) mit gezogener Kanone; Nachfolger Challenger 3", "users": "Vereinigtes Königreich, Oman, Ukraine", "weapons": ["120-mm-Zugrohrkanone L30", "2 × 7,62-mm-MG"], "recog": "Sechs Laufrollen, hoher, kantiger Turm mit senkrechten Seiten, oft mit Zusatzpanzerung und Gitterschutz am Heck.", "confuse": ["leo2", "leclerc"], "jtac": ["Sechs Laufrollen – nicht allein darauf verlassen, der Turm ist kantig und hoch."], "vars": [{"v": null, "name": "Challenger 2"}]}, {"id": "puma", "name": "Puma", "short": "PUMA", "cat": "spz", "origin": "Deutschland", "designation": "Puma – Schützenpanzer der Bundeswehr (ab 2015) mit unbemanntem Turm, Nachfolger des Marder", "users": "Deutschland", "weapons": ["30-mm-Maschinenkanone MK30-2 im unbemannten Turm", "Panzerabwehr-Lenkflugkörper MELLS (Spike LR)", "5,56-mm-MG"], "recog": "Sehr kantige, flache Wanne mit breiten Schürzen, kleiner, flacher unbemannter Turm.", "confuse": ["marder", "cv90"], "jtac": ["Der Turm ist unbemannt und flach – das Fahrzeug wirkt wie ein Kasten mit kleinem Aufsatz."], "vars": [{"v": null, "name": "Puma"}]}, {"id": "marder", "name": "Marder 1", "short": "MAR", "cat": "spz", "origin": "Deutschland", "designation": "Marder 1A3/1A5 – Schützenpanzer der Bundeswehr (1971), wird vom Puma abgelöst; auch in der Ukraine im Einsatz", "users": "Deutschland, Ukraine, Griechenland, Chile, Jordanien", "weapons": ["20-mm-Maschinenkanone", "Panzerabwehr-Lenkflugkörper MILAN (teils)", "7,62-mm-MG"], "recog": "Hohe, kastenförmige Wanne mit steiler Front, kleiner Turm mit 20-mm-Kanone, sechs Laufrollen.", "confuse": ["puma", "bradley"], "jtac": ["In der Ukraine kämpfen Marder neben sowjetischen BMP – Typ und Seite immer getrennt prüfen."], "vars": [{"v": null, "name": "Marder 1"}]}, {"id": "cv90", "name": "CV90", "short": "CV90", "cat": "spz", "origin": "Schweden", "designation": "CV90 – schwedischer Schützenpanzer (1993), in Europa weit verbreitet; Kaliber je nach Land 30, 35 oder 40 mm", "users": "Schweden, Norwegen, Finnland, Dänemark, Niederlande, Estland, Schweiz, Tschechien, Slowakei, Ukraine", "weapons": ["30-, 35- oder 40-mm-Maschinenkanone (je nach Nation)", "7,62-mm-MG"], "recog": "Kantige Wanne mit flacher Front, Turm mittig mit langer Kanone, sieben Laufrollen, Hecktür für die Infanterie.", "confuse": ["puma", "bradley"], "jtac": ["Sieben Laufrollen – russische Schützenpanzer BMP-1/2/3 haben sechs."], "vars": [{"v": null, "name": "CV90"}]}, {"id": "bradley", "name": "M2 Bradley", "short": "M2", "cat": "spz", "origin": "USA", "designation": "M2/M3 Bradley – US-Schützenpanzer (1981), M3 als Aufklärungsversion; in der Ukraine im Einsatz", "users": "USA, Ukraine, Kroatien und weitere Staaten", "weapons": ["25-mm-Maschinenkanone M242 Bushmaster", "TOW-Panzerabwehr-Lenkflugkörper im Doppelstarter am Turm", "7,62-mm-MG"], "recog": "Hohe Wanne mit senkrechten Seiten, Turm mit kastenförmigem TOW-Starter an der linken Seite, sechs Laufrollen.", "confuse": ["marder", "cv90"], "jtac": ["Der TOW-Kasten an der Turmseite ist das sicherste Merkmal."], "vars": [{"v": null, "name": "M2 Bradley"}]}, {"id": "boxer", "name": "Boxer", "short": "BOX", "cat": "rpz", "origin": "Deutschland und Niederlande", "designation": "Boxer – Radpanzer 8×8 (ab 2011) mit tauschbaren Missionsmodulen: Transport, Sanität, Führung oder Schützenpanzer mit Turm", "users": "Deutschland, Niederlande, Vereinigtes Königreich, Litauen, Australien", "weapons": ["Je nach Version 12,7-mm-MG, 40-mm-Granatmaschinenwaffe oder 30-mm-Turm"], "recog": "Sehr hoher, kantiger Aufbau auf acht großen Rädern, flache, steile Front, Heckrampe.", "confuse": ["stryker", "vbci"], "jtac": ["Viel höher als ein BTR – auch auf Drohnenbildern wirkt der Boxer wie ein großer Kasten."], "vars": [{"v": null, "name": "Boxer"}]}, {"id": "stryker", "name": "Stryker", "short": "STRY", "cat": "rpz", "origin": "USA", "designation": "Stryker – US-Radpanzer 8×8 (2002) in vielen Versionen; das in Deutschland stationierte 2. Kavallerieregiment fährt ihn auch mit 30-mm-Turm", "users": "USA, Ukraine, Bulgarien", "weapons": ["12,7-mm-MG oder 40-mm-Granatmaschinenwaffe in der fernbedienten Waffenstation", "Version Dragoon: 30-mm-Maschinenkanone"], "recog": "Kantiger, flacher Kasten auf acht Rädern, fernbediente Waffenstation statt Turm, oft mit Gitterpanzerung.", "confuse": ["boxer", "vbci"], "jtac": ["Ohne Turm mit Waffenstation – der BTR hat immer einen Turm vorn."], "vars": [{"v": null, "name": "Stryker"}]}, {"id": "vbci", "name": "VBCI", "short": "VBCI", "cat": "rpz", "origin": "Frankreich", "designation": "VBCI – französischer Schützenpanzer 8×8 (2008) mit 25-mm-Turm", "users": "Frankreich, Katar", "weapons": ["25-mm-Maschinenkanone im Turm", "7,62-mm-MG"], "recog": "Hoher, kantiger Aufbau auf acht Rädern, kleiner Turm mit 25-mm-Kanone, Heckrampe.", "confuse": ["boxer", "griffon"], "jtac": ["Hat einen Turm wie der BTR, ist aber viel höher und kantiger."], "vars": [{"v": null, "name": "VBCI"}]}, {"id": "griffon", "name": "VBMR Griffon", "short": "GRIF", "cat": "rpz", "origin": "Frankreich", "designation": "VBMR Griffon – französischer Radpanzer 6×6 (2019), Nachfolger des VAB", "users": "Frankreich, Belgien", "weapons": ["Fernbediente Waffenstation mit 12,7-mm-MG oder 40-mm-Granatmaschinenwaffe"], "recog": "Hoher, kantiger Aufbau auf sechs Rädern, große Panzerkabine mit Frontscheiben, Waffenstation auf dem Dach.", "confuse": ["vbci", "fuchs"], "jtac": ["Sechs Räder: Griffon und Fuchs. Russische Radschützenpanzer haben acht."], "vars": [{"v": null, "name": "VBMR Griffon"}]}, {"id": "fuchs", "name": "Fuchs", "short": "FUX", "cat": "rpz", "origin": "Deutschland", "designation": "TPz 1 Fuchs – Transportpanzer 6×6 der Bundeswehr (1979), auch als ABC-Spürpanzer", "users": "Deutschland, Niederlande, Saudi-Arabien, Algerien u. a.", "weapons": ["7,62-mm- bzw. 12,7-mm-MG"], "recog": "Bootsförmige Wanne auf sechs Rädern, steile Front mit großen Scheiben, große Hecktüren.", "confuse": ["griffon"], "jtac": ["Sechs Räder und kein Turm – der BTR hat acht Räder und einen Turm."], "vars": [{"v": null, "name": "Fuchs"}]}, {"id": "m113", "name": "M113", "short": "M113", "cat": "tpzk", "origin": "USA", "designation": "M113 – Transportpanzer auf Ketten (1960), der häufigste Transportpanzer der Welt; die Ukraine erhielt Hunderte", "users": "Sehr viele Staaten, u. a. USA, Ukraine, Litauen, Spanien, Italien, Australien", "weapons": ["12,7-mm-MG M2"], "recog": "Hoher, glatter Aluminiumkasten mit schräger Front, fünf Laufrollen, Heckrampe.", "confuse": [], "jtac": ["Fünf Laufrollen und hoher Kasten – der russische MT-LB ist sehr flach und hat sechs."], "vars": [{"v": null, "name": "M113"}]}, {"id": "dingo", "name": "Dingo 2", "short": "DIN", "cat": "gfz", "origin": "Deutschland", "designation": "ATF Dingo 2 – geschütztes Fahrzeug 4×4 der Bundeswehr mit Minenschutz", "users": "Deutschland, Belgien, Österreich, Luxemburg, Tschechien, Norwegen u. a.", "weapons": ["Fernbediente Waffenstation mit 12,7-mm-MG oder 40-mm-Granatmaschinenwaffe"], "recog": "Hohes 4×4-Fahrzeug mit großen Reifen, gepanzerte Kabine mit kleinen Scheiben, Waffenstation auf dem Dach.", "confuse": ["jltv", "fennek"], "jtac": ["Geschützte 4×4 sehen sich ähnlich – auf Markierungen und Lage achten."], "vars": [{"v": null, "name": "Dingo 2"}]}, {"id": "fennek", "name": "Fennek", "short": "FEN", "cat": "gfz", "origin": "Deutschland und Niederlande", "designation": "Fennek – Spähwagen 4×4 (2003) mit ausfahrbarem Sensormast, sehr flach und leise", "users": "Deutschland, Niederlande", "weapons": ["12,7-mm-MG bzw. 40-mm-Granatmaschinenwaffe"], "recog": "Sehr flaches, keilförmiges 4×4-Fahrzeug, Sensorkopf auf ausfahrbarem Mast.", "confuse": ["dingo"], "jtac": ["Späher stehen weit vorn – oft vor der eigenen Front in der Nähe des Gegners."], "vars": [{"v": null, "name": "Fennek"}]}, {"id": "jltv", "name": "JLTV", "short": "JLTV", "cat": "gfz", "origin": "USA", "designation": "JLTV (Joint Light Tactical Vehicle, ab 2019) – geschütztes Fahrzeug 4×4 der US-Streitkräfte, Nachfolger des HMMWV (Humvee)", "users": "USA, Litauen, Slowenien, Montenegro, Nordmazedonien u. a.; den älteren HMMWV nutzen sehr viele Staaten, auch die Ukraine", "weapons": ["12,7-mm-MG, 40-mm-Granatmaschinenwaffe oder Panzerabwehr-Lenkflugkörper auf dem Dach"], "recog": "Hohes 4×4-Fahrzeug mit steiler, kantiger Front, großen Reifen und keilförmigem Unterboden; Waffe auf dem Dach.", "confuse": ["dingo"], "jtac": ["Der Vorgänger HMMWV ist viel flacher und breiter – beide sind auf Seite Blau weit verbreitet."], "vars": [{"v": null, "name": "JLTV"}]}, {"id": "pzh2000", "name": "Panzerhaubitze 2000", "short": "PzH", "cat": "art", "origin": "Deutschland", "designation": "Panzerhaubitze 2000 – 155-mm-Panzerhaubitze (1998), Reichweite ca. 30–40 km; auch in der Ukraine im Einsatz", "users": "Deutschland, Niederlande, Italien, Griechenland, Litauen, Ungarn, Kroatien, Katar, Ukraine", "weapons": ["155-mm-Haubitze L52 (ca. 30 km, mit Reichweitenmunition ca. 40 km)", "7,62-mm-MG"], "recog": "Großer, kantiger Turm weit hinten, sehr langes Rohr mit Mündungsbremse, sieben Laufrollen.", "confuse": ["m109"], "jtac": ["Steht weit hinter der Front – mit Reichweitenmunition 40 km und mehr."], "vars": [{"v": null, "name": "Panzerhaubitze 2000"}]}, {"id": "m109", "name": "M109", "short": "M109", "cat": "art", "origin": "USA", "designation": "M109 – US-Panzerhaubitze 155 mm (1963), aktuell M109A6 Paladin und M109A7", "users": "USA, Ukraine, Lettland, Norwegen, Schweiz und weitere Staaten", "weapons": ["155-mm-Haubitze (ca. 22–30 km)", "12,7-mm-MG"], "recog": "Großer Kastenturm über der hinteren Wannenhälfte, Rohr mit Mündungsbremse, sieben Laufrollen.", "confuse": ["pzh2000"], "jtac": ["Kürzeres Rohr als die PzH 2000 – Reichweite etwas geringer."], "vars": [{"v": null, "name": "M109"}]}, {"id": "caesar", "name": "CAESAR", "short": "CAE", "cat": "art", "origin": "Frankreich", "designation": "CAESAR – französische 155-mm-Radhaubitze (2008) auf 6×6-Lkw, als CAESAR 8×8 auf Tatra-Fahrgestell; auch in der Ukraine", "users": "Frankreich, Belgien, Dänemark, Tschechien, Litauen, Estland, Ukraine, Saudi-Arabien, Indonesien", "weapons": ["155-mm-Haubitze L52, ca. 40 km"], "recog": "Lkw mit Panzerkabine vorn, Geschütz offen auf der Ladefläche; in Stellung mit Erdsporn hinten abgestützt.", "confuse": [], "jtac": ["Schießt und fährt sofort weiter – nach wenigen Minuten nicht mehr in der Stellung."], "vars": [{"v": null, "name": "CAESAR"}]}, {"id": "himars", "name": "M142 HIMARS", "short": "HIM", "cat": "rak", "origin": "USA", "designation": "M142 HIMARS – Raketenwerfer auf 6×6-Lkw (2005) mit einem Behälter: 6 Lenkraketen GMLRS (ca. 70–80 km) oder 1 ATACMS", "users": "USA, Ukraine, Polen, Estland, Lettland, Litauen, Rumänien, Australien u. a.", "weapons": ["6 Lenkraketen GMLRS (ca. 70–80 km) oder 1 ATACMS (bis ca. 300 km)"], "recog": "Sechs-Rad-Lkw mit Panzerkabine, ein geschlossener Kasten (Behälter) auf dem Heck statt offener Rohre.", "confuse": ["m270"], "jtac": ["Ein geschlossener Behälter: HIMARS. Offene Rohre: russischer Raketenwerfer."], "vars": [{"v": null, "name": "M142 HIMARS"}]}, {"id": "m270", "name": "M270 / MARS II", "short": "MARS", "cat": "rak", "origin": "USA", "designation": "M270 MLRS (Deutschland: MARS II, Frankreich: LRU) – Raketenwerfer auf Ketten mit zwei Behältern für je 6 Lenkraketen", "users": "USA, Vereinigtes Königreich, Deutschland, Frankreich, Italien, Norwegen, Finnland, Ukraine", "weapons": ["12 Lenkraketen GMLRS in zwei Behältern (ca. 70–80 km)"], "recog": "Kettenfahrzeug mit Kabine vorn und großem Startkasten mit zwei Behältern auf dem Heck.", "confuse": ["himars"], "jtac": ["Ketten und zwei Behälter: M270. Räder und ein Behälter: HIMARS."], "vars": [{"v": null, "name": "M270 / MARS II"}]}], "curated": [["f-1", "gen", "Du siehst einen T-72 im Raum der Ukraine. Ist das sicher Feind?", ["Nein – beide Seiten fahren T-72; Freund oder Feind nur über Lage, Kennzeichnung und Meldungen bestätigen", "Ja – T-72 fährt nur Russland", "Ja, wenn er sich bewegt", "Nein – T-72 fährt nur die Ukraine"], "Sowjetische Fahrzeuge wie T-72, BMP und BTR stehen auf beiden Seiten. Der Typ sagt nichts über die Seite – Lage, Frontverlauf, Kennzeichnung und Meldungen der Bodentruppe entscheiden."], ["f-2", "gen", "Womit kennzeichnen sich eigene Fahrzeuge bei Tag gegenüber Lfz?", ["Mit Markierungstafeln wie VS-17 (orange bzw. pink) und vereinbarten Zeichen", "Mit eingeschaltetem Licht", "Mit Nebel", "Gar nicht – Lfz erkennen Fahrzeuge am Typ"], "Markierungstafeln (z. B. VS-17) und vereinbarte Zeichen helfen der Besatzung bei Tag. Nachts gelten IR-Marker und Wärmebild-Kennungstafeln. Was gilt, steht im Befehl bzw. in den SPINS."], ["f-3", "gen", "Ein Kampfpanzer hat sieben Laufrollen. Was kommt in Frage?", ["Leopard 2 oder M1 Abrams", "T-72 oder T-90", "Leclerc oder Challenger 2", "T-80"], "Sieben Laufrollen haben Leopard 2 und M1. Leclerc, Challenger 2 und alle T-Panzer haben sechs."], ["f-4", "gen", "Ein Raketenwerfer trägt einen geschlossenen Kasten statt offener Rohre. Was ist das am ehesten?", ["HIMARS bzw. M270/MARS II – KR Blau", "BM-21 Grad – KR Rot", "TOS-1A", "BM-27 Uragan"], "Westliche Raketenwerfer laden Lenkraketen in geschlossenen Behältern. Russische Werfer wie Grad, Uragan und Smerch tragen offene Rohrbündel."], ["f-5", "gen", "Ein Kampfpanzer zeigt im Wärmebild ein auffällig heißes Heck. Was kann das sein?", ["M1 Abrams oder T-80 – beide mit Gasturbine", "Nur Leopard 2", "Nur T-72", "Ein Panzer mit Motorschaden"], "M1 Abrams und T-80 haben eine Gasturbine mit sehr heißem Abgas. Die Wärmesignatur hilft beim Typ, nicht bei der Seite."], ["r-1", "gen", "Ein Radpanzer mit sechs Rädern und ohne Turm. Was ist das am ehesten?", ["Ein westlicher Radpanzer wie Fuchs oder Griffon", "BTR-82A", "BTR-80", "BRDM-2"], "Russische Radschützenpanzer (BTR-60 bis BTR-82A) haben acht Räder und einen Turm vorn. Sechs Räder ohne Turm: Fuchs oder Griffon."]], "merk": [["Freund oder Feind", ["Fahrzeugtyp allein reicht nicht: Die Ukraine fährt sowjetische und westliche Fahrzeuge, Russland zeigt erbeutete westliche Fahrzeuge.", "Immer abgleichen: eigene Lage und Frontverlauf, Meldungen der Bodentruppe, Blue Force Tracking, Funk.", "Kennzeichnung bei Tag: Markierungstafeln VS-17 (orange bzw. pink), taktische Zeichen; nachts: IR-Marker und -Leuchten, Wärmebild-Kennungstafeln.", "Im Zweifel nicht freigeben – erst bestätigen lassen."]], ["Laufrollen zählen", ["Kampfpanzer: sieben Laufrollen = Leopard 2 oder M1. Sechs = Leclerc, Challenger 2 und alle T-Panzer.", "Schützenpanzer: CV90 hat sieben, Marder und Bradley haben sechs – wie BMP-1/2/3.", "M113: fünf Laufrollen. MT-LB: sechs, sehr flach.", "Panzerhaubitzen: PzH 2000 und M109 haben sieben, 2S19 und 2S3 sechs."]], ["Räder zählen", ["Sechs Räder: Fuchs, Griffon, HIMARS, CAESAR (6×6).", "Acht Räder: Boxer, Stryker, VBCI – und auf Seite Rot BTR-60/70/80/82A und Malva.", "Westliche Radpanzer sind hoch und kastig, BTR niedrig und bootsförmig mit Turm vorn."]], ["Raketenwerfer", ["Geschlossene Behälter (HIMARS, M270/MARS II): KR Blau. Offene Rohrbündel (Grad, Uragan, Smerch/Tornado): KR Rot."]]]};
+const IMG = {"leo2": ["img/leo2-0.webp", "img/leo2-1.webp", "img/leo2-2.webp"], "m1": ["img/m1-0.webp", "img/m1-1.webp"], "leclerc": ["img/leclerc-0.webp", "img/leclerc-1.webp"], "chall": ["img/chall-0.webp", "img/chall-1.webp"], "puma": ["img/puma-0.webp", "img/puma-1.webp", "img/puma-2.webp"], "marder": ["img/marder-0.webp", "img/marder-1.webp"], "cv90": ["img/cv90-0.webp", "img/cv90-1.webp", "img/cv90-2.webp"], "bradley": ["img/bradley-0.webp", "img/bradley-1.webp"], "boxer": ["img/boxer-0.webp", "img/boxer-1.webp", "img/boxer-2.webp"], "stryker": ["img/stryker-0.webp", "img/stryker-1.webp", "img/stryker-2.webp"], "vbci": ["img/vbci-0.webp"], "griffon": ["img/griffon-0.webp"], "fuchs": ["img/fuchs-0.webp", "img/fuchs-1.webp", "img/fuchs-2.webp"], "m113": ["img/m113-0.webp", "img/m113-1.webp"], "dingo": ["img/dingo-0.webp", "img/dingo-1.webp", "img/dingo-2.webp"], "fennek": ["img/fennek-0.webp", "img/fennek-1.webp", "img/fennek-2.webp"], "jltv": ["img/jltv-0.webp", "img/jltv-1.webp", "img/jltv-2.webp"], "pzh2000": ["img/pzh2000-0.webp", "img/pzh2000-1.webp", "img/pzh2000-2.webp"], "m109": ["img/m109-0.webp", "img/m109-1.webp", "img/m109-2.webp"], "caesar": ["img/caesar-0.webp", "img/caesar-1.webp", "img/caesar-2.webp"], "himars": ["img/himars-0.webp", "img/himars-1.webp", "img/himars-2.webp"], "m270": ["img/m270-0.webp", "img/m270-1.webp", "img/m270-2.webp"]};
+const VAR = {"leo2": [null, null, null], "m1": [null, null], "leclerc": [null, null], "chall": [null, null], "puma": [null, null, null], "marder": [null, null], "cv90": [null, null, null], "bradley": [null, null], "boxer": [null, null, null], "stryker": [null, null, null], "vbci": [null], "griffon": [null], "fuchs": [null, null, null], "m113": [null, null], "dingo": [null, null, null], "fennek": [null, null, null], "jltv": [null, null, null], "pzh2000": [null, null, null], "m109": [null, null, null], "caesar": [null, null, null], "himars": [null, null, null], "m270": [null, null, null]};
+const AR = {"leo2": 1.3333, "m1": 1.5, "leclerc": 1.519, "chall": 1.761, "puma": 1.5054, "marder": 1.5054, "cv90": 1.5, "bradley": 1.5642, "boxer": 1.3333, "stryker": 1.5, "vbci": 1.3333, "griffon": 1.3333, "fuchs": 1.5217, "m113": 1.5328, "dingo": 2.0538, "fennek": 1.3839, "jltv": 1.5273, "pzh2000": 1.5135, "m109": 1.5, "caesar": 1.5, "himars": 1.5054, "m270": 1.597};
+const ARS = {"leo2": [1.3333, 1.3333, 1.492], "m1": [1.5, 1.5081], "leclerc": [1.519, 1.4973], "chall": [1.761, 1.5], "puma": [1.5054, 1.5, 1.5054], "marder": [1.5054, 1.492], "cv90": [1.5, 1.5, 1.3016], "bradley": [1.5642, 1.5], "boxer": [1.3333, 1.3333, 1.3333], "stryker": [1.5, 1.5328, 1.5527], "vbci": [1.3333], "griffon": [1.3333], "fuchs": [1.5217, 1.6438, 1.5054], "m113": [1.5328, 1.4841], "dingo": [2.0538, 1.4237, 1.597], "fennek": [1.3839, 1.3333, 1.5], "jltv": [1.5273, 1.5, 1.5], "pzh2000": [1.5135, 1.5, 1.5], "m109": [1.5, 1.7987, 1.5054], "caesar": [1.5, 1.4973, 1.5], "himars": [1.5054, 1.5081, 1.5054], "m270": [1.597, 1.4947, 1.5027], "red": [1.5, 1.5, 1.5, 1.5, 1.4008, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5859, 1.5, 1.5, 1.4634, 1.3333, 1.5, 1.5, 1.2429, 1.3333, 1.3333]};
+const PINS = {"leo2": {"0": [[35, 40, "Großer, kantiger Turm mit senkrechten Seiten"], [80, 33, "Lange 120-mm-Kanone"], [25, 63, "Sieben Laufrollen unter Seitenschürzen"]]}, "m1": {"0": [[45, 42, "Sehr flacher, breiter, kantiger Turm"], [12, 43, "Staukorb am Turmheck"], [35, 58, "Sieben Laufrollen"]]}, "leclerc": {"0": [[55, 45, "Hoher, kastiger Turm mit langem Heck"], [55, 76, "Sechs Laufrollen"]]}, "chall": {"0": [[50, 27, "Hoher, kantiger Turm mit senkrechten Seiten"], [85, 25, "Kanone mit Wärmeschutzhülle"], [35, 57, "Sechs Laufrollen"]]}, "puma": {"0": [[55, 20, "Kleiner, flacher, unbemannter Turm"], [40, 48, "Sehr kantige Wanne mit breiten Schürzen"]]}, "marder": {"0": [[50, 37, "Kleiner Turm mit 20-mm-Kanone"], [50, 58, "Hohe, kastenförmige Wanne mit steiler Front"]]}, "cv90": {"0": [[33, 38, "Turm mit langer Kanone"], [50, 75, "Sieben Laufrollen"]]}, "bradley": {"0": [[72, 38, "TOW-Starter an der Turmseite"], [45, 60, "Hohe Wanne mit steiler Front"]]}, "boxer": {"0": [[45, 40, "Sehr hoher, kantiger Aufbau"], [40, 70, "Acht große Räder"]]}, "stryker": {"0": [[52, 22, "Waffenstation bzw. Turm auf flachem, kantigem Kasten"], [70, 62, "Acht Räder"]]}, "vbci": {"0": [[35, 47, "Kleiner Turm mit 25-mm-Kanone"], [60, 60, "Hoher, kantiger Aufbau"], [50, 78, "Acht Räder"]]}, "griffon": {"0": [[50, 15, "Waffenstation auf dem Dach"], [45, 45, "Hoher, kantiger Aufbau mit großer Kabine"], [55, 72, "Sechs Räder"]]}, "fuchs": {"0": [[62, 10, "Nur MG auf dem Dach, kein Turm"], [85, 42, "Steile Bugplatte"], [45, 70, "Sechs Räder"]]}, "m113": {"0": [[55, 52, "Hoher, glatter Kasten mit schräger Front"], [55, 75, "Fünf Laufrollen"]]}, "dingo": {"0": [[55, 10, "Waffenstation auf dem Dach"], [40, 45, "Gepanzerte Kabine mit kleinen Scheiben"], [30, 70, "Vier große Räder"]]}, "fennek": {"0": [[50, 45, "Sehr flaches, keilförmiges Fahrzeug ohne Turm"], [70, 75, "Vier Räder"]]}, "jltv": {"0": [[45, 15, "Waffe auf dem Dach"], [30, 55, "Steile, kantige Front"], [45, 80, "Große Räder, keilförmiger Unterboden"]]}, "pzh2000": {"0": [[65, 42, "Großer, kantiger Turm weit hinten"], [20, 45, "Sehr langes Rohr mit Mündungsbremse"], [70, 68, "Sieben Laufrollen"]]}, "m109": {"0": [[30, 45, "Großer Kastenturm"], [62, 28, "Rohr mit Mündungsbremse"], [35, 70, "Sieben Laufrollen"]]}, "caesar": {"0": [[75, 25, "155-mm-Rohr offen auf der Ladefläche"], [55, 65, "Lkw-Fahrgestell mit sechs Rädern"]]}, "himars": {"0": [[25, 45, "Ein geschlossener Behälter statt offener Rohre"], [80, 40, "Gepanzerte Kabine"], [50, 72, "Sechs Räder"]]}, "m270": {"0": [[25, 40, "Großer Startkasten mit zwei Behältern"], [55, 45, "Kabine vorn"], [35, 72, "Kettenfahrgestell"]]}};
+const LEIT = {};
+const AIR = [];
+const ANNO = {"leo2": [[35, 40, "Großer, kantiger Turm mit senkrechten Seiten"], [80, 33, "Lange 120-mm-Kanone"], [25, 63, "Sieben Laufrollen unter Seitenschürzen"]], "m1": [[45, 42, "Sehr flacher, breiter, kantiger Turm"], [12, 43, "Staukorb am Turmheck"], [35, 58, "Sieben Laufrollen"]], "leclerc": [[55, 45, "Hoher, kastiger Turm mit langem Heck"], [55, 76, "Sechs Laufrollen"]], "chall": [[50, 27, "Hoher, kantiger Turm mit senkrechten Seiten"], [85, 25, "Kanone mit Wärmeschutzhülle"], [35, 57, "Sechs Laufrollen"]], "puma": [[55, 20, "Kleiner, flacher, unbemannter Turm"], [40, 48, "Sehr kantige Wanne mit breiten Schürzen"]], "marder": [[50, 37, "Kleiner Turm mit 20-mm-Kanone"], [50, 58, "Hohe, kastenförmige Wanne mit steiler Front"]], "cv90": [[33, 38, "Turm mit langer Kanone"], [50, 75, "Sieben Laufrollen"]], "bradley": [[72, 38, "TOW-Starter an der Turmseite"], [45, 60, "Hohe Wanne mit steiler Front"]], "boxer": [[45, 40, "Sehr hoher, kantiger Aufbau"], [40, 70, "Acht große Räder"]], "stryker": [[52, 22, "Waffenstation bzw. Turm auf flachem, kantigem Kasten"], [70, 62, "Acht Räder"]], "vbci": [[35, 47, "Kleiner Turm mit 25-mm-Kanone"], [60, 60, "Hoher, kantiger Aufbau"], [50, 78, "Acht Räder"]], "griffon": [[50, 15, "Waffenstation auf dem Dach"], [45, 45, "Hoher, kantiger Aufbau mit großer Kabine"], [55, 72, "Sechs Räder"]], "fuchs": [[62, 10, "Nur MG auf dem Dach, kein Turm"], [85, 42, "Steile Bugplatte"], [45, 70, "Sechs Räder"]], "m113": [[55, 52, "Hoher, glatter Kasten mit schräger Front"], [55, 75, "Fünf Laufrollen"]], "dingo": [[55, 10, "Waffenstation auf dem Dach"], [40, 45, "Gepanzerte Kabine mit kleinen Scheiben"], [30, 70, "Vier große Räder"]], "fennek": [[50, 45, "Sehr flaches, keilförmiges Fahrzeug ohne Turm"], [70, 75, "Vier Räder"]], "jltv": [[45, 15, "Waffe auf dem Dach"], [30, 55, "Steile, kantige Front"], [45, 80, "Große Räder, keilförmiger Unterboden"]], "pzh2000": [[65, 42, "Großer, kantiger Turm weit hinten"], [20, 45, "Sehr langes Rohr mit Mündungsbremse"], [70, 68, "Sieben Laufrollen"]], "m109": [[30, 45, "Großer Kastenturm"], [62, 28, "Rohr mit Mündungsbremse"], [35, 70, "Sieben Laufrollen"]], "caesar": [[75, 25, "155-mm-Rohr offen auf der Ladefläche"], [55, 65, "Lkw-Fahrgestell mit sechs Rädern"]], "himars": [[25, 45, "Ein geschlossener Behälter statt offener Rohre"], [80, 40, "Gepanzerte Kabine"], [50, 72, "Sechs Räder"]], "m270": [[25, 40, "Großer Startkasten mit zwei Behältern"], [55, 45, "Kabine vorn"], [35, 72, "Kettenfahrgestell"]]};
+const CMP = [{"a": {"fam": "leo2", "i": 0, "lab": "Leopard 2", "pins": [[35, 40, "Großer, kantiger Turm mit senkrechten Seiten"], [80, 33, "Lange 120-mm-Kanone"], [25, 63, "Sieben Laufrollen unter Seitenschürzen"]]}, "b": {"fam": "red", "i": 0, "lab": "T-90 (KR Rot)", "pins": [[42, 50, "Kantige Turmfront mit Relikt – keine Shtora-Strahler"], [57, 32, "Panoramavisier des Kommandanten"], [78, 46, "Großer Staukorb am Turmheck"], [70, 63, "Gitterschutz an der Seite"]]}, "key": "Leopard 2: sieben Laufrollen und hoher, kantiger Turm mit senkrechten Seiten. T-90: sechs Laufrollen, kantiger Turm mit Reaktivpanzerung, beim T-90M mit großem Staukorb am Turmheck."}, {"a": {"fam": "m1", "i": 0, "lab": "M1 Abrams", "pins": [[45, 42, "Sehr flacher, breiter, kantiger Turm"], [12, 43, "Staukorb am Turmheck"], [35, 58, "Sieben Laufrollen"]]}, "b": {"fam": "red", "i": 1, "lab": "T-80 (KR Rot)", "pins": [[33, 50, "Relikt-Module an der Turmfront"], [25, 63, "Seitenschürzen mit eingesetzten Relikt-Modulen"]]}, "key": "M1: sieben Laufrollen und sehr flacher, kantiger Turm. T-80: sechs gummibereifte Laufrollen und flacher Turm mit Reaktivpanzerung. Beide haben eine Gasturbine – im Wärmebild beide mit heißem Heck."}, {"a": {"fam": "leclerc", "i": 0, "lab": "Leclerc", "pins": [[55, 45, "Hoher, kastiger Turm mit langem Heck"], [55, 76, "Sechs Laufrollen"]]}, "b": {"fam": "red", "i": 2, "lab": "T-72 (KR Rot)", "pins": [[50, 38, "Kontakt-5: wenige große, flache Keile an der Turmfront statt vieler kleiner Kacheln"], [35, 26, "Visierkasten Sosna-U auf dem Turmdach"], [42, 53, "Glatte Gummischürzen ohne Module"]]}, "key": "Beide haben sechs Laufrollen. Leclerc: hoher, kastiger Turm mit langem Heck. T-72: flacher, runder Gussturm."}, {"a": {"fam": "chall", "i": 0, "lab": "Challenger 2", "pins": [[50, 27, "Hoher, kantiger Turm mit senkrechten Seiten"], [85, 25, "Kanone mit Wärmeschutzhülle"], [35, 57, "Sechs Laufrollen"]]}, "b": {"fam": "red", "i": 3, "lab": "T-72 (KR Rot)", "pins": [[50, 38, "Kontakt-5: wenige große, flache Keile an der Turmfront statt vieler kleiner Kacheln"], [35, 26, "Visierkasten Sosna-U auf dem Turmdach"], [42, 53, "Glatte Gummischürzen ohne Module"]]}, "key": "Beide haben sechs Laufrollen. Challenger 2: hoher, kantiger Turm. T-72: niedriger, runder Turm."}, {"a": {"fam": "puma", "i": 0, "lab": "Puma", "pins": [[55, 20, "Kleiner, flacher, unbemannter Turm"], [40, 48, "Sehr kantige Wanne mit breiten Schürzen"]]}, "b": {"fam": "red", "i": 4, "lab": "BMP-3 (KR Rot)", "pins": [[80, 33, "Dickes 100-mm-Rohr, daneben die 30-mm-Kanone"], [57, 42, "Turm in der Mitte"], [22, 57, "Breite, hohe Wanne"], [40, 85, "Sechs Laufrollen"]]}, "key": "Puma: hohe, kantige Wanne mit kleinem, flachem Turm. BMP-3: flache Wanne mit großem Turm und dicker 100-mm-Kanone."}, {"a": {"fam": "marder", "i": 0, "lab": "Marder 1", "pins": [[50, 37, "Kleiner Turm mit 20-mm-Kanone"], [50, 58, "Hohe, kastenförmige Wanne mit steiler Front"]]}, "b": {"fam": "red", "i": 5, "lab": "BMP-2 (KR Rot)", "pins": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]]}, "key": "Marder: hohe, kastige Wanne mit steiler Front. BMP-2: niedrige, keilförmige Wanne mit spitzer Bugplatte."}, {"a": {"fam": "cv90", "i": 0, "lab": "CV90", "pins": [[33, 38, "Turm mit langer Kanone"], [50, 75, "Sieben Laufrollen"]]}, "b": {"fam": "red", "i": 6, "lab": "BMP-2 (KR Rot)", "pins": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]]}, "key": "CV90: sieben Laufrollen und kantige, hohe Wanne. BMP-2: sechs Laufrollen und niedrige, spitze Wanne."}, {"a": {"fam": "bradley", "i": 0, "lab": "M2 Bradley", "pins": [[72, 38, "TOW-Starter an der Turmseite"], [45, 60, "Hohe Wanne mit steiler Front"]]}, "b": {"fam": "red", "i": 7, "lab": "BMP-2 (KR Rot)", "pins": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]]}, "key": "Bradley: hoch und kastig, TOW-Kasten an der Turmseite. BMP-2: niedrige Wanne, Lenkflugkörper oben auf dem Turm."}, {"a": {"fam": "boxer", "i": 0, "lab": "Boxer", "pins": [[45, 40, "Sehr hoher, kantiger Aufbau"], [40, 70, "Acht große Räder"]]}, "b": {"fam": "red", "i": 8, "lab": "BTR-82A (KR Rot)", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, "key": "Boxer: sehr hoch und kastig, Heckrampe. BTR-82A: niedrig und bootsförmig, Seitentür zwischen 2. und 3. Achse, Turm vorn."}, {"a": {"fam": "stryker", "i": 0, "lab": "Stryker", "pins": [[52, 22, "Waffenstation bzw. Turm auf flachem, kantigem Kasten"], [70, 62, "Acht Räder"]]}, "b": {"fam": "red", "i": 9, "lab": "BTR-82A (KR Rot)", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, "key": "Stryker: kantiger Kasten mit Waffenstation statt Turm. BTR-82A: bootsförmige Wanne mit Turm vorn."}, {"a": {"fam": "vbci", "i": 0, "lab": "VBCI", "pins": [[35, 47, "Kleiner Turm mit 25-mm-Kanone"], [60, 60, "Hoher, kantiger Aufbau"], [50, 78, "Acht Räder"]]}, "b": {"fam": "red", "i": 10, "lab": "BTR-82A (KR Rot)", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, "key": "VBCI: hoch und kantig, Heckrampe. BTR-82A: niedrig, bootsförmig, Seitentür zwischen den Achsen."}, {"a": {"fam": "griffon", "i": 0, "lab": "VBMR Griffon", "pins": [[50, 15, "Waffenstation auf dem Dach"], [45, 45, "Hoher, kantiger Aufbau mit großer Kabine"], [55, 72, "Sechs Räder"]]}, "b": {"fam": "red", "i": 11, "lab": "BTR-82A (KR Rot)", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, "key": "Griffon: sechs Räder und hoher Kasten mit Waffenstation. BTR-82A: acht Räder, niedrig, mit Turm."}, {"a": {"fam": "fuchs", "i": 0, "lab": "Fuchs", "pins": [[62, 10, "Nur MG auf dem Dach, kein Turm"], [85, 42, "Steile Bugplatte"], [45, 70, "Sechs Räder"]]}, "b": {"fam": "red", "i": 12, "lab": "BTR-80 (KR Rot)", "pins": [[35, 14, "Dickes, kurzes 14,5-mm-MG KPWT"], [42, 25, "Kleiner, kegelförmiger Turm"]]}, "key": "Fuchs: sechs Räder, kein Turm. BTR-80: acht Räder und Kegelturm."}, {"a": {"fam": "m113", "i": 0, "lab": "M113", "pins": [[55, 52, "Hoher, glatter Kasten mit schräger Front"], [55, 75, "Fünf Laufrollen"]]}, "b": {"fam": "red", "i": 13, "lab": "MT-LB (KR Rot)", "pins": [[38, 62, "Flache, lange Kastenwanne"], [16, 83, "Sechs Laufrollen ohne Stützrollen"], [47, 48, "Luken und Aufbauten auf dem flachen Dach"]]}, "key": "M113: hoher Kasten mit fünf Laufrollen. MT-LB: sehr flache Wanne mit sechs Laufrollen ohne Stützrollen."}, {"a": {"fam": "dingo", "i": 0, "lab": "Dingo 2", "pins": [[55, 10, "Waffenstation auf dem Dach"], [40, 45, "Gepanzerte Kabine mit kleinen Scheiben"], [30, 70, "Vier große Räder"]]}, "b": {"fam": "red", "i": 14, "lab": "Typhoon (KR Rot)", "pins": [[68, 30, "Hohe, kantige Panzerkabine mit Panzerglas"], [25, 40, "Kastenaufbau für die Truppe"], [36, 72, "Drei Achsen (Typhoon-K)"]]}, "key": "Dingo: kompaktes 4×4 mit Kabine bis nach vorn. Typhoon: deutlich größerer, Lkw-artiger Aufbau mit Panzerglas, als Typhoon-K mit drei Achsen."}, {"a": {"fam": "fennek", "i": 0, "lab": "Fennek", "pins": [[50, 45, "Sehr flaches, keilförmiges Fahrzeug ohne Turm"], [70, 75, "Vier Räder"]]}, "b": {"fam": "red", "i": 15, "lab": "BRDM-2 (KR Rot)", "pins": [[52, 18, "Kegelturm mit 14,5-mm-MG (wie BTR-80)"], [22, 50, "Spitzer Bootsbug"], [70, 70, "Vier große Räder"]]}, "key": "Fennek: flach und kantig, ohne Turm. BRDM-2: spitzer Bootsbug und Kegelturm."}, {"a": {"fam": "jltv", "i": 0, "lab": "JLTV", "pins": [[45, 15, "Waffe auf dem Dach"], [30, 55, "Steile, kantige Front"], [45, 80, "Große Räder, keilförmiger Unterboden"]]}, "b": {"fam": "red", "i": 16, "lab": "Tigr (KR Rot)", "pins": [[57, 40, "Kastiger Aufbau mit hohen, geraden Seiten und kleinen Fenstern"], [17, 56, "Großer Frontschutzbügel"], [48, 72, "Vier große Räder"]]}, "key": "JLTV: steile, kantige Front und keilförmiger Unterboden. Tigr: kastiger Geländewagen mit hohen, geraden Seiten, kleinen Fenstern und großem Frontschutzbügel."}, {"a": {"fam": "pzh2000", "i": 0, "lab": "Panzerhaubitze 2000", "pins": [[65, 42, "Großer, kantiger Turm weit hinten"], [20, 45, "Sehr langes Rohr mit Mündungsbremse"], [70, 68, "Sieben Laufrollen"]]}, "b": {"fam": "red", "i": 17, "lab": "2S19 Msta-S (KR Rot)", "pins": [[70, 48, "Sehr großer, kastenförmiger Turm"], [38, 30, "Langes 152-mm-Rohr mit Rauchabsauger und Mündungsbremse"], [75, 88, "Kampfpanzer-Laufwerk mit sechs Laufrollen"]]}, "key": "PzH 2000: Turm weit hinten, sieben Laufrollen. 2S19: Turm mittig auf dem Kampfpanzer-Laufwerk mit sechs Laufrollen."}, {"a": {"fam": "m109", "i": 0, "lab": "M109", "pins": [[30, 45, "Großer Kastenturm"], [62, 28, "Rohr mit Mündungsbremse"], [35, 70, "Sieben Laufrollen"]]}, "b": {"fam": "red", "i": 18, "lab": "2S3 Akatsiya (KR Rot)", "pins": [[25, 30, "Großer, runder Turm im hinteren Teil"], [52, 38, "Rauchabsauger etwa in der Rohrmitte"], [92, 36, "152-mm-Rohr mit Zweikammer-Mündungsbremse, ragt weit über den Bug"], [35, 75, "Sechs große Laufrollen"]]}, "key": "M109: sieben Laufrollen und flacher Kastenturm. 2S3: sechs Laufrollen und großer, runder Turm."}, {"a": {"fam": "caesar", "i": 0, "lab": "CAESAR", "pins": [[75, 25, "155-mm-Rohr offen auf der Ladefläche"], [55, 65, "Lkw-Fahrgestell mit sechs Rädern"]]}, "b": {"fam": "red", "i": 19, "lab": "2S43 Malva (KR Rot)", "pins": [[77, 15, "Langes 152-mm-Rohr mit Mündungsbremse, offen auf dem Fahrzeug – hier steil aufgerichtet"], [22, 50, "Große, gepanzerte Lkw-Kabine vorn"]]}, "key": "Beide tragen das Geschütz offen auf einem Lkw. CAESAR: meist sechs Räder, französisch. Malva: acht Räder, russisch – im Zweifel Lage und Kennung prüfen."}, {"a": {"fam": "himars", "i": 0, "lab": "M142 HIMARS", "pins": [[25, 45, "Ein geschlossener Behälter statt offener Rohre"], [80, 40, "Gepanzerte Kabine"], [50, 72, "Sechs Räder"]]}, "b": {"fam": "red", "i": 20, "lab": "BM-21 Grad (KR Rot)", "pins": [[22, 33, "40 Rohre 122 mm in vier Reihen hinter der Kabine"], [60, 45, "Ural-Lkw 6×6"]]}, "key": "HIMARS: ein geschlossener Behälter auf sechs Rädern. BM-21 Grad: 40 offene Rohre auf dem Ural-Lkw."}, {"a": {"fam": "m270", "i": 0, "lab": "M270 / MARS II", "pins": [[25, 40, "Großer Startkasten mit zwei Behältern"], [55, 45, "Kabine vorn"], [35, 72, "Kettenfahrgestell"]]}, "b": {"fam": "red", "i": 21, "lab": "BM-27 Uragan (KR Rot)", "pins": [[40, 37, "16 dicke Rohre 220 mm"], [33, 68, "ZIL-135: die beiden mittleren Achsen dicht beieinander"]]}, "key": "M270: Ketten und geschlossene Behälter. Uragan: acht Räder und 16 offene Rohre."}];
+const CMPTXT = {};
+const RED = [{"blue": "leo2", "src": "../manoever/img/t90-0.webp", "ar": 1.5, "name": "T-90", "key": "Leopard 2: sieben Laufrollen und hoher, kantiger Turm mit senkrechten Seiten. T-90: sechs Laufrollen, kantiger Turm mit Reaktivpanzerung, beim T-90M mit großem Staukorb am Turmheck.", "pins": [[42, 50, "Kantige Turmfront mit Relikt – keine Shtora-Strahler"], [57, 32, "Panoramavisier des Kommandanten"], [78, 46, "Großer Staukorb am Turmheck"], [70, 63, "Gitterschutz an der Seite"]]}, {"blue": "m1", "src": "../manoever/img/t80-0.webp", "ar": 1.5, "name": "T-80", "key": "M1: sieben Laufrollen und sehr flacher, kantiger Turm. T-80: sechs gummibereifte Laufrollen und flacher Turm mit Reaktivpanzerung. Beide haben eine Gasturbine – im Wärmebild beide mit heißem Heck.", "pins": [[33, 50, "Relikt-Module an der Turmfront"], [25, 63, "Seitenschürzen mit eingesetzten Relikt-Modulen"]]}, {"blue": "leclerc", "src": "../manoever/img/t72-0.webp", "ar": 1.5, "name": "T-72", "key": "Beide haben sechs Laufrollen. Leclerc: hoher, kastiger Turm mit langem Heck. T-72: flacher, runder Gussturm.", "pins": [[50, 38, "Kontakt-5: wenige große, flache Keile an der Turmfront statt vieler kleiner Kacheln"], [35, 26, "Visierkasten Sosna-U auf dem Turmdach"], [42, 53, "Glatte Gummischürzen ohne Module"]]}, {"blue": "chall", "src": "../manoever/img/t72-0.webp", "ar": 1.5, "name": "T-72", "key": "Beide haben sechs Laufrollen. Challenger 2: hoher, kantiger Turm. T-72: niedriger, runder Turm.", "pins": [[50, 38, "Kontakt-5: wenige große, flache Keile an der Turmfront statt vieler kleiner Kacheln"], [35, 26, "Visierkasten Sosna-U auf dem Turmdach"], [42, 53, "Glatte Gummischürzen ohne Module"]]}, {"blue": "puma", "src": "../manoever/img/bmp3-0.webp", "ar": 1.4008, "name": "BMP-3", "key": "Puma: hohe, kantige Wanne mit kleinem, flachem Turm. BMP-3: flache Wanne mit großem Turm und dicker 100-mm-Kanone.", "pins": [[80, 33, "Dickes 100-mm-Rohr, daneben die 30-mm-Kanone"], [57, 42, "Turm in der Mitte"], [22, 57, "Breite, hohe Wanne"], [40, 85, "Sechs Laufrollen"]]}, {"blue": "marder", "src": "../manoever/img/bmp2-0.webp", "ar": 1.5, "name": "BMP-2", "key": "Marder: hohe, kastige Wanne mit steiler Front. BMP-2: niedrige, keilförmige Wanne mit spitzer Bugplatte.", "pins": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]]}, {"blue": "cv90", "src": "../manoever/img/bmp2-0.webp", "ar": 1.5, "name": "BMP-2", "key": "CV90: sieben Laufrollen und kantige, hohe Wanne. BMP-2: sechs Laufrollen und niedrige, spitze Wanne.", "pins": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]]}, {"blue": "bradley", "src": "../manoever/img/bmp2-0.webp", "ar": 1.5, "name": "BMP-2", "key": "Bradley: hoch und kastig, TOW-Kasten an der Turmseite. BMP-2: niedrige Wanne, Lenkflugkörper oben auf dem Turm.", "pins": [[31, 44, "Langes, dünnes 30-mm-Rohr"], [47, 35, "Zwei-Mann-Turm ohne Kornet-Rohre"], [75, 57, "Hecktüren – innen Kraftstofftanks"]]}, {"blue": "boxer", "src": "../manoever/img/btr-0.webp", "ar": 1.5, "name": "BTR-82A", "key": "Boxer: sehr hoch und kastig, Heckrampe. BTR-82A: niedrig und bootsförmig, Seitentür zwischen 2. und 3. Achse, Turm vorn.", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, {"blue": "stryker", "src": "../manoever/img/btr-0.webp", "ar": 1.5, "name": "BTR-82A", "key": "Stryker: kantiger Kasten mit Waffenstation statt Turm. BTR-82A: bootsförmige Wanne mit Turm vorn.", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, {"blue": "vbci", "src": "../manoever/img/btr-0.webp", "ar": 1.5, "name": "BTR-82A", "key": "VBCI: hoch und kantig, Heckrampe. BTR-82A: niedrig, bootsförmig, Seitentür zwischen den Achsen.", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, {"blue": "griffon", "src": "../manoever/img/btr-0.webp", "ar": 1.5, "name": "BTR-82A", "key": "Griffon: sechs Räder und hoher Kasten mit Waffenstation. BTR-82A: acht Räder, niedrig, mit Turm.", "pins": [[66, 33, "Langes 30-mm-Rohr 2A72"], [50, 33, "Größerer, runder Turm"]]}, {"blue": "fuchs", "src": "../manoever/img/btr-7.webp", "ar": 1.5859, "name": "BTR-80", "key": "Fuchs: sechs Räder, kein Turm. BTR-80: acht Räder und Kegelturm.", "pins": [[35, 14, "Dickes, kurzes 14,5-mm-MG KPWT"], [42, 25, "Kleiner, kegelförmiger Turm"]]}, {"blue": "m113", "src": "../manoever/img/mtlb-0.webp", "ar": 1.5, "name": "MT-LB", "key": "M113: hoher Kasten mit fünf Laufrollen. MT-LB: sehr flache Wanne mit sechs Laufrollen ohne Stützrollen.", "pins": [[38, 62, "Flache, lange Kastenwanne"], [16, 83, "Sechs Laufrollen ohne Stützrollen"], [47, 48, "Luken und Aufbauten auf dem flachen Dach"]]}, {"blue": "dingo", "src": "../manoever/img/typhoon-0.webp", "ar": 1.5, "name": "Typhoon", "key": "Dingo: kompaktes 4×4 mit Kabine bis nach vorn. Typhoon: deutlich größerer, Lkw-artiger Aufbau mit Panzerglas, als Typhoon-K mit drei Achsen.", "pins": [[68, 30, "Hohe, kantige Panzerkabine mit Panzerglas"], [25, 40, "Kastenaufbau für die Truppe"], [36, 72, "Drei Achsen (Typhoon-K)"]]}, {"blue": "fennek", "src": "../manoever/img/brdm2-0.webp", "ar": 1.4634, "name": "BRDM-2", "key": "Fennek: flach und kantig, ohne Turm. BRDM-2: spitzer Bootsbug und Kegelturm.", "pins": [[52, 18, "Kegelturm mit 14,5-mm-MG (wie BTR-80)"], [22, 50, "Spitzer Bootsbug"], [70, 70, "Vier große Räder"]]}, {"blue": "jltv", "src": "../manoever/img/tigr-0.webp", "ar": 1.3333, "name": "Tigr", "key": "JLTV: steile, kantige Front und keilförmiger Unterboden. Tigr: kastiger Geländewagen mit hohen, geraden Seiten, kleinen Fenstern und großem Frontschutzbügel.", "pins": [[57, 40, "Kastiger Aufbau mit hohen, geraden Seiten und kleinen Fenstern"], [17, 56, "Großer Frontschutzbügel"], [48, 72, "Vier große Räder"]]}, {"blue": "pzh2000", "src": "../artillerie/img/2s19-0.webp", "ar": 1.5, "name": "2S19 Msta-S", "key": "PzH 2000: Turm weit hinten, sieben Laufrollen. 2S19: Turm mittig auf dem Kampfpanzer-Laufwerk mit sechs Laufrollen.", "pins": [[70, 48, "Sehr großer, kastenförmiger Turm"], [38, 30, "Langes 152-mm-Rohr mit Rauchabsauger und Mündungsbremse"], [75, 88, "Kampfpanzer-Laufwerk mit sechs Laufrollen"]]}, {"blue": "m109", "src": "../artillerie/img/2s3-0.webp", "ar": 1.5, "name": "2S3 Akatsiya", "key": "M109: sieben Laufrollen und flacher Kastenturm. 2S3: sechs Laufrollen und großer, runder Turm.", "pins": [[25, 30, "Großer, runder Turm im hinteren Teil"], [52, 38, "Rauchabsauger etwa in der Rohrmitte"], [92, 36, "152-mm-Rohr mit Zweikammer-Mündungsbremse, ragt weit über den Bug"], [35, 75, "Sechs große Laufrollen"]]}, {"blue": "caesar", "src": "../artillerie/img/2s43-0.webp", "ar": 1.2429, "name": "2S43 Malva", "key": "Beide tragen das Geschütz offen auf einem Lkw. CAESAR: meist sechs Räder, französisch. Malva: acht Räder, russisch – im Zweifel Lage und Kennung prüfen.", "pins": [[77, 15, "Langes 152-mm-Rohr mit Mündungsbremse, offen auf dem Fahrzeug – hier steil aufgerichtet"], [22, 50, "Große, gepanzerte Lkw-Kabine vorn"]]}, {"blue": "himars", "src": "../artillerie/img/bm21-0.webp", "ar": 1.3333, "name": "BM-21 Grad", "key": "HIMARS: ein geschlossener Behälter auf sechs Rädern. BM-21 Grad: 40 offene Rohre auf dem Ural-Lkw.", "pins": [[22, 33, "40 Rohre 122 mm in vier Reihen hinter der Kabine"], [60, 45, "Ural-Lkw 6×6"]]}, {"blue": "m270", "src": "../artillerie/img/bm27-0.webp", "ar": 1.3333, "name": "BM-27 Uragan", "key": "M270: Ketten und geschlossene Behälter. Uragan: acht Räder und 16 offene Rohre.", "pins": [[40, 37, "16 dicke Rohre 220 mm"], [33, 68, "ZIL-135: die beiden mittleren Achsen dicht beieinander"]]}];
+const FAMS = DATA.families;
+const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
+const CATS = DATA.cats;
+const ROUND_LEN = 12;
+const GROUPS = [["Kampfpanzer", ["leo2", "m1", "leclerc", "chall"]], ["Schützenpanzer", ["puma", "marder", "cv90", "bradley"]], ["Rad- und Transportpanzer", ["boxer", "stryker", "vbci", "griffon", "fuchs", "m113"]], ["Geschützte Fahrzeuge", ["dingo", "fennek", "jltv"]], ["Artillerie", ["pzh2000", "m109", "caesar", "himars", "m270"]]];
+const MODES = {
+  mix:  {name:'Gemischte Runde', kinds:['img','cat','ff','org','cur']},
+  img:  {name:'Fahrzeuge erkennen', kinds:['img']},
+  ff:   {name:'Freund oder Feind', kinds:['ff','cur'], tags:['f-']},
+  cat:  {name:'Fahrzeugart erkennen', kinds:['cat','cur'], tags:['r-']},
+  org:  {name:'Herkunft', kinds:['org']},
+  conf: {name:'Verwechslungsgefahr', kinds:['img'], confusion:true},
+};
+const UNITS = [];
+const UNIT = {};
+FAMS.forEach(f => f.vars.forEach((u, k) => { u.fam = f.id; u.k = k; u.key = f.vars.length > 1 ? `${f.id}:${u.v}` : f.id; UNITS.push(u); if (f.vars.length > 1) UNIT[u.key] = {f, u}; }));
+const multi = f => f.vars.length > 1;
+const pinsFor = (fid, i) => (PINS[fid] || {})[i] || null;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
+const imgSrc = (fid, i) => fid === 'air' ? AIR[i] : fid === 'red' ? RED[i].src : IMG[fid][i];
+const imgCount = fid => fid === 'air' ? AIR.length : (IMG[fid] || []).length;
+
+/* ---------- state & persistence ---------- */
+const KEY = 'blautrainer.v1';
+const blank = () => ({v:1, updated:0, fam:{}, q:{}, flags:{}, recent:[], lastImg:{}, answered:0, correct:0, annoOpen:false});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+let remote = null, syncLabel = 'Nur auf diesem Gerät gespeichert';
+let pushTimer = null;
+function save(){
+  S.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (remote){ clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 1200); }
+}
+async function pushRemote(){
+  if (!remote) return;
+  try { await remote.set(JSON.parse(JSON.stringify(S))); }
+  catch(e){ if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) { remote = null; syncLabel = 'Nur auf diesem Gerät gespeichert'; } }
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc('data/users/' + id + '/progress');
+    const snap = await ref.get();
+    remote = ref;
+    syncLabel = 'Fortschritt wird geräteübergreifend gespeichert';
+    if (snap.exists){
+      const r = JSON.parse(JSON.stringify(snap.data() || {}));
+      if ((r.updated || 0) > (S.updated || 0)){
+        S = Object.assign(blank(), r);
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+        if (view === 'home' || view === 'stats' || view === 'cards') render();
+      } else if (S.updated) pushRemote();
+    } else if (S.updated) pushRemote();
+    if (view === 'stats') render();
+  } catch(e){ remote = null; }
+})();
+
+/* ---------- question bank ---------- */
+function buildBank(){
+  const bank = [];
+  for (const f of FAMS){
+    const imgs = IMG[f.id] || [];
+    imgs.forEach((_, i) => bank.push({id:`img:${f.id}:${i}`, kind:'img', fam:f.id, i}));
+    if (multi(f)) imgs.forEach((_, i) => { if (VAR[f.id][i] && pinsFor(f.id, i)) bank.push({id:`var:${f.id}:${i}`, kind:'var', fam:f.id, i}); });
+    bank.push({id:`cat:${f.id}`, kind:'cat', fam:f.id});
+    bank.push({id:`org:${f.id}`, kind:'org', fam:f.id});
+  }
+  RED.forEach((r, i) => {
+    bank.push({id:`ff:b:${r.blue}`, kind:'ff', fam:r.blue, red:false, i});
+    bank.push({id:`ff:r:${r.blue}`, kind:'ff', fam:r.blue, red:true, i});
+  });
+  for (const [id, fam, q, opts, ex] of DATA.curated) bank.push({id, kind:'cur', fam, q, opts, ex});
+  return bank;
+}
+const BANK = buildBank();
+
+function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+function weight(q, prevFam){
+  const fa = famAcc(q.fam);
+  const weak = fa === null ? 0.45 : 1 - fa;
+  const s = S.q[q.id];
+  let w = (1 + 2 * weak) * (s ? Math.max(0.25, 1 + 1.6 * (s.w / Math.max(1, s.c + s.w)) - 0.08 * Math.min(s.c, 6)) : 1.35);
+  if (S.recent.includes(q.id)) w *= 0.12;
+  if (q.fam === prevFam) w *= 0.25;
+  if (q.kind === 'img') w *= 0.9;
+  if (q.kind === 'var' || q.kind === 'cat') w *= 0.8;
+  return w;
+}
+function pickRound(mode){
+  const M = MODES[mode];
+  let pool = BANK.filter(q => M.kinds.includes(q.kind));
+  if (M.tags) pool = pool.filter(q => q.kind !== 'cur' || M.tags.some(t => q.id.startsWith(t)));
+  if (M.confusion) pool = pool.filter(q => FAM[q.fam] && FAM[q.fam].confuse.length);
+  const out = []; let prevFam = null;
+  const n = Math.min(ROUND_LEN, pool.length);
+  const usedImgFam = {};
+  const isImg = q => q.kind === 'img' || q.kind === 'var';
+  while (out.length < n && pool.length){
+    const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
+    let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
+    while (k < ws.length - 1 && (r -= ws[k]) > 0) k++;
+    const q = pool.splice(k, 1)[0];
+    if (isImg(q)) usedImgFam[q.fam] = true;
+    out.push(q); prevFam = q.fam;
+  }
+  return out;
+}
+
+/* distractor helpers */
+function nameDistractors(f, strict){
+  const pool = FAMS.filter(x => x.id !== f.id);
+  const conf = shuffle(f.confuse.map(id => FAM[id]).filter(Boolean));
+  const same = shuffle(pool.filter(x => x.cat === f.cat && !f.confuse.includes(x.id)));
+  const rest = shuffle(pool.filter(x => x.cat !== f.cat && !f.confuse.includes(x.id)));
+  const list = strict ? [...conf, ...same, ...rest] : [...conf.slice(0, 2), ...shuffle([...conf.slice(2), ...same, ...rest])];
+  return list.slice(0, 3).map(x => x.name);
+}
+function varDistractors(f, u){
+  const own = f.vars.filter(x => x !== u).map(x => x.name);
+  const other = shuffle(f.confuse.flatMap(id => FAM[id].vars.map(x => x.name)));
+  return [...own, ...other].filter((x, i, a) => a.indexOf(x) === i).slice(0, 3);
+}
+function catAlternatives(f){
+  const excl = [f.cat, ...(DATA.catExcl[f.cat] || []), ...(DATA.catX[f.id] || [])];
+  return shuffle(DATA.catOrder.filter(c => !excl.includes(c))).slice(0, 3).map(c => CATS[c].label);
+}
+const unitOfImg = (f, i) => f.vars.find(u => u.v === VAR[f.id][i]) || null;
+function unitImgs(f, u){
+  const all = (IMG[f.id] || []).map((_, i) => i);
+  if (!u.v) return all;
+  const own = all.filter(i => VAR[f.id][i] === u.v);
+  return own.length ? own : all;
+}
+function randomImg(f, u){
+  const idx = u ? unitImgs(f, u) : (IMG[f.id] || []).map((_, i) => i);
+  if (!idx.length) return null;
+  let i = idx[Math.floor(Math.random() * idx.length)];
+  if (idx.length > 1 && S.lastImg[f.id] === i) i = idx[(idx.indexOf(i) + 1) % idx.length];
+  return [f.id, i];
+}
+function annoFig(fid, i, pins, alt){
+  if (!pins || !IMG[fid] || IMG[fid][i] == null) return '';
+  const ar = (ARS[fid] || [])[i] || 4/3;
+  return `<figure class="anno" style="aspect-ratio:${ar};width:min(100%, ${Math.round(520 * ar)}px)" data-zoom="${fid}:${i}">
+      <img src="${IMG[fid][i]}" alt="${esc(alt)} mit markierten Erkennungsmerkmalen">
+      ${pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </figure>
+    <ol class="legendlist">${pins.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol>`;
+}
+const annoHtml = f => annoFig(f.id, 0, ANNO[f.id], f.name);
+const leitIdx = (f, u) => (LEIT[f.id] || {})[u.v];
+const unitAnno = (f, u) => { const i = leitIdx(f, u); return i == null ? '' : annoFig(f.id, i, pinsFor(f.id, i), u.name); };
+/* Merkmale passend zum gezeigten Bild: Bild-Pins, sonst Familien-Pins */
+function imgAnno(f, i){
+  const p = i != null ? pinsFor(f.id, i) : null;
+  if (p) return {title:'Merkmale auf diesem Bild', html:annoFig(f.id, i, p, f.name)};
+  return ANNO[f.id] ? {title:`Merkmale der ${f.name}-Familie`, html:annoHtml(f)} : null;
+}
+const tisLong = u => u.sight + (u.tis === 'tis'
+  ? ' Feste Deckung (Erde, Mauern, Glas) schützt, normaler Rauch und normale Tarnnetze kaum.'
+  : ' Trotzdem nicht unbeobachtet: Die Infanterie hat Wärmebild-Handgeräte, Drohnen fliegen mit Wärmebildkameras.');
+const lwrLong = u => u.lwrx || (u.lwr === 'lwr' ? 'Laserwarner mit automatischem Nebel bzw. Aerosol.' : DATA.lwrNo);
+
+function materialize(q, mode){
+  const f = FAM[q.fam];
+  const strict = MODES[mode].confusion;
+  const confTxt = f && f.confuse.length ? ` Verwechslungsgefahr mit ${f.confuse.map(c => FAM[c].name).join(', ')}.` : '';
+  const u = f && q.k != null ? f.vars[q.k] : null;
+  switch (q.kind){
+    case 'img': {
+      const iu = unitOfImg(f, q.i);
+      return {prompt:'Welches Fahrzeug ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict),
+        ex:`${f.name}: ${CATS[f.cat].label}.${iu && f.vars.length > 1 ? ` Hier: ${iu.name} – ${iu.recog}` : ''} Erkennung: ${f.recog}` + confTxt};
+    }
+    case 'var': {
+      const iu = unitOfImg(f, q.i);
+      return {prompt:'Welche Version ist das?', img:[f.id, q.i], correct:iu.name, wrong:varDistractors(f, iu),
+        ex:`${iu.name}: ${iu.recog}`, unit:iu, pinsNow:true,
+        compare:f.vars.filter(x => x !== iu)};
+    }
+    case 'cat':
+      return {prompt:'Was für ein Fahrzeug ist das?', img:randomImg(f), correct:CATS[f.cat].label, wrong:catAlternatives(f),
+        ex:`${f.name}: ${CATS[f.cat].label} – ${CATS[f.cat].cap}.`};
+    case 'air': {
+      const wrong = shuffle(['spz', 'll', 'tpzr', 'tpzk', 'rad', 'pzj']).slice(0, 3).map(c => CATS[c].label);
+      return {prompt:'Drohnen- bzw. Pod-Bild: Was für ein Fahrzeug ist das?', img:['air', q.i], correct:CATS.kpz.label, wrong,
+        ex:`${DATA.airNotes[q.i]} ${DATA.airTip}`};
+    }
+    case 'aa':
+      return {unit:u, prompt:`${u.name}: Was ist die größte Gefahr für einen Hubschrauber?`, img:randomImg(f, u), correct:u.aaQ[0], wrong:shuffle(u.aaQ[1]).slice(0, 3),
+        ex:`${u.aa} ${DATA.fj}`};
+    case 'lwr':
+      return {unit:u, prompt:`Du lasert einen ${u.name} mit Entfernungsmesser oder Designator. Merkt die Besatzung das?`, img:randomImg(f, u),
+        correct:DATA.lwr[u.lwr], wrong:DATA.lwrOrder.filter(k => k !== u.lwr).map(k => DATA.lwr[k]), order:DATA.lwrOrder.map(k => DATA.lwr[k]),
+        ex:lwrLong(u)};
+    case 'tis':
+      return {unit:u, prompt:`Womit klärt ein ${u.name} nachts mit Bordmitteln auf?`, img:randomImg(f, u),
+        correct:DATA.tis[u.tis], wrong:DATA.tisOrder.filter(k => k !== u.tis).map(k => DATA.tis[k]), order:DATA.tisOrder.map(k => DATA.tis[k]),
+        ex:tisLong(u)};
+    case 'wpn':
+      return {prompt:`Welche Wirkmittel empfiehlst du gegen ${f.name}?`, img:randomImg(f),
+        correct:DATA.wcls[f.wcls], wrong:DATA.wOrder.filter(k => k !== f.wcls).map(k => DATA.wcls[k]), order:DATA.wOrder.map(k => DATA.wcls[k]),
+        ex:`${f.protection} Schwachstellen: ${f.weak}`};
+    case 'ff': {
+      const r = RED[q.i];
+      const blue = `${f.name} – KR Blau`, red = `${r.name} – KR Rot`;
+      const pool = shuffle([...FAMS.filter(x => x.id !== f.id).map(x => `${x.name} – KR Blau`), ...RED.filter(x => x !== r && x.name !== r.name).map(x => `${x.name} – KR Rot`)]);
+      const others = uniq(pool).filter(o => o !== blue && o !== red).slice(0, 2);
+      return {prompt:'Freund oder Feind – welches Fahrzeug ist das?', img:q.red ? ['red', q.i] : randomImg(f),
+        correct:q.red ? red : blue, wrong:[q.red ? blue : red, ...others],
+        ex:`${r.key} Der Typ allein entscheidet nie über Freund oder Feind – immer Lage, Kennzeichnung und Meldungen abgleichen.`};
+    }
+    case 'org':
+      return {prompt:`Aus welchem Land stammt der ${f.name}?`, img:randomImg(f), correct:f.origin,
+        wrong:shuffle(DATA.origins.filter(o => o !== f.origin)).slice(0, 3), ex:`${f.designation}. Nutzer: ${f.users}.`};
+    case 'cur':
+      return {prompt:q.q, correct:q.opts[0], wrong:q.opts.slice(1), ex:q.ex};
+  }
+}
+
+/* ---------- views ---------- */
+let view = 'home';
+let R = null;
+
+function setBar(title, opts = {}){
+  const b = $('#barin');
+  b.innerHTML = (opts.back ? `<button class="iconbtn" data-act="${opts.back}" aria-label="Zurück">‹ Zurück</button>` : '') +
+    `<div class="t">${esc(title)}</div>` + (opts.right || '');
+  const p = $('#prog');
+  if (opts.progress != null){ p.hidden = false; p.firstElementChild.style.width = (opts.progress * 100) + '%'; } else p.hidden = true;
+}
+function famState(id){ const a = famAcc(id); if (a === null) return 'none'; return a >= .8 ? 'ok' : a >= .5 ? 'mid' : 'bad'; }
+function pct(id){ const a = famAcc(id); return a === null ? '–' : Math.round(a * 100) + ' %'; }
+const cellsHtml = list => `<div class="cells">${list.map(id => FAM[id]).map(f => `<button class="cell" data-s="${famState(f.id)}" data-card="${f.id}" title="${esc(f.name)}: ${pct(f.id)}"><b>${esc(f.short)}</b><span>${esc(f.name)}</span><i style="width:${famAcc(f.id) === null ? 0 : Math.max(8, famAcc(f.id) * 100)}%"></i></button>`).join('')}</div>`;
+const countPool = mode => { const M = MODES[mode]; return BANK.filter(q => M.kinds.includes(q.kind) && (q.kind !== 'cur' || !M.tags || M.tags.some(t => q.id.startsWith(t))) && (!M.confusion || (FAM[q.fam] && FAM[q.fam].confuse.length))).length; };
+
+function renderHome(){
+  setBar('Blau-Trainer');
+  $('#bar').hidden = true;
+  const nImg = BANK.filter(q => q.kind === 'img').length;
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a>
+    <h1>Blau-Trainer</h1>
+    <p>Gängige Landfahrzeuge der eigenen und verbündeten Kräfte (KR Blau) erkennen und von ähnlichen Fahrzeugen KR Rot unterscheiden – damit du nie auf die eigene Truppe wirkst.</p>
+  </section>
+  <section class="board" aria-label="Lagebild">
+    <div class="board-h"><h2>Lagebild</h2><span class="small muted">${S.answered ? `${S.answered} Antworten, ${Math.round(100 * S.correct / Math.max(1, S.answered))} % richtig` : 'Noch keine Antworten'}</span></div>
+    ${GROUPS.map(([t, ids]) => `<h3>${esc(t)}</h3>${cellsHtml(ids)}`).join('')}
+    <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Fahrzeuge kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <nav class="modes" aria-label="Trainingsarten">
+    <button class="mode" data-start="img"><span class="mi"><strong>Fahrzeuge erkennen</strong><small>Welches Fahrzeug ist das? Mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
+    <button class="mode" data-start="ff"><span class="mi"><strong>Freund oder Feind</strong><small>KR Blau oder das ähnliche Fahrzeug KR Rot – z. B. Leopard 2 oder T-90</small></span><span class="n">${countPool('ff')} Fragen</span></button>
+    <button class="mode" data-start="cat"><span class="mi"><strong>Fahrzeugart erkennen</strong><small>Kampfpanzer, Schützenpanzer, Radpanzer, Artillerie</small></span><span class="n">${countPool('cat')} Fragen</span></button>
+    <button class="mode" data-start="org"><span class="mi"><strong>Herkunft</strong><small>Aus welchem Land stammt das Fahrzeug?</small></span><span class="n">${countPool('org')} Fragen</span></button>
+    <button class="mode" data-start="conf"><span class="mi"><strong>Verwechslungsgefahr</strong><small>Bilder nur gegen ähnliche Fahrzeuge KR Blau</small></span><span class="n">${countPool('conf')} Bilder</span></button>
+    <button class="mode" data-act="merk"><span class="mi"><strong>Merkblatt</strong><small>Freund oder Feind, Laufrollen und Räder zählen, Raketenwerfer</small></span><span class="n"></span></button>
+    <button class="mode" data-act="cmpall"><span class="mi"><strong>Blau gegen Rot</strong><small>Jedes Fahrzeug neben seinem Gegenstück KR Rot, mit den Unterschieden</small></span><span class="n">${CMP.length} Paare</span></button>
+    <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle Fahrzeuge zum Nachlesen, mit Bildern und Versionen</small></span><span class="n">${FAMS.length}</span></button>
+    <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Fahrzeug, markierte Fragen zum Prüfen</small></span><span class="n">${Object.keys(S.flags).length ? Object.keys(S.flags).length + ' gemeldet' : ''}</span></button>
+  </nav>
+  <a class="guide-link" href="../manoever/"><span class="mi"><strong>Manöver-Trainer</strong><small>Die Fahrzeuge KR Rot im Detail</small></span><span class="n">Trainer ›</span></a>
+  <p class="foot">Alle Angaben stammen aus öffentlichen Quellen und sind gerundet. Die Bilder stammen von Wikimedia Commons und sind gemeinfrei. Der Fahrzeugtyp sagt nichts Sicheres über die Seite: Die Ukraine fährt sowjetische und westliche Fahrzeuge, erbeutete Fahrzeuge wechseln die Seite. Falsche oder unklare Fragen kannst du nach der Antwort melden.</p>`;
+}
+
+function hudSvg(){
+  return `<svg viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="var(--hud)" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".9">
+  <path d="M14 46V14h32M354 14h32v32M386 254v32h-32M46 286H14v-32"/>
+  <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
+}
+function feedHtml(famId, i, opts = {}){
+  return `<figure class="feed" data-zoom="${famId}:${i}">
+    <img src="${imgSrc(famId, i)}" alt="${opts.alt ? esc(opts.alt) : 'Bild eines Fahrzeugs'}">${hudSvg()}
+    <span class="hud tl">${famId === 'air' ? 'UAS' : 'TV'}</span><span class="hud tr">NAR</span>${opts.counter ? `<span class="hud bl">${opts.counter}</span>` : ''}
+    ${opts.nav ? `<button class="nav l" data-img="-1" aria-label="Vorheriges Bild">‹</button><button class="nav r" data-img="1" aria-label="Nächstes Bild">›</button>` : ''}
+  </figure>`;
+}
+
+function startRound(mode){
+  const qs = pickRound(mode);
+  R = {mode, qs, i:0, score:0, missed:[], cur:null, answered:false};
+  view = 'quiz'; nextQ(true);
+}
+function nextQ(first){
+  if (!first) R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; return render(); }
+  const q = R.qs[R.i];
+  const m = materialize(q, R.mode);
+  const all = [m.correct, ...m.wrong.slice(0, 3)];
+  const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct)};
+  R.answered = false;
+  render();
+  window.scrollTo(0, 0);
+}
+function renderQuiz(){
+  $('#bar').hidden = false;
+  const {m, opts} = R.cur;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  $('#app').innerHTML = `
+    ${m.img ? feedHtml(m.img[0], m.img[1]) : ''}
+    <h2 class="prompt">${esc(m.prompt)}</h2>
+    <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
+    <div id="fb"></div>`;
+}
+function fbAnno(f, m){
+  if (!f || (m.img && m.img[0] === 'red')) return '';
+  const idx = m.img && m.img[0] === f.id ? m.img[1] : null;
+  if (m.pinsNow){
+    return `<div class="sec"><h3>Merkmale auf diesem Bild</h3>${annoFig(f.id, idx, pinsFor(f.id, idx), m.correct)}</div>`;
+  }
+  const a = imgAnno(f, idx); if (!a) return '';
+  return `<div class="annobox"><button class="btn" data-act="anno" aria-expanded="${S.annoOpen ? 'true' : 'false'}">${S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen'}</button><div id="annoarea"${S.annoOpen ? '' : ' hidden'}><p class="small muted" style="margin:10px 0 0">${esc(a.title)}</p>${a.html}</div></div>`;
+}
+function answer(k){
+  if (R.answered) return;
+  R.answered = true;
+  const {q, m, ci} = R.cur;
+  const ok = k === ci;
+  document.querySelectorAll('.opt').forEach((b, j) => {
+    b.disabled = true;
+    if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
+  });
+  const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
+  ok ? qs.c++ : qs.w++;
+  const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
+  ok ? fs.c++ : fs.w++;
+  const uk = m.unit && m.unit.key !== q.fam ? m.unit.key : (q.kind === 'img' && FAM[q.fam] && multi(FAM[q.fam]) && unitOfImg(FAM[q.fam], q.i) ? unitOfImg(FAM[q.fam], q.i).key : null);
+  if (uk){ const us = S.fam[uk] || (S.fam[uk] = {c:0, w:0}); ok ? us.c++ : us.w++; }
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  if (m.img) S.lastImg[m.img[0]] = m.img[1];
+  save();
+  if (ok) R.score++; else R.missed.push({fam:q.fam, prompt:m.prompt, correct:m.correct});
+  const f = FAM[q.fam];
+  const flagged = !!S.flags[q.id];
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    <p>${esc(m.ex)}</p>
+    ${fbAnno(f, m)}
+    ${m.compare ? `<div class="sec"><h3>Zum Vergleich</h3>${m.compare.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join('')}</div>` : ''}
+    ${f ? profileHtml(f, m.unit || (m.img && m.img[0] === f.id ? unitOfImg(f, m.img[1]) : null)) : ''}
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const fb = $('#fb .btn.main'); if (fb) fb.focus({preventScroll:true});
+  $('#fb').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+const unitChips = u => '';
+const sideChip = f => `<ul class="chips"><li data-v="1">KR Blau</li><li data-v="?">${esc(CATS[f.cat].label)}</li><li data-v="?">Herkunft: ${esc(f.origin)}</li></ul>`;
+function unitsHtml(f, cur){
+  if (!multi(f)) return '';
+  const list = cur ? [cur, ...f.vars.filter(u => u !== cur)] : f.vars;
+  return list.map(u => `<div class="unitrow${u === cur ? ' cur' : ''}"><strong>${esc(u.name)}${u === cur ? ' <span class="tag">im Bild</span>' : ''}</strong><p class="small" style="margin:4px 0 0">${esc(u.recog)}</p></div>`).join('');
+}
+function profileHtml(f, cur){
+  const title = cur && multi(f) ? cur.name : f.name;
+  const r = RED.find(x => x.blue === f.id);
+  return `<div class="profile">
+    <h3>${esc(title)}<small>${esc(CATS[f.cat].label)} · KR Blau</small></h3>
+    ${unitsHtml(f, cur)}
+    <dl class="kv"><dt>Nutzer</dt><dd>${esc(f.users)}</dd><dt>Erkennung</dt><dd>${esc(f.recog)}</dd>${r ? `<dt>Ähnlich KR Rot</dt><dd>${esc(r.name)}: ${esc(r.key)}</dd>` : ''}</dl>
+    <div class="row" style="margin-top:10px">${cur && multi(f) ? `<button class="linkbtn" data-card="${cur.key}">Steckbrief ${esc(cur.name)}</button>` : ''}<button class="linkbtn" data-card="${f.id}">${multi(f) ? `Familie ${esc(f.name)}` : 'Steckbrief öffnen'}</button></div>
+  </div>`;
+}
+function renderEnd(){
+  $('#bar').hidden = false;
+  setBar('Auswertung', {back:'home'});
+  const n = R.qs.length;
+  $('#app').innerHTML = `
+    <div class="score">${R.score}<span class="muted" style="font-size:.45em"> / ${n}</span></div>
+    <p class="muted">${MODES[R.mode].name} – ${Math.round(100 * R.score / n)} % richtig.</p>
+    ${R.missed.length ? `<h2 style="margin-top:22px">Nacharbeiten</h2><ul class="misslist">${R.missed.map(x => `<li><div>${esc(x.prompt)}</div><div class="small"><strong>${esc(x.correct)}</strong>${FAM[x.fam] ? ` – <button class="linkbtn" data-card="${x.fam}">Steckbrief ${esc(FAM[x.fam].name)}</button>` : x.fam === 'gen' || x.fam === 'air' ? ` – <button class="linkbtn" data-act="merk">Merkblatt</button>` : ''}</div></li>`).join('')}</ul>` : '<p>Alles richtig.</p>'}
+    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+}
+function renderCards(){
+  $('#bar').hidden = false;
+  setBar('Steckbriefe', {back:'home'});
+  $('#app').innerHTML = `<div class="row" style="margin-top:6px"><button class="btn" data-act="merk">Merkblatt öffnen</button></div>` + GROUPS.map(([t, ids]) => `<section class="group"><h2>${esc(t)}</h2>
+      ${ids.map(id => FAM[id]).map(f => `<button class="fam" data-card="${f.id}"><span class="code">${esc(f.short)}</span><span class="nm">${esc(f.name)}${multi(f) ? ' <span class="small muted" style="font-weight:400">– Familie, Versionen im Vergleich</span>' : ''}<br><span class="small muted" style="font-weight:400">${esc(CATS[f.cat].label)}</span></span><span class="pct">${pct(f.id)}</span></button>`
+        + (multi(f) ? f.vars.map(u => `<button class="fam sub" data-card="${u.key}"><span class="code"></span><span class="nm">${esc(u.name)}<br><span class="small muted" style="font-weight:400">${esc(u.recog)}</span></span><span class="pct">${pct(u.key)}</span></button>`).join('') : '')).join('')}</section>`).join('');
+}
+let cardState = null;
+function openSheet(html){
+  $('#sheet').innerHTML = html;
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function openCard(id){
+  if (!FAM[id] && !UNIT[id]) return;
+  cardState = {id, i:0, pins:false};
+  drawCard();
+  const sh = $('#sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+/* Bildliste der Karte: Familie = alle Bilder, Version = nur ihre eigenen */
+function cardImgs(){
+  const id = cardState.id;
+  if (UNIT[id]){ const {f, u} = UNIT[id]; return unitImgs(f, u).filter(i => VAR[f.id][i] === u.v); }
+  return (IMG[id] || []).map((_, i) => i);
+}
+function carouselHtml(f){
+  const list = cardImgs(); if (!list.length) return '';
+  const k = cardState.i % list.length, i = list[k];
+  const iu = multi(f) ? unitOfImg(f, i) : null;
+  const pins = pinsFor(f.id, i);
+  const label = !multi(f) ? '' : iu ? iu.name : 'Version nicht eindeutig erkennbar';
+  const onUnit = !!UNIT[cardState.id];
+  return `${feedHtml(f.id, i, {nav:list.length > 1, counter:`${k + 1}/${list.length}`, alt:label || f.name})}
+    <div class="imgcap">
+      ${multi(f) ? `<span class="vlabel${iu ? '' : ' none'}">${esc(label)}</span>` : '<span></span>'}
+      <span class="capbtns">${pins ? `<button class="btn sm" data-act="cardpins" aria-expanded="${cardState.pins ? 'true' : 'false'}">${cardState.pins ? 'Merkmale ausblenden' : 'Merkmale auf diesem Bild'}</button>` : ''}${multi(f) && iu && !onUnit ? `<button class="btn sm" data-card="${iu.key}">Steckbrief ${esc(iu.name)}</button>` : ''}</span>
+    </div>
+    ${pins && cardState.pins ? `<div class="pinwrap">${annoFig(f.id, i, pins, label || f.name)}</div>` : ''}`;
+}
+const cmpFor = fid => CMP.filter(c => c.a.fam === fid || c.b.fam === fid);
+const cmpPair = (x, y) => CMP.find(c => (c.a.fam === x && c.b.fam === y) || (c.a.fam === y && c.b.fam === x));
+function cmpSide(sd, pos, ci, side){
+  const ar = (ARS[sd.fam] || [])[sd.i] || 4/3;
+  const w = ar >= 4/3 ? 100 : Math.round(ar / (4/3) * 1000) / 10;
+  return `<figure class="cmpfig">
+    <span class="ctag">${pos}</span>
+    <div class="cmpbox" data-czoom="${ci}:${side}"><div class="cmpin" style="aspect-ratio:${ar};width:${w}%">
+      <img src="${imgSrc(sd.fam, sd.i)}" alt="${esc(sd.lab)}">
+      ${sd.pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}
+    </div></div>
+    <figcaption><b>${pos}: ${esc(sd.lab)}</b><ol class="legendlist">${sd.pins.map(([, , t], k) => `<li><b>${k + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol></figcaption>
+  </figure>`;
+}
+function cmpHtml(c, focus){
+  const sw = c.b.fam === focus && c.a.fam !== focus, ci = CMP.indexOf(c);
+  const [L, Rt] = sw ? [c.b, c.a] : [c.a, c.b];
+  return `<div class="cmpwrap"><div class="cmp">${cmpSide(L, 'Links', ci, sw ? 'b' : 'a')}${cmpSide(Rt, 'Rechts', ci, sw ? 'a' : 'b')}</div><p class="cmpkey"><strong>${esc(c.keyLab || 'Sicherstes Merkmal:')}</strong> ${esc(c.key)}</p></div>`;
+}
+function confCompare(f){
+  const others = [...new Set(f.confuse)].filter(c => FAM[c]);
+  if (!others.length) return '';
+  others.sort((x, y) => (cmpPair(f.id, y) ? 1 : 0) - (cmpPair(f.id, x) ? 1 : 0));
+  return `<div class="sec"><h3>Verwechslungsgefahr innerhalb KR Blau</h3><p class="confint">Fahrzeuge, die leicht mit dem ${esc(f.name)} verwechselt werden, und woran du sie unterscheidest.</p>${others.map(c => {
+    const o = FAM[c], pr = cmpPair(f.id, c);
+    return `<div class="vbox"><h4>${esc(f.name)} oder ${esc(o.name)}?</h4>${pr ? cmpHtml(pr, f.id) : `<p style="margin:4px 0 0"><strong>${esc(o.name)}:</strong> ${esc(o.recog)}</p>${CMPTXT[[f.id, c].sort().join('|')] ? `<p class="cmpkey"><strong>Sicherstes Merkmal:</strong> ${esc(CMPTXT[[f.id, c].sort().join('|')])}</p>` : ''}`}<button class="linkbtn" data-card="${c}" style="margin-top:8px">Steckbrief ${esc(o.name)}</button></div>`;
+  }).join('')}</div>`;
+}
+function openCmpAll(){
+  cardState = null;
+  openSheet(`<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">Blau gegen Rot</div></div></div>
+  <div class="wrap">
+    <h1 style="font-size:2.6rem;margin-top:16px">Blau gegen Rot</h1>
+    <p class="muted" style="margin:6px 0 0">Jedes Fahrzeug KR Blau neben einem ähnlichen Fahrzeug KR Rot, mit den Merkmalen, die sie unterscheiden. Tippe auf ein Bild, um es zu vergrößern.</p>
+    ${CMP.map((c, k) => `<div class="sec"><h3>${esc(FAM[c.a.fam].name)} oder ${esc(RED[k].name)}?</h3>${cmpHtml(c, c.a.fam)}</div>`).join('')}
+  </div>`);
+}
+function redSec(f){
+  const k = RED.findIndex(x => x.blue === f.id); if (k < 0) return '';
+  const c = CMP[k];
+  return `<div class="sec"><h3>Nicht verwechseln mit KR Rot: ${esc(RED[k].name)}</h3>${cmpHtml(c, f.id)}</div>`;
+}
+function drawCard(){
+  const id = cardState.id;
+  const isUnit = !!UNIT[id];
+  const f = isUnit ? UNIT[id].f : FAM[id];
+  const U = isUnit ? UNIT[id].u : null;
+  const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  const sec = (h, body) => `<div class="sec"><h3>${h}</h3>${body}</div>`;
+  const p = s => `<p style="margin:0">${esc(s)}</p>`;
+  const common = `
+    ${sec('Bewaffnung', list(f.weapons))}
+    ${sec('Als JTAC beachten', list(f.jtac))}
+    ${redSec(f)}`;
+  let body;
+  if (isUnit){
+    const others = f.vars.filter(x => x !== U);
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(U.name)}</h1>
+    <div class="desig">Version der ${esc(f.name)}-Familie · ${esc(CATS[f.cat].label)} · <button class="linkbtn" data-card="${f.id}">alle ${esc(f.name)}-Versionen im Vergleich</button></div>
+    ${sideChip(f)}
+    ${sec(`Woran erkennst du den ${esc(U.name)}?`, unitAnno(f, U) + `<p style="margin:10px 0 0"><strong>${esc(U.recog)}</strong></p><p class="small muted" style="margin:6px 0 0">Gilt für alle ${esc(f.name)}: ${esc(f.recog)}</p>`)}
+    ${sec('Unterschied zu den anderen Versionen', others.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join(''))}
+    ${common}
+    ${confCompare(f)}`;
+  } else {
+    body = `
+    <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
+    <div class="desig">${esc(f.designation)}</div>
+    ${sideChip(f)}
+    ${multi(f) ? `<div class="row" style="margin-top:12px">${f.vars.map(u => `<button class="btn" data-card="${u.key}">Steckbrief ${esc(u.name)}</button>`).join('')}</div>` : ''}
+    ${sec('Nutzer', p(f.users))}
+    ${ANNO[f.id] ? sec('Erkennungsmerkmale', annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
+    ${multi(f) ? sec('Versionen unterscheiden', f.vars.map(u => `<div class="vbox"><h4>${esc(u.name)}</h4><div style="margin-top:8px">${unitAnno(f, u)}</div><p style="margin:8px 0 0"><strong>${esc(u.recog)}</strong></p><button class="btn" data-card="${u.key}" style="margin-top:8px">Steckbrief ${esc(u.name)}</button></div>`).join('')) : ''}
+    ${common}
+    ${confCompare(f)}`;
+  }
+  const title = isUnit ? U.name : f.name;
+  $('#sheet').innerHTML = `<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">${esc(title)}</div><span class="muted small">${pct(id)}</span></div>
+  <div class="wrap">
+    ${carouselHtml(f)}
+    ${body}
+  </div>`;
+}
+function openMerk(){
+  cardState = null;
+  openSheet(`<div class="bar" style="position:sticky"><div class="bar-in"><button class="iconbtn" data-act="closecard" aria-label="Schließen">‹ Zurück</button><div class="t">Merkblatt</div></div></div>
+  <div class="wrap">
+    <h1 style="font-size:2.6rem;margin-top:16px">Merkblatt</h1>
+    <p class="muted" style="margin:6px 0 0">Die wichtigsten Regeln aus der App auf einen Blick. Richtwerte aus öffentlichen Quellen – im Einsatz gilt die aktuelle Lage.</p>
+    ${DATA.merk.map(([h, items]) => `<div class="sec"><h3>${esc(h)}</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+  </div>`);
+}
+function closeCard(){ $('#sheet').hidden = true; document.body.style.overflow = ''; cardState = null; }
+
+function renderStats(){
+  $('#bar').hidden = false;
+  setBar('Statistik', {back:'home'});
+  const rows = FAMS.map(f => ({id:f.id, name:f.name, card:true, a:famAcc(f.id), s:S.fam[f.id] || {c:0, w:0}}));
+  UNITS.filter(u => UNIT[u.key] && S.fam[u.key]).forEach(u => rows.push({id:u.key, name:u.name + ' (Version)', card:true, a:famAcc(u.key), s:S.fam[u.key]}));
+  rows.push({id:'gen', name:'Grundlagen', card:false, a:famAcc('gen'), s:S.fam.gen || {c:0, w:0}});
+  rows.sort((x, y) => (x.a ?? -1) - (y.a ?? -1));
+  const flags = Object.entries(S.flags);
+  const flagText = flags.map(([id, v]) => `• [${id}] ${v.t}`).join('\n');
+  const bar = a => `<div class="sbar"><i style="width:${a === null ? 0 : a * 100}%;background:${a === null ? 'transparent' : a >= .8 ? 'var(--ok)' : a >= .5 ? 'var(--cta)' : 'var(--bad)'}"></i></div>`;
+  $('#app').innerHTML = `
+    <div class="stat-top"><div><b>${S.answered}</b><span class="muted small">Antworten</span></div><div><b>${S.answered ? Math.round(100 * S.correct / S.answered) + ' %' : '–'}</b><span class="muted small">richtig</span></div></div>
+    <p class="sync">${esc(syncLabel)}</p>
+    <h2 style="margin-top:18px">Je Fahrzeug, schwächste zuerst</h2>
+    <div style="margin-top:6px">${rows.map(r => `<div class="srow">${r.card ? `<button class="linkbtn" data-card="${r.id}" style="text-align:left">${esc(r.name)}</button>` : `<span>${esc(r.name)}</span>`}${bar(r.a)}<span class="small muted" style="text-align:right">${r.a === null ? '–' : Math.round(r.a * 100) + ' %'}<br>${r.s.c + r.s.w}×</span></div>`).join('')}</div>
+    <h2 style="margin-top:26px">Gemeldete Fragen</h2>
+    ${flags.length ? `<p class="small muted" style="margin:4px 0 8px">Kopiere die Liste und schick sie mir im Chat, dann prüfe und korrigiere ich die Fragen.</p><textarea readonly id="flagtxt">${esc(flagText)}</textarea><div class="row"><button class="btn" data-act="copyflags">Liste kopieren</button><button class="btn" data-act="clearflags">Meldungen löschen</button></div>` : '<p class="muted">Noch keine Frage gemeldet. Nach jeder Antwort kannst du eine Frage mit „Frage melden“ markieren.</p>'}
+    <h2 style="margin-top:26px">Zurücksetzen</h2>
+    <p class="small muted" style="margin:4px 0 8px">Löscht alle Antworten und Trefferquoten. Gemeldete Fragen bleiben erhalten.</p>
+    <button class="btn" data-act="reset">Statistik zurücksetzen</button>`;
+}
+function render(){
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'cards') renderCards();
+  else if (view === 'stats') renderStats();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-zoom],[data-czoom]');
+  if (!t) return;
+  if (t.dataset.img && cardState){
+    e.stopPropagation();
+    const n = cardImgs().length;
+    cardState.i = (cardState.i + Number(t.dataset.img) + n) % n; cardState.pins = false; drawCard(); return;
+  }
+  if (t.dataset.czoom){
+    const [ci, side] = t.dataset.czoom.split(':'); const sd = CMP[Number(ci)][side];
+    const ar = (ARS[sd.fam] || [])[sd.i] || 4/3;
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<div class="czoom"><div class="cmpin" style="aspect-ratio:${ar};width:min(100%, calc((100vh - 140px) * ${ar}))"><img src="${imgSrc(sd.fam, sd.i)}" alt="${esc(sd.lab)}">${sd.pins.map(([x, y], k) => `<span class="pin" style="left:${x}%;top:${y}%">${k + 1}</span>`).join('')}</div>
+      <p class="czcap"><b>${esc(sd.lab)}</b>${sd.pins.map(([, , tx], k) => `<span><i>${k + 1}</i>${esc(tx)}</span>`).join('')}</p></div>`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.zoom){
+    const [fid, i] = t.dataset.zoom.split(':');
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog');
+    lb.innerHTML = `<img src="${imgSrc(fid, Number(i))}" alt="Vergrößerte Ansicht">`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb); return;
+  }
+  if (t.dataset.start){ closeCard(); startRound(t.dataset.start); return; }
+  if (t.dataset.go){ view = t.dataset.go; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.card){ openCard(t.dataset.card); return; }
+  if (t.dataset.ans != null){ answer(Number(t.dataset.ans)); return; }
+  if (t.dataset.flag){
+    const id = t.dataset.flag;
+    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt : id, ts:Date.now()};
+    save();
+    t.classList.toggle('flagged', !!S.flags[id]); t.textContent = S.flags[id] ? 'Gemeldet' : 'Frage melden';
+    return;
+  }
+  const act = t.dataset.act;
+  if (act === 'home'){ closeCard(); view = 'home'; R = null; render(); window.scrollTo(0, 0); }
+  else if (act === 'next') nextQ();
+  else if (act === 'merk') openMerk();
+  else if (act === 'cmpall') openCmpAll();
+  else if (act === 'anno'){
+    const ar = $('#annoarea'); if (!ar) return;
+    S.annoOpen = ar.hidden; ar.hidden = !ar.hidden; save();
+    t.textContent = S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen';
+    t.setAttribute('aria-expanded', S.annoOpen ? 'true' : 'false');
+    if (S.annoOpen) ar.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  else if (act === 'closecard') closeCard();
+  else if (act === 'cardpins' && cardState){ cardState.pins = !cardState.pins; drawCard(); }
+  else if (act === 'copyflags'){
+    const ta = $('#flagtxt'); ta.select();
+    const done = () => { t.textContent = 'Kopiert'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, () => { try { document.execCommand('copy'); done(); } catch(_){} });
+    else { try { document.execCommand('copy'); done(); } catch(_){} }
+  }
+  else if (act === 'clearflags'){ S.flags = {}; save(); render(); }
+  else if (act === 'reset'){
+    if (t.dataset.confirm){ const fl = S.flags; S = blank(); S.flags = fl; save(); render(); }
+    else { t.dataset.confirm = '1'; t.textContent = 'Wirklich zurücksetzen? Erneut tippen'; t.classList.add('flagged'); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
+  if (!$('#sheet').hidden){ if (e.key === 'Escape') closeCard(); return; }
+  if (view !== 'quiz' || !R) return;
+  if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
+  else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
+});
+render();
+
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "JTAC-Trainer",
   "short_name": "JTAC",
-  "description": "Sieben Trainer für CAS aus JTAC-Sicht – Kräfte Rot, Waffen und Sensoren, Verfahren und Brevity. Läuft offline.",
+  "description": "Acht Trainer für CAS aus JTAC-Sicht – Kräfte Rot und Blau, Waffen und Sensoren, Verfahren und Brevity. Läuft offline.",
   "lang": "de",
   "dir": "ltr",
   "start_url": "./",
