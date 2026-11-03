@@ -1,6 +1,6 @@
 # JTAC-Trainer
 
-Web-App (PWA) mit acht Trainern für CAS aus JTAC-Sicht. Installierbar auf dem Home-Bildschirm, läuft nach dem ersten Aufruf vollständig offline.
+Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem Home-Bildschirm, läuft nach dem ersten Aufruf vollständig offline.
 
 | Ordner | Trainer |
 |---|---|
@@ -8,6 +8,7 @@ Web-App (PWA) mit acht Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 | `artillerie/` | Artillerie-Trainer |
 | `flugabwehr/` | Flugabwehr-Trainer |
 | `blau/` | Blau-Trainer (Fahrzeuge KR Blau, Freund oder Feind) |
+| `ziele/` | Zielpriorisierung (Lagen mit vier Zielen, Bilder aus Manöver-, Artillerie- und Flugabwehr-Trainer) |
 | `waffen/` | Waffen-Trainer |
 | `pods/` | Pod-Trainer |
 | `drill/` | JTAC-Drill |
@@ -23,6 +24,7 @@ Web-App (PWA) mit acht Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 - `sw.js` – Service Worker für die Offline-Nutzung
 - `manifest.webmanifest`, `icons/` – App-Name und Icons
 - `tools/build.py` – baut die Website nach `_site/` und trägt die Offline-Liste in `sw.js` ein
+- `tools/gen_ziele.py` – trägt die Bodenbilder der drei Rot-Trainer in `ziele/index.html` ein (läuft mit `build.py` automatisch)
 
 Der Fortschritt liegt im `localStorage` des Geräts, je Trainer unter einem eigenen Schlüssel (`manoevertrainer.v1`, `jtacdrill.v1` usw.).
 
