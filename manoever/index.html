@@ -93,6 +93,17 @@ h3{font-size:1.25rem;font-weight:600}
 .feed .hud.tl{top:10px;left:14px} .feed .hud.tr{top:10px;right:14px} .feed .hud.bl{bottom:10px;left:14px}
 .feed .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;pointer-events:auto}
 .feed .nav.l{left:8px} .feed .nav.r{right:8px}
+.feed canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed.fx:not(.open){cursor:default}
+.feed.fx img,.feed.fx canvas{transition:filter .5s,transform .5s}
+.feed.fx-whot img,.feed.fx-whot canvas{filter:grayscale(1) invert(1) contrast(1.35) brightness(1.05) blur(.6px)}
+.feed.fx-bhot img,.feed.fx-bhot canvas{filter:grayscale(1) contrast(1.5) blur(.6px)}
+.feed.fx-haze img,.feed.fx-haze canvas{filter:contrast(.42) brightness(1.2) saturate(.3) blur(1.6px)}
+.feed.fx-dusk img,.feed.fx-dusk canvas{filter:brightness(.46) contrast(1.15) saturate(.45) blur(.4px)}
+.feed.fx-far:not(.open) img{visibility:hidden}
+.feed.fx.open img,.feed.fx.open canvas{filter:none!important;transform:none!important}
+.feed.fx.open canvas{display:none}
+.fxnote{margin:4px 0 8px;font-size:.9rem;color:var(--muted)}
 
 /* quiz */
 .qmeta{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 10px;font-size:.9rem;color:var(--muted)}
@@ -292,6 +303,7 @@ const GROUPS = [
 const MODES = {
   mix:  {name:'Gemischte Runde', kinds:['img','cat','air','var','aa','lwr','tis','wpn','cur']},
   img:  {name:'Fahrzeuge erkennen', kinds:['img']},
+  sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true},
   cat:  {name:'Fahrzeugart erkennen', kinds:['cat','air','cur'], tags:['r-']},
   side: {name:'Wer fährt was?', kinds:['side','cur'], tags:['s-']},
   thr:  {name:'Bedrohung für dein Lfz', kinds:['aa','cur'], tags:['a-']},
@@ -542,6 +554,7 @@ function renderHome(){
   <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Fahrzeuge kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="img"><span class="mi"><strong>Fahrzeuge erkennen</strong><small>Welches Fahrzeug ist das? Mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
+    <button class="mode" data-start="sicht"><span class="mi"><strong>Unter Sichtbedingungen</strong><small>Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto</small></span><span class="n">${nImg} Bilder</span></button>
     <button class="mode" data-start="cat"><span class="mi"><strong>Fahrzeugart erkennen</strong><small>KPz, SPz, Radfahrzeug, Panzerjäger – auch aus Drohnen- und Pod-Perspektive</small></span><span class="n">${countPool('cat')} Fragen</span></button>
     <button class="mode" data-start="side"><span class="mi"><strong>Wer fährt was?</strong><small>Welche Fahrzeuge setzen Russland und die Ukraine beide ein – Freund oder Feind nie am Typ festmachen</small></span><span class="n">${countPool('side')} Fragen</span></button>
     <button class="mode" data-start="thr"><span class="mi"><strong>Bedrohung für dein Lfz</strong><small>MG, Maschinenkanone, Kanonen-LFK, Ataka und Kornet – was reicht wie weit</small></span><span class="n">${countPool('thr')} Fragen</span></button>
@@ -565,11 +578,56 @@ function hudSvg(){
   <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
 }
 function feedHtml(famId, i, opts = {}){
-  return `<figure class="feed" data-zoom="${famId}:${i}">
-    <img src="${imgSrc(famId, i)}" alt="${opts.alt ? esc(opts.alt) : 'Bild eines Fahrzeugs'}">${hudSvg()}
-    <span class="hud tl">${famId === 'air' ? 'UAS' : 'TV'}</span><span class="hud tr">NAR</span>${opts.counter ? `<span class="hud bl">${opts.counter}</span>` : ''}
+  const fx = opts.fx;
+  const cls = fx ? ` fx${fx.tone ? ' fx-' + fx.tone : ''}${fx.geo ? ' fx-' + fx.geo : ''}` : '';
+  const st = fx && fx.geo === 'crop' ? ` style="transform:scale(${fx.s});transform-origin:${fx.x}% ${fx.y}%"` : '';
+  return `<figure class="feed${cls}" ${fx ? 'data-fxzoom' : 'data-zoom'}="${famId}:${i}">
+    <img src="${imgSrc(famId, i)}" alt="${opts.alt ? esc(opts.alt) : 'Bild eines Fahrzeugs'}"${st}>${fx && fx.geo === 'far' ? `<canvas data-w="${fx.w}" data-src="${imgSrc(famId, i)}" aria-hidden="true"></canvas>` : ''}${hudSvg()}
+    <span class="hud tl">${fx && fx.tone ? FX_HUD[fx.tone] : famId === 'air' ? 'UAS' : 'TV'}</span><span class="hud tr">${fx && fx.geo ? FX_HUD[fx.geo] : 'NAR'}</span>${opts.counter ? `<span class="hud bl">${opts.counter}</span>` : ''}
     ${opts.nav ? `<button class="nav l" data-img="-1" aria-label="Vorheriges Bild">‹</button><button class="nav r" data-img="1" aria-label="Nächstes Bild">›</button>` : ''}
   </figure>`;
+}
+
+/* ---------- Sichtbedingungen: Bild verfremden, nach der Antwort Original zeigen ---------- */
+const FX_TXT = {whot:'Wärmebild-Optik weiß-heiß (nachgestellt)', bhot:'Wärmebild-Optik schwarz-heiß (nachgestellt)', haze:'Dunst und Staub', dusk:'Dämmerung', far:'große Entfernung, nur wenige Pixel', crop:'nur ein Ausschnitt'};
+const FX_HUD = {whot:'WHOT', bhot:'BHOT', haze:'TV', dusk:'TV', far:'WIDE', crop:'ZOOM'};
+function pickFx(fid, i){
+  const r = a => a[Math.floor(Math.random() * a.length)];
+  let tone, geo;
+  do { tone = r([null, null, 'whot', 'bhot', 'haze', 'dusk']); geo = r([null, 'far', 'crop']); } while (!tone && !geo);
+  if (geo === 'far' && (tone === 'haze' || tone === 'dusk')) tone = null;
+  const fx = {tone, geo};
+  if (geo === 'crop'){
+    const p = pinsFor(fid, i);
+    const [x, y] = p && p.length ? r(p) : [50 + (Math.random() - .5) * 24, 50 + (Math.random() - .5) * 20];
+    fx.x = Math.round(x); fx.y = Math.round(y); fx.s = (1.8 + Math.random() * .6).toFixed(2);
+  }
+  if (geo === 'far') fx.w = 110 + Math.floor(Math.random() * 60);
+  return fx;
+}
+const fxLabel = fx => [fx.tone && FX_TXT[fx.tone], fx.geo && FX_TXT[fx.geo]].filter(Boolean).join(', ');
+const wantFx = q => !!MODES[R.mode].fx || (R.mode === 'mix' && q.kind === 'img' && Math.random() < .25);
+function farPaint(){
+  document.querySelectorAll('.feed canvas[data-w]').forEach(c => {
+    const im = new Image();
+    im.onload = () => {
+      const w = +c.dataset.w, h = Math.max(1, Math.round(w * im.naturalHeight / im.naturalWidth));
+      c.width = w; c.height = h;
+      const x = c.getContext('2d'); x.drawImage(im, 0, 0, w, h);
+      try {
+        const d = x.getImageData(0, 0, w, h), a = d.data;
+        for (let k = 0; k < a.length; k += 4){ const n = (Math.random() - .5) * 30; a[k] += n; a[k + 1] += n; a[k + 2] += n; }
+        x.putImageData(d, 0, 0);
+      } catch(e){}
+    };
+    im.src = c.dataset.src;
+  });
+}
+function fxReveal(){
+  const fig = document.querySelector('.feed.fx'); if (!fig) return;
+  fig.classList.add('open'); fig.dataset.zoom = fig.dataset.fxzoom;
+  const tl = fig.querySelector('.hud.tl'), tr = fig.querySelector('.hud.tr');
+  if (tl) tl.textContent = 'ORIGINAL'; if (tr) tr.textContent = '';
 }
 
 function startRound(mode){
@@ -584,7 +642,7 @@ function nextQ(first){
   const m = materialize(q, R.mode);
   const all = [m.correct, ...m.wrong.slice(0, 3)];
   const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
-  R.cur = {q, m, opts, ci:opts.indexOf(m.correct)};
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct), fx:m.img && wantFx(q) ? pickFx(m.img[0], m.img[1]) : null};
   R.answered = false;
   render();
   window.scrollTo(0, 0);
@@ -594,10 +652,11 @@ function renderQuiz(){
   const {m, opts} = R.cur;
   setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
   $('#app').innerHTML = `
-    ${m.img ? feedHtml(m.img[0], m.img[1]) : ''}
+    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx}) : ''}
     <h2 class="prompt">${esc(m.prompt)}</h2>
     <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
     <div id="fb"></div>`;
+  if (R.cur.fx && R.cur.fx.geo === 'far') farPaint();
 }
 function fbAnno(f, m){
   if (!f) return '';
@@ -618,6 +677,7 @@ function answer(k){
     if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
   });
   const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
+  fxReveal();
   ok ? qs.c++ : qs.w++;
   const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
   ok ? fs.c++ : fs.w++;
@@ -632,6 +692,7 @@ function answer(k){
   const flagged = !!S.flags[q.id];
   $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
     <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    ${R.cur.fx ? `<p class="fxnote">Ansicht: ${esc(fxLabel(R.cur.fx))}. Oben siehst du jetzt das Originalbild.</p>` : ''}
     <p>${esc(m.ex)}</p>
     ${fbAnno(f, m)}
     ${m.compare ? `<div class="sec"><h3>Zum Vergleich</h3>${m.compare.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join('')}</div>` : ''}
