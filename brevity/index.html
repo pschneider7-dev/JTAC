@@ -187,10 +187,13 @@ const GROUPS = {
   raum:    {l:"Raumordnung (ACM, FSCM)", k:"a"},
   wirk:    {l:"Waffen und Wirkung", k:"a"},
   tech:    {l:"Sensoren und Technik", k:"a"},
-  threat:  {l:"Bedrohung und Luftverteidigung", k:"a"}
+  threat:  {l:"Bedrohung und Luftverteidigung", k:"a"},
+  luftop:  {l:"Luftoperationen", k:"a"},
+  fsup:    {l:"Steilfeuer und Feuerunterstützung", k:"a"},
+  land:    {l:"Landoperationen und Führung", k:"a"}
 };
 const G_ORDER_B = ["sicht","laser","angriff","feuer","waffen","bedr","koord","luft","eloka","funk","boden","heli"];
-const G_ORDER_A = ["rollen","verf","raum","wirk","tech","threat"];
+const G_ORDER_A = ["rollen","verf","luftop","raum","fsup","land","wirk","tech","threat"];
 
 /* B(Wort, Gruppe, Bedeutung deutsch, Originaldefinition, Optionen)
    o.opp = Gegenstück, o.conf = Verwechsler, o.note = JTAC-Hinweis, o.acc = akzeptierte Eingaben (Regex), o.near = [Regex, Hinweis] */
@@ -1207,7 +1210,7 @@ A("RFA","raum","Restrictive Fire Area","Raum mit Feuerbeschränkungen; darüber 
 A("FFA","raum","Free-Fire Area","Raum, in den ohne weitere Abstimmung gefeuert werden darf.");
 A("RFL","raum","Restrictive Fire Line","Linie zwischen zwei aufeinander zulaufenden eigenen Kräften – Feuer darüber nur abgestimmt.");
 A("FLOT","raum","Forward Line of Own Troops","Linie der vordersten eigenen Kräfte.");
-A("FEBA","raum","Forward Edge of the Battle Area","Vorderer Rand des Verteidigungsraums.");
+A("FEBA","raum","Forward Edge of the Battle Area","Vorderer Rand der Verteidigung (VRV): vorderste Linie der Räume, in denen eigene Kampftruppen eingesetzt sind – ohne die Sicherungskräfte davor.");
 A("TRP","raum","Target Reference Point","Zielbezugspunkt für Feuer und Talk-on.");
 A("EA","raum","Engagement Area","Feuerraum, in dem der Gegner bekämpft werden soll.");
 A("AO","raum","Area of Operations","Einsatzraum bzw. Verantwortungsbereich eines Truppenteils.");
@@ -1260,6 +1263,160 @@ A("EMCON","threat","Emission Control","Steuerung bzw. Begrenzung der eigenen Abs
 A("HVT","verf","High-Value Target","Hochwertziel – für den Gegner wichtig.");
 A("HPT","verf","High-Payoff Target","Ziel, dessen Bekämpfung den eigenen Auftrag am meisten fördert.");
 A("TST","verf","Time-Sensitive Target","Zeitkritisches Ziel, das sofort bekämpft werden muss.");
+
+/* ---- Erweiterung: Luftoperationen, Luftraum, Feuerunterstützung, Landoperationen (x = nicht CAS-Kern) ---- */
+A("JFC","rollen","Joint Force Commander","Befehlshaber einer streitkräftegemeinsamen Truppe (Joint Force).",{x:1});
+A("JFACC","rollen","Joint Force Air Component Commander","Befehlshaber der Luftkomponente einer Joint Force (NATO: COM JFAC).",{x:1});
+A("JFAC","rollen","Joint Force Air Component","Luftkomponente (NATO-Hauptquartier), plant und führt die Luftoperationen.",{x:1});
+A("JFLCC","rollen","Joint Force Land Component Commander","Befehlshaber der Landkomponente einer Joint Force.",{x:1});
+A("AOC","rollen","Air Operations Center","Luftoperationszentrale (US): plant, führt und überwacht die Luftoperationen; NATO-Gegenstück: CAOC.",{x:1});
+A("AOCC","rollen","Air Operations Coordination Centre","Luftkoordinierungsstelle beim Hauptquartier der Landkomponente (NATO).",{x:1});
+A("CRC","rollen","Control and Reporting Centre","Radarleitstelle: Luftlagebild, Luftraumüberwachung und Führung eigener Lfz.",{x:1});
+A("WOC","rollen","Wing Operations Centre","Gefechtsstand eines Geschwaders bzw. Einsatzverbands, setzt die ATO für seine Lfz um.",{x:1});
+A("ALO","rollen","Air Liaison Officer","Luftwaffen-Verbindungsoffizier beim Heer: berät den Bodenführer zum Einsatz von Luftstreitkräften.",{x:1});
+A("FAC","rollen","Forward Air Controller","Fliegerleitoffizier; Oberbegriff, heute meist JTAC (am Boden) bzw. FAC(A) (in der Luft).",{x:1});
+A("TAC(A)","rollen","Tactical Air Coordinator (Airborne)","Lfz-Besatzung, die in der Luft Lfz im Raum führt und Luftunterstützung koordiniert.",{x:1});
+A("AMC","rollen","Air Mission Commander","Führer eines Hubschrauber- bzw. Luftverbands im Einsatz.",{x:1});
+A("JSTARS","rollen","Joint Surveillance Target Attack Radar System","Luftgestützte Radarüberwachung der Bodenlage (E-8C), lenkt Angriffe auf Bodenziele.",{x:1});
+A("ANGLICO","rollen","Air Naval Gunfire Liaison Company","US-Marine-Einheit, die verbündeten Truppen Luft-, Steilfeuer- und Schiffsartillerie-Unterstützung vermittelt.",{x:1});
+A("JFST","fsup","Joint Fire Support Team","Streitkräftegemeinsamer Feuerunterstützungstrupp: Beobachter und Leitpersonal für Steilfeuer, Luft- und Seeunterstützung.",{x:1});
+A("FSO","fsup","Fire Support Officer","Feuerunterstützungsoffizier: berät den Kommandeur und plant die Feuerunterstützung.",{x:1});
+A("FSE","fsup","Fire Support Element","Feuerunterstützungszelle im Gefechtsstand eines Verbands bzw. Großverbands.",{x:1});
+A("JFSE","fsup","Joint Fire Support Element","Streitkräftegemeinsame Feuerunterstützungszelle: koordiniert Steilfeuer, Luft- und Seeunterstützung.",{x:1});
+A("FSCC","fsup","Fire Support Coordination Centre","Feuerunterstützungs-Koordinierungsstelle.",{x:1});
+A("FDC","fsup","Fire Direction Center","Feuerleitstelle der Artillerie bzw. Mörser: berechnet Schießwerte und verteilt Feueraufträge.",{x:1});
+A("FO","fsup","Forward Observer","Vorgeschobener Beobachter (VB) für Artillerie und Mörser.",{x:1});
+A("CFF","fsup","Call for Fire","Feueranforderung an Artillerie bzw. Mörser.",{x:1});
+A("FFE","fsup","Fire for Effect","Wirkungsschießen.",{x:1});
+A("MRSI","fsup","Multiple Rounds Simultaneous Impact","Mehrere Geschosse eines Rohrs mit unterschiedlichen Flugbahnen schlagen gleichzeitig ein.",{x:1});
+A("FPF","fsup","Final Protective Fire","Sperrfeuer unmittelbar vor den eigenen Stellungen.",{x:1});
+A("CB","fsup","Counter-Battery (Fire)","Gegenbatteriefeuer: Bekämpfung feindlicher Artillerie.",{x:1});
+A("NGFS","fsup","Naval Gunfire Support","Feuerunterstützung durch Schiffsartillerie.",{x:1});
+A("MAX ORD","fsup","Maximum Ordinate","Gipfelhöhe der Geschossbahn (wichtig für die Trennung von Lfz und Steilfeuer).",{x:1});
+A("WLR","fsup","Weapon Locating Radar","Artillerieortungsradar (z. B. COBRA): ortet feuernde Waffen anhand der Geschossbahn.",{x:1});
+A("MLRS","fsup","Multiple Launch Rocket System","Raketenwerfer auf Kettenfahrgestell (Bundeswehr: MARS).",{x:1});
+A("HIMARS","fsup","High Mobility Artillery Rocket System","Raketenwerfer auf Radfahrgestell (US).",{x:1});
+A("GMLRS","fsup","Guided Multiple Launch Rocket System","GPS-gelenkte Rakete für MLRS und HIMARS.",{x:1});
+A("ATACMS","fsup","Army Tactical Missile System","Ballistische Boden-Boden-Rakete für MLRS und HIMARS, Reichweite bis ca. 300 km.",{x:1});
+A("OCA","luftop","Offensive Counterair","Offensive Bekämpfung feindlicher Luftmacht, möglichst nahe an ihrem Ursprung (Flugplätze, Flugabwehr, Führung).",{x:1});
+A("DCA","luftop","Defensive Counterair","Abwehr eindringender feindlicher Luftangriffe und Flugkörper.",{x:1});
+A("CAP","luftop","Combat Air Patrol","Luftpatrouille von Jagdflugzeugen zum Schutz eines Raums bzw. Verbands.",{x:1});
+A("AAR","luftop","Air-to-Air Refuelling","Luftbetankung.",{x:1});
+A("SCAR","luftop","Strike Coordination and Reconnaissance","Ziele in einem Raum aufklären und Angriffe darauf koordinieren, meist für Abriegelung (AI).",{x:1});
+A("GCAS","luftop","Ground Alert CAS","CAS-Lfz in Startbereitschaft am Boden.",{x:1});
+A("XCAS","luftop","Airborne Alert CAS","CAS-Lfz in der Luft auf Abruf, ohne festen Auftrag.",{x:1});
+A("CSAR","luftop","Combat Search and Rescue","Suche und Rettung im Gefecht, z. B. abgeschossener Besatzungen.",{x:1});
+A("PR","luftop","Personnel Recovery","Rückführung isolierter bzw. abgeschossener Personen.",{x:1});
+A("RTB","luftop","Return to Base","Rückflug zum Heimatplatz.",{x:1});
+A("TOS","luftop","Time on Station","Verweildauer des Lfz im Einsatzraum.",{x:1});
+A("VUL","luftop","Vulnerability Period","In der ATO festgelegtes Zeitfenster, in dem ein Lfz für seinen Auftrag im Raum ist.",{x:1});
+A("FW","luftop","Fixed Wing","Starrflügler (Flugzeug).",{x:1});
+A("RW","luftop","Rotary Wing","Drehflügler (Hubschrauber).",{x:1});
+A("AOD","luftop","Air Operations Directive","Weisung des Luftkomponentenbefehlshabers mit Schwerpunkten und Vorgaben für die Planung der ATO.",{x:1});
+A("MAAP","luftop","Master Air Attack Plan","Gesamtplan der Lufteinsätze, aus dem die ATO erstellt wird.",{x:1});
+A("JIPTL","luftop","Joint Integrated Prioritized Target List","Streitkräftegemeinsame, priorisierte Zielliste.",{x:1});
+A("ACP","luftop","Airspace Control Plan","Grundsätze der Luftraumkontrolle im Einsatzgebiet; Grundlage der ACO.",{x:1});
+A("ACMREQ","luftop","Airspace Control Means Request","Antrag auf eine Luftraumkoordinierungsmaßnahme.",{x:1});
+A("ASR","luftop","Air Support Request","Anforderung von Luftunterstützung (NATO-Format).",{x:1});
+A("FARP","luftop","Forward Arming and Refueling Point","Vorgeschobener Munitions- und Betankungspunkt, meist für Hubschrauber.",{x:1});
+A("FLET","raum","Forward Line of Enemy Troops","Linie der vordersten feindlichen Kräfte.",{x:1});
+A("BCL","raum","Battlefield Coordination Line","Zusätzliche Koordinierungslinie (US Marines) zwischen FLOT und FSCL; erleichtert die Bekämpfung von Zielen jenseits davon.",{x:1});
+A("CFZ","raum","Critical Friendly Zone","Raum, den das Artillerieortungsradar vorrangig überwacht: Feindfeuer auf ihn wird sofort zur Bekämpfung gemeldet.",{x:1});
+A("PAA","raum","Position Area for Artillery","Raum für Artilleriestellungen (US).",{x:1});
+A("CGRS","raum","Common Grid Reference System","Gitternetz zur Raumaufteilung, z. B. für Kill Boxes.",{x:1});
+A("HIDACZ","raum","High-Density Airspace Control Zone","Luftraum mit hoher Nutzungsdichte und eigener Kontrollbehörde.",{x:1});
+A("MRR","raum","Minimum-Risk Route","Route geringsten Risikos für eigene Lfz durch das Kampfgebiet.",{x:1});
+A("SAAFR","raum","Standard Use Army Aircraft Flight Route","Standardflugroute für Luftfahrzeuge des Heeres, meist im rückwärtigen Raum.",{x:1});
+A("LLTR","raum","Low-Level Transit Route","Tiefflug-Transitroute durch die eigene Luftverteidigung.",{x:1});
+A("FEZ","raum","Fighter Engagement Zone","Raum, in dem Luftziele vorrangig durch Jagdflugzeuge bekämpft werden.",{x:1});
+A("MEZ","raum","Missile Engagement Zone","Raum, in dem Luftziele vorrangig durch Flugabwehrraketen bekämpft werden.",{x:1});
+A("JEZ","raum","Joint Engagement Zone","Raum, in dem Jagdflugzeuge und Flugabwehr gleichzeitig wirken.",{x:1});
+A("AOR","raum","Area of Responsibility","Verantwortungsbereich.",{x:1});
+A("AOI","raum","Area of Interest","Interessengebiet.",{x:1});
+A("JOA","raum","Joint Operations Area","Streitkräftegemeinsames Operationsgebiet.",{x:1});
+A("LZ","raum","Landing Zone","Landezone für Hubschrauber.",{x:1});
+A("PZ","raum","Pickup Zone","Aufnahmeraum, in dem Hubschrauber Truppen aufnehmen.",{x:1});
+A("DZ","raum","Drop Zone","Absetzzone für Fallschirmspringer bzw. Lasten.",{x:1});
+A("NAI","land","Named Area of Interest","Benannter Beobachtungsraum, in dem die Aufklärung Feindaktivität erwartet.",{x:1});
+A("TAI","land","Target Area of Interest","Raum, in dem Ziele bekämpft werden sollen.",{x:1});
+A("PL","land","Phase Line","Phasen- bzw. Meldelinie zur Steuerung der Bewegung.",{x:1});
+A("LD","land","Line of Departure","Angriffslinie (Ausgangslinie des Angriffs).",{x:1});
+A("LOA","land","Limit of Advance","Grenze des Vorgehens.",{x:1});
+A("OBJ","land","Objective","Angriffsziel.",{x:1});
+A("MSR","land","Main Supply Route","Hauptversorgungsweg.",{x:1});
+A("FOB","land","Forward Operating Base","Vorgeschobene Operationsbasis.",{x:1});
+A("TOC","land","Tactical Operations Center","Taktischer Gefechtsstand.",{x:1});
+A("QRF","land","Quick Reaction Force","Schnelle Eingreifreserve.",{x:1});
+A("OPORD","land","Operation Order","Operationsbefehl.",{x:1});
+A("FRAGO","land","Fragmentary Order","Ergänzungs- bzw. Änderungsbefehl zu einem bestehenden Befehl.",{x:1});
+A("WARNO","land","Warning Order","Vorbefehl (Warnbefehl).",{x:1});
+A("CONOPS","land","Concept of Operations","Operationsplan in Grundzügen (Absicht und Ablauf).",{x:1});
+A("COA","land","Course of Action","Handlungsmöglichkeit.",{x:1});
+A("CCIR","land","Commander's Critical Information Requirements","Wesentlicher Informationsbedarf des Kommandeurs.",{x:1});
+A("PIR","land","Priority Intelligence Requirements","Vorrangiger Aufklärungsbedarf.",{x:1});
+A("IPB","land","Intelligence Preparation of the Battlefield","Nachrichtendienstliche Auswertung von Feind, Gelände und Wetter für die Planung.",{x:1});
+A("METT-TC","land","Mission, Enemy, Terrain and Weather, Troops, Time, Civil Considerations","Beurteilungsfaktoren der Lage (US-Heer).",{x:1});
+A("SALUTE","land","Size, Activity, Location, Unit, Time, Equipment","Meldeschema für Feindbeobachtungen.",{x:1});
+A("SITREP","land","Situation Report","Lagemeldung.",{x:1});
+A("SPOTREP","land","Spot Report","Sofortmeldung einer Feindbeobachtung.",{x:1});
+A("OPCON","land","Operational Control","Operative Führung (Unterstellungsverhältnis).",{x:1});
+A("TACON","land","Tactical Control","Taktische Führung (Unterstellungsverhältnis für Auftrag und Bewegung).",{x:1});
+A("C2","land","Command and Control","Führung.",{x:1});
+A("MEDEVAC","land","Medical Evacuation","Verwundetentransport mit sanitätsdienstlicher Versorgung unterwegs.",{x:1});
+A("CASEVAC","land","Casualty Evacuation","Verwundetentransport mit dem gerade verfügbaren Transportmittel, ohne Sanitätsbegleitung.",{x:1});
+A("D3A","verf","Decide, Detect, Deliver, Assess","Zielbekämpfungszyklus (Targeting) des Heeres.",{x:1});
+A("F2T2EA","verf","Find, Fix, Track, Target, Engage, Assess","Ablauf der Bekämpfung (Kill Chain), vor allem bei zeitkritischen Zielen.",{x:1});
+A("NSL","verf","No-Strike List","Liste von Objekten, die nicht bekämpft werden dürfen.",{x:1});
+A("RTL","verf","Restricted Target List","Liste von Zielen, deren Bekämpfung eingeschränkt ist.",{x:1});
+A("LOAC","verf","Law of Armed Conflict","Recht des bewaffneten Konflikts (humanitäres Völkerrecht).",{x:1});
+A("TAC","verf","Terminal Attack Control","Befugnis, Angriffe von CAS-Lfz zu steuern und freizugeben (JTAC bzw. FAC(A)).",{x:1});
+A("TGO","verf","Terminal Guidance Operations","Maßnahmen, die einem Wirkmittel in der Endphase Zielführung geben, z. B. Laser- oder IR-Markierung.",{x:1});
+A("DACAS","verf","Digitally Aided Close Air Support","Digital unterstützte Luftnahunterstützung: Datenaustausch zwischen JTAC und Lfz.",{x:1});
+A("DWE","wirk","Desired Weapons Effects","Gewünschte Waffenwirkung.",{x:1});
+A("JMEM","wirk","Joint Munitions Effectiveness Manual","Handbuch zur Waffenwirkung, Grundlage für die Wahl der Wirkmittel.",{x:1});
+A("PGM","wirk","Precision-Guided Munition","Präzisionsgelenkte Munition.",{x:1});
+A("GBU","wirk","Guided Bomb Unit","Lenkbombe.",{x:1});
+A("CBU","wirk","Cluster Bomb Unit","Streubombe.",{x:1});
+A("APKWS","wirk","Advanced Precision Kill Weapon System","Lasergelenkte 70-mm-Rakete (Lenkteil AGR-20).",{x:1});
+A("HE","wirk","High Explosive","Sprengmunition.",{x:1});
+A("ILLUM","wirk","Illumination","Leuchtmunition.",{x:1});
+A("DPICM","wirk","Dual-Purpose Improved Conventional Munition","Artillerie-Streumunition mit Submunition gegen Personal und leichte Panzerung.",{x:1});
+A("VT","wirk","Variable Time (Fuze)","Annäherungszünder: Detonation in der Luft über dem Ziel.",{x:1});
+A("PD","wirk","Point Detonating (Fuze)","Aufschlagzünder.",{x:1});
+A("HEL","wirk","High-Energy Laser","Hochenergielaser(waffe).",{x:1});
+A("SAR","tech","Synthetic Aperture Radar","Radar mit synthetischer Apertur: liefert ein Radarbild des Bodens.",{x:1});
+A("GMTI","tech","Ground Moving Target Indicator","Radarmodus, der bewegte Bodenziele erfasst.",{x:1});
+A("EO","tech","Electro-Optical","Elektrooptisch (Tageslichtkamera).",{x:1});
+A("IR","tech","Infrared","Infrarot (Wärmebild).",{x:1});
+A("FOV","tech","Field of View","Sichtfeld eines Sensors.",{x:1});
+A("SPI","tech","Sensor Point of Interest","Vom Sensor bezeichneter Punkt, der per Datenlink weitergegeben werden kann.",{x:1});
+A("TOI","tech","Track of Interest","Track von Interesse.",{x:1});
+A("PLI","tech","Position Location Information","Positionsmeldungen eigener Kräfte über Datenlink.",{x:1});
+A("BFT","tech","Blue Force Tracking","Ortung und Anzeige eigener Kräfte.",{x:1});
+A("VMF","tech","Variable Message Format","Nachrichtenformat für digitale Datenübertragung, z. B. bei DACAS.",{x:1});
+A("SATCOM","tech","Satellite Communications","Satellitenfunk.",{x:1});
+A("UHF","tech","Ultra High Frequency","Ultrakurzwelle im Bereich 300–3000 MHz; militärischer Flugfunk meist 225–400 MHz.",{x:1});
+A("VHF","tech","Very High Frequency","Ultrakurzwelle im Bereich 30–300 MHz (FM-Truppenfunk, AM-Flugfunk).",{x:1});
+A("NM","tech","Nautical Mile","Seemeile (1 852 m).",{x:1});
+A("BVR","threat","Beyond Visual Range","Jenseits der Sichtweite (Luftkampf mit Radar-Flugkörpern).",{x:1});
+A("EOB","threat","Electromagnetic Order of Battle","Übersicht über feindliche Emitter (Radar, Funk) und ihre Standorte.",{x:1});
+A("ES","threat","Electromagnetic Support","Elektronische Unterstützung: Erfassen und Orten feindlicher Emitter.",{x:1});
+A("EP","threat","Electromagnetic Protection","Elektronischer Schutz eigener Systeme gegen Störung.",{x:1});
+A("ELINT","threat","Electronic Intelligence","Elektronische Aufklärung (Radar und andere Nicht-Kommunikations-Emitter).",{x:1});
+A("COMINT","threat","Communications Intelligence","Fernmeldeaufklärung.",{x:1});
+A("WCS","threat","Weapons Control Status","Feuerkontrollstatus der Luftverteidigung: FREE, TIGHT oder HOLD.",{x:1});
+A("ADW","threat","Air Defense Warning","Luftverteidigungswarnstufe: RED, YELLOW oder WHITE.",{x:1});
+A("ADA","threat","Air Defense Artillery","Flugabwehr (US-Truppengattung).",{x:1});
+A("IAMD","threat","Integrated Air and Missile Defence","Integrierte Luft- und Raketenabwehr (NATO).",{x:1});
+A("C-RAM","threat","Counter Rocket, Artillery and Mortar","Abwehr anfliegender Raketen-, Artillerie- und Mörsergeschosse.",{x:1});
+A("TBM","threat","Theater Ballistic Missile","Ballistische Rakete mit Reichweite im Einsatzgebiet.",{x:1});
+A("GCI","threat","Ground-Controlled Intercept","Vom Boden geführte Abfangjagd.",{x:1});
+A("C-UAS","threat","Counter-Unmanned Aircraft System","Drohnenabwehr.",{x:1});
+A("FPV","threat","First-Person View","Mit Videobrille gesteuerte Drohne, oft als Kamikazedrohne eingesetzt.",{x:1});
+A("ATGM","threat","Anti-Tank Guided Missile","Panzerabwehrlenkflugkörper.",{x:1});
+A("RPG","threat","Rocket-Propelled Grenade","Rückstoßfreie Panzerabwehrwaffe mit Raketengranate (z. B. RPG-7).",{x:1});
+A("IED","threat","Improvised Explosive Device","Unkonventionelle Spreng- und Brandvorrichtung (USBV).",{x:1});
+A("VBIED","threat","Vehicle-Borne Improvised Explosive Device","In einem Fahrzeug verbaute USBV (Autobombe).",{x:1});
 
 </script>
 <script>
@@ -1333,9 +1490,10 @@ BR.forEach(b => {
 LAGEN.forEach(l => BANK.push({id:'lg:' + l.id, kind:'lg', g:l.g, ref:l.id}));
 SEQ.forEach(s => BANK.push({id:'sq:' + s.id, kind:'sq', g:SEQG[s.id] || 'angriff', ref:s.id}));
 AB.forEach(a => {
-  BANK.push({id:'am:' + a.a, kind:'am', g:a.g, ref:a.a});
-  BANK.push({id:'ad:' + a.a, kind:'ad', g:a.g, ref:a.a});
-  BANK.push({id:'ai:' + a.a, kind:'ai', g:a.g, ref:a.a});
+  const x = a.x ? 1 : 0;
+  BANK.push({id:'am:' + a.a, kind:'am', g:a.g, ref:a.a, x});
+  BANK.push({id:'ad:' + a.a, kind:'ad', g:a.g, ref:a.a, x});
+  BANK.push({id:'ai:' + a.a, kind:'ai', g:a.g, ref:a.a, x});
 });
 const QBYID = {}; BANK.forEach(q => QBYID[q.id] = q);
 
@@ -1345,14 +1503,14 @@ const MODES = {
   bc:{name:'Welches Wort passt?', desc:'Bedeutung lesen – Brevity-Wort wählen', kinds:['bc'], n:15},
   lg:{name:'Lagen und Abläufe', desc:'Was funkst du, was hörst du – und in welcher Reihenfolge?', kinds:['lg','sq','bo'], n:15},
   bi:{name:'Brevity eintippen', desc:'Ohne Antwortvorgaben – das Wort selbst eingeben', kinds:['bi'], n:15},
-  abk:{name:'Abkürzungen', desc:'Langform und Bedeutung der CAS-Abkürzungen', kinds:['am','ad'], n:15},
+  abk:{name:'Abkürzungen', desc:'Langform und Bedeutung – CAS, Luftraum, Feuerunterstützung, Landoperationen', kinds:['am','ad'], n:15},
   ai:{name:'Abkürzungen eintippen', desc:'Bedeutung lesen – Abkürzung eingeben', kinds:['ai'], n:15},
   weak:{name:'Fehler üben', desc:'Nur Fragen, die du zuletzt falsch hattest', kinds:null, n:15}
 };
 const isB = g => GROUPS[g] && GROUPS[g].k === 'b';
 /* Wortschatz: 'core' = nur CAS-Kernwörter, 'all' = mit Erweiterung */
 const inScope = o => S.scope !== 'core' || !o.x;
-const N_CORE = BR.filter(b => !b.x).length;
+const N_CORE = BR.filter(b => !b.x).length + AB.filter(a => !a.x).length;
 function poolFor(mode){
   const m = MODES[mode];
   let p = BANK.filter(q => (!m.kinds || m.kinds.includes(q.kind)) && inScope(q));
@@ -1393,7 +1551,7 @@ function brWrongWords(b, extraEx){
   return w.slice(0, 3);
 }
 function abWrong(a){
-  const same = AB.filter(x => x.g === a.g && x.a !== a.a);
+  const same = AB.filter(x => x.g === a.g && x.a !== a.a && inScope(x));
   const sim = same.filter(x => x.a[0] === a.a[0] || Math.abs(x.a.length - a.a.length) <= 1);
   let w = fillFrom(sim, [], 2, []);
   w = fillFrom(same, w, 3, []);
@@ -1581,12 +1739,12 @@ function renderHome(){
   const modeBtn = k => { const n = poolFor(k).length; return `<button class="mode" data-start="${k}" ${n ? '' : 'disabled'}><span class="mi"><strong>${esc(MODES[k].name)}</strong><small>${esc(MODES[k].desc)}</small></span><span class="n">${n} Fragen</span></button>`; };
   $('#app').innerHTML = `
   <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a><h1>Brevity</h1>
-    <p>Codewörter nach ATP 1-02.1 – vom CAS-Kern bis zu Luftlage, EloKa, Funk, Bodenfeuer und Hubschraubern – und die Abkürzungen aus dem CAS-Alltag.</p>
+    <p>Codewörter nach ATP 1-02.1 – vom CAS-Kern bis zu Luftlage, EloKa, Funk, Bodenfeuer und Hubschraubern – und Abkürzungen aus CAS, Luftraum, Luftoperationen, Feuerunterstützung und Landoperationen.</p>
     <span class="radioline">HOG 31: IN FROM THE WEST – JTAC: CLEARED HOT</span></section>
   <section class="board">
-    <div class="seg" role="group" aria-label="Wortschatz wählen" style="margin-top:4px"><button data-scope="core" aria-pressed="${S.scope === 'core'}">CAS-Kern (${N_CORE})</button><button data-scope="all" aria-pressed="${S.scope !== 'core'}">Alle Wörter (${BR.length})</button></div>
+    <div class="seg" role="group" aria-label="Wortschatz wählen" style="margin-top:4px"><button data-scope="core" aria-pressed="${S.scope === 'core'}">CAS-Kern (${N_CORE})</button><button data-scope="all" aria-pressed="${S.scope !== 'core'}">Alles (${BR.length + AB.length})</button></div>
     <h3>Brevity</h3><div class="cells">${G_ORDER_B.filter(g => groupScore(g).n).map(cellHtml).join('')}</div>
-    <h3>Abkürzungen</h3><div class="cells">${G_ORDER_A.map(cellHtml).join('')}</div>
+    <h3>Abkürzungen</h3><div class="cells">${G_ORDER_A.filter(g => groupScore(g).n).map(cellHtml).join('')}</div>
     ${filt}
   </section>
   <button class="cta" data-start="mix"><span><strong>Gemischte Runde</strong><small>${Math.min(20, poolFor('mix').length)} Fragen aus allen Fragetypen</small></span><span class="go">→</span></button>
