@@ -177,6 +177,11 @@ const GROUPS = {
   waffen:  {l:"Waffen und Wirkung", k:"b"},
   bedr:    {l:"Bedrohung und Selbstschutz", k:"b"},
   koord:   {l:"Treibstoff, Zeit, Koordination", k:"b"},
+  luft:    {l:"Luftlage und Identifizierung", k:"b"},
+  eloka:   {l:"EloKa und Emitter", k:"b"},
+  funk:    {l:"Funk, Datenlink, IFF", k:"b"},
+  boden:   {l:"Bodenfeuer und Flugabwehr", k:"b"},
+  heli:    {l:"Hubschrauber und CSAR", k:"b"},
   rollen:  {l:"Rollen und Stellen", k:"a"},
   verf:    {l:"Verfahren und Planung", k:"a"},
   raum:    {l:"Raumordnung (ACM, FSCM)", k:"a"},
@@ -184,7 +189,7 @@ const GROUPS = {
   tech:    {l:"Sensoren und Technik", k:"a"},
   threat:  {l:"Bedrohung und Luftverteidigung", k:"a"}
 };
-const G_ORDER_B = ["sicht","laser","angriff","feuer","waffen","bedr","koord"];
+const G_ORDER_B = ["sicht","laser","angriff","feuer","waffen","bedr","koord","luft","eloka","funk","boden","heli"];
 const G_ORDER_A = ["rollen","verf","raum","wirk","tech","threat"];
 
 /* B(Wort, Gruppe, Bedeutung deutsch, Originaldefinition, Optionen)
@@ -407,6 +412,678 @@ B("FEET DRY","koord","Fliegt über Land.","Flying over land.",
 B("FEET WET","koord","Fliegt über Wasser.","Flying over water.",
   {opp:"FEET DRY", conf:["FENCE OUT","POPEYE","DIVERT"]});
 
+/* ---- Erweiterung nach ATP 1-02.1 (April 2025): Luftlage, EloKa, Funk, Bodenfeuer, Hubschrauber; x = nicht CAS-Kern ---- */
+B("ACCURACY","eloka","Vorab festgelegte Genauigkeit bei der Ortung (Geolocation) ist erreicht.","Prebriefed criteria is met during geolocation; must be briefed by package commander (or outlined in the special instructions (SPINS)/standards).",
+  {x:1, note:"Funkform: [High or Low] ACCURACY. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("ACTION","angriff","Vorab abgesprochene Angriffsfolge oder Manöver beginnen.","Initiate a briefed attack sequence or maneuver.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See, Boden-Luft."});
+B("ACTIVE","eloka","Genannter Emitter strahlt am angegebenen Ort bzw. in der angegebenen Richtung.","Referenced emitter is radiating at the stated location or along the stated bearing. Electronic intelligence derived.",
+  {x:1, note:"Funkform: [system] ACTIVE [location, direction]. Bereich: Luft-Luft, EloKa. Bedeutung weicht von NATO (APP-7) ab."});
+B("ADD","eloka","System bzw. Emitterkategorie zusätzlich in die Suche aufnehmen.","Add a specific (system) or (electromagnetic order of battle (EOB) category) to search responsibilities.",
+  {x:1, note:"Funkform: ADD [system or category]. Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("AFFIRM","boden","Eigene Bodenflugabwehr ist bereit, das genannte Ziel zu bekämpfen.","FRIENDLY surface-to-air weapons platform are prepared to engage specified target(s) (e.g., BIRD(S) AFFIRM). Opposite of NEGATE.",
+  {x:1, opp:"NEGATE", note:"Funkform: [weapon] AFFIRM. Bereich: Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("ALARM","eloka","Emissionsbeschränkung (EMCON) aufheben.","Terminate or terminating emissions control procedures. Opposite of SNOOZE.",
+  {x:1, opp:"SNOOZE", note:"Bereich: Luft-Luft, EloKa, See, Weltraum."});
+B("ALLIGATOR","funk","Link 11A bzw. Datenlink Alpha.","Link-11A or tactical data link Alpha.",
+  {x:1});
+B("ANGELS","koord","Flughöhe eigener Lfz in tausend Fuß über NN (MSL).","Height of FRIENDLY aircraft in thousands of feet from mean sea level (MSL).",
+  {x:1});
+B("ANYFACE","funk","Eigene Führungsstelle (C2), wenn das Rufzeichen unbekannt ist.","FRIENDLY command and control (C2) agency when call sign is not known.",
+  {x:1});
+B("AS FRAGGED","koord","Einheit bzw. Element arbeitet genau wie befohlen bzw. geplant.","Unit or element will be performing exactly as briefed or scheduled.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("ASLEEP","eloka","Keine Aktivität des Boden- bzw. Seeemitters mehr erkannt (Fernmeldeaufklärung).","No longer detecting land or surface emitter activity via communications intelligence. Opposite of AWAKE.",
+  {x:1, opp:"AWAKE", note:"Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("AUTHENTICATE","funk","Authentisierungsabfrage stellen oder beantworten.","To request or provide a response for a coded challenge.",
+  {x:1});
+B("AUTOCAT","funk","Funkrelais mit automatischer Weiterleitung.","Any communications relay using automatic retransmissions.",
+  {x:1});
+B("AWAKE","eloka","Aktivität eines Boden- bzw. Seeemitters erkannt.","Land or surface emitter activity detected via communications intelligence. Opposite of ASLEEP.",
+  {x:1, opp:"ASLEEP", note:"Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("AZIMUTH","luft","Luftlage: zwei Gruppen nebeneinander (seitlich getrennt).","1. A picture label describing two GROUPS separated laterally. GROUP names will be referenced by cardinal directions (e.g., NORTH GROUP, SOUTH GROUP, or EAST GROUP, WEST GROUP). 2. Direction to the threat.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-See, Boden-Luft."});
+B("BAD MAP","sicht","Radarbild (SAR-Karte) unbrauchbar, z. B. durch Geländeschatten.","Call that the displayed map is unusable due to the following: Terrain - call that shadows obstruct the target area and a map must be taken from a different axis or graze angle. Image - call that the displayed image quality prevents target identification (ID).",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BAT","waffen","Eigene vernetzte Gleitwaffe mit Mehrfach-Suchkopf.","FRIENDLY net-enabled glide weapon(s) with a multi-mode seeker (e.g., standoff weapon, guided bomb unit, small diameter bomb).",
+  {x:1, acc:[/^(BATS)$/], note:"Funkform: BAT(S). Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BAY","eloka","Befohlenen Täuschungsplan ausführen.","Carry out deception plan indicated or IAW previous orders.",
+  {x:1, note:"Bereich: EloKa."});
+B("BEAD WINDOW","funk","Letzter Funkspruch hat möglicherweise schützenswerte Informationen preisgegeben.","Last transmission potentially disclosed unauthorized information.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("BEAM RIDER","eloka","Möglicher Störsender in der angegebenen Richtung.","Potential JAMMER along the stated azimuth from a ground unit or aircraft stated from the unit or aircraft’s location. Usually followed by a request to search using an alternate radar source.",
+  {x:1, note:"Funkform: BEAM RIDER [direction]. Bereich: Luft-Luft, Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BERETTA","waffen","Keine Luft-Boden-Munition mehr (außer Bordkanone).","Aircraft is out of or unable to employ remaining air-to-ground ordnance, not to include gun (if equipped).",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BIG STICK","boden","Eigene Langstrecken-Flugabwehrraketen.","FRIENDLY long-range surface-to-air missile(s) (SAM(s)). Modifiers include: AWAY, NEGATE, AFFIRM.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BIRDDOG","funk","Sensoren wie geplant bzw. gebrieft einstellen.","Call to configure sensors IAW mission planning/brief.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BITTERSWEET","feuer","Gefahr von Beschuss eigener oder neutraler Kräfte.","Notification of potential for blue-on-blue (friendly fire) or blue-on-neutral situation.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BLOTTER","eloka","Empfänger für elektronische Gegenmaßnahmen.","Electromagnetic countermeasure receiver.",
+  {x:1, note:"Bereich: EloKa."});
+B("BLUR","eloka","Radar wird gestört.","Radar being jammed.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BOGEY DOPE","luft","Anfrage nach Peilung, Entfernung, Höhe und Aspekt (BRAA) der nächsten bzw. genannten Gruppe.","Request for information on indicated or closest GROUP in bearing, range, altitude, and aspect (BRAA) format (with appropriate fill-ins).",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("BOOSTER","boden","Abgetrennte Antriebsstufe einer ballistischen Rakete.","Track identified as a separated booster phase component of a ballistic missile.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BRAA","luft","Zielangabe als Peilung, Entfernung, Höhe, Aspekt (Bearing, Range, Altitude, Aspect) zum eigenen Lfz.","1. Provides target BRAA relative to the specified FRIENDLY aircraft (tactical control format). 2. Switch to BRAA format to a specific GROUP or CONTACT.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("BRACKET","angriff","Ziel von zwei Seiten in die Zange nehmen (seitlich oder in der Höhe).","Maneuver to a position on opposite sides, either laterally or vertically from the target.",
+  {x:1, note:"Funkform: BRACKET [direction]. Bereich: Luft-Luft, Luft-Boden."});
+B("BREAK AWAY","koord","Luftbetankung: sofort Abstand zwischen Tanker und Empfänger herstellen.","Tanker or receiver call indicating immediate vertical and nose-to-tail separation between tanker and receiver is required.",
+  {x:1});
+B("BROKEN SPUR","heli","Bergung durch Hubschrauber (Buddy- bzw. Selbstbergung) nicht möglich.","Helicopter buddy or self-extraction is not possible.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BROWNING","boden","Flugabwehrsystem hat kaum noch Flugkörper.","SAM platform has reached low missile state.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BUCKET","eloka","Führungsstelle wird im genannten Gebiet durch Radartäuschung gestört.","C2 is experiencing radar electromagnetic deceptive jamming in a specified geographic area.",
+  {x:1, note:"Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("BUDDY","laser","Waffe soll von einer anderen Quelle als dem abwerfenden Lfz gelenkt werden.","Request or informative communication to have weapon guidance from a source other than delivering aircraft.",
+  {x:1, note:"Funkform: BUDDY [LASE or GUIDE]. Bereich: Luft-Boden. Bedeutung weicht von NATO (APP-7) ab."});
+B("BUTTON","funk","Funkkanal-Einstellung.","Radio channel setting.",
+  {x:1});
+B("BUZZSAW","heli","Am Band geschwungener Leuchtstab zur Markierung eigener Kräfte.","A chemical light-stick tied to a string and swung overhead; used to mark a FRIENDLY position.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CANDYGRAM","eloka","EloKa-Zielinformationen liegen auf dem abgesprochenen gesicherten Netz bereit.","Informative call that EW targeting information is available on a briefed secure net.",
+  {x:1, note:"Bereich: EloKa."});
+B("CANYON","eloka","Radarfrequenz wie befohlen stören bzw. EloKa-Angriff ausführen.","Use electromagnetic jamming on radar frequency indicated or IAW previous orders or informative call for execution of electromagnetic attack (EA) list or EA against designated group.",
+  {x:1, note:"Bereich: EloKa."});
+B("CATALOG","sicht","Beschreibung, Lage und Höhe eines möglichen Ziels festhalten.","A directive call to record a potential target’s description, location, and elevation information on a potential target.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CEASE","feuer","Genannte Tätigkeit einstellen (z. B. CEASE LASER, CEASE SPARKLE).","Discontinue stated activity (e.g., CEASE BUZZER, LASER, SPARKLE, TORCH).",
+  {x:1, note:"Funkform: CEASE [activity]. Bedeutung weicht von NATO (APP-7) ab."});
+B("CHAMELEON","eloka","EloKa-Ziel auf bekannter Frequenz mit veränderten Parametern.","An EW target identified as operating on a known frequency with changes to external parameters. The term does not imply direction or authority to engage.",
+  {x:1, note:"Bereich: EloKa, Weltraum. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CHATTERMARK","funk","Abgesprochene Verfahren gegen Funkstörung anwenden.","Begin using briefed communication procedures to counter communications jamming. If no modifier specified, “radio” is understood.",
+  {x:1, note:"Funkform: CHATTERMARK [comm type]."});
+B("CHECK CAPTURE","sicht","Ziel wird vom Sensor offenbar nicht mehr verfolgt.","Target appears to be no longer tracked by sensor.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("CHECK DATA","funk","Nachricht im genannten Medium beachten (z. B. Chat, Link-16-Freitext).","Reference specified medium for message traffic (e.g., Internet relay chat, J28.2 [Link-16 free text message]).",
+  {x:1, note:"Funkform: CHECK DATA [source]."});
+B("CHECK FOCUS","sicht","Sensorbild ist unscharf.","Sensor image appears to be out of focus.",
+  {x:1});
+B("CHECK SOLUTION","boden","Seezielfeuer: Schiff soll seine Feuerlösung prüfen (zu große Ablage).","Order sent by the spotter for the ship to check the fire control solution when an excessive initial or salvo-to-salvo error is observed.",
+  {x:1, note:"Bereich: See, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CHECK TIDS","funk","Datenlink-Anzeige beachten.","Directive or descriptive call to reference data link display and may be followed by amplifying information.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CHERRY","heli","Landezone bzw. Absetzzone hat Feindaktivität über dem gebrieften Risiko.","Call to inbound aircraft the landing zone (LZ), helicopter landing zone, or drop zone (DZ) has enemy activity above the prebriefed risk tolerance. Opposite of and cancels ICE.",
+  {x:1, opp:"ICE", note:"Bereich: Luft-Luft, Luft-Boden, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CHERUBS","koord","Flughöhe eigener Lfz in hundert Fuß über Grund (AGL).","Height of a FRIENDLY aircraft in hundreds of feet above ground level.",
+  {x:1});
+B("CHICK","luft","Eigene Lfz des gleichen Auftrags bzw. Begleitschutz.","Term used to denote FRIENDLY aircraft on the safe flight or mission.",
+  {x:1, acc:[/^(CHICKS)$/], note:"Funkform: CHICK(S). Bedeutung weicht von NATO (APP-7) ab."});
+B("CLAM","eloka","Abstrahlung des genannten Geräts einstellen bzw. Störung eingestellt.","1. Cease emissions on specified equipment. 2. Directive or informative call that jamming has stopped on current assignment. Assumed when COLD.",
+  {x:1, note:"Bereich: EloKa."});
+B("CLIFF","eloka","Störsignal.","Jamming signal.",
+  {x:1, note:"Bereich: EloKa. Bedeutung weicht von NATO (APP-7) ab."});
+B("CLOAK","koord","Auf nachtsichttaugliche, verdeckte Außenbeleuchtung umschalten.","Switch(ing) from normal or overt external lighting to covert night-vision device only compatible lighting.",
+  {x:1, acc:[/^(CLOAKING)$/], note:"Funkform: CLOAK(ING). Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CLOVER","heli","Hubschrauber: Kleeblatt-Muster in der genannten Richtung fliegen.","Rotary-wing directive call to establish clover patterns in stated direction (e.g., “Taz 31, CLOVER left”).",
+  {x:1, note:"Funkform: CLOVER [left or right]. Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CLUSTER","boden","Mehrere ballistische Objekte auf engem Raum.","Multiple ballistic missile objects within a small volume of space.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("COLOR","eloka","Anfrage nach Systemtyp an genanntem Ort (Klärung einer Mehrdeutigkeit).","Request for information on a type (system) at stated location; implies a request for ambiguity resolution. May be used with data link data message (e.g., color, data).",
+  {x:1, note:"Funkform: COLOR [system, position]. Bereich: EloKa."});
+B("COMEBACK","koord","Kurs umkehren.","Directive call to reverse course.",
+  {x:1, note:"Funkform: COMEBACK [direction]."});
+B("COME OFF","angriff","Wie angewiesen abdrehen, um Flugwege zu entflechten oder Deckung wiederherzustellen.","1. Maneuver as indicated to either regain mutual support or to deconflict flight paths. Implies both VISUAL and TALLY. 2. Maneuver or execute a specific instruction.",
+  {x:1, note:"Funkform: COME OFF [direction]. Bereich: Luft-Luft, Luft-Boden."});
+B("CONFIDENCE","luft","Angabe der Zuverlässigkeit (Vertrauensgrad) gemäß Weisung.","Confidence indication IAW operational directives.",
+  {x:1, note:"Funkform: CONFIDENCE [level]. Bedeutung weicht von NATO (APP-7) ab."});
+B("COVER","boden","Flugabwehr bzw. Lfz so einstellen, dass ein Ziel bei Bedarf bekämpft werden kann.","1. Assign surface-to-air weapons or establish an air-to-air posture that will allow engagement of a specified track or threat if required. 2. Directive call to be ready for reattack/re-engage if weapons effects not achieved. 3. Assign weapons or establish posture that allows engagement of a specified track or threat.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See, Boden-Luft, Weltraum."});
+B("COVEY","bedr","Zwei oder mehr feindliche Marschflugkörper (QUAIL).","Two or more QUAIL.",
+  {x:1, note:"Bereich: Luft-Boden, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CRATER","boden","Erwarteter Einschlagpunkt einer feindlichen ballistischen Rakete.","Expected threat ballistic missile impact point.",
+  {x:1, note:"Funkform: CRATER [location]. Bereich: Boden-Luft, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CREEP","eloka","Signal charakterisieren.","Characterize signal.",
+  {x:1, note:"Bereich: EloKa, Weltraum. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CRISS CROSS","eloka","Position bzw. Spur aus Kreuzpeilung (Funkpeilung).","A position or track derived from the plotting of direction finding bearings.",
+  {x:1, note:"Bereich: EloKa."});
+B("CROW","koord","Gefangene bzw. Festgehaltene.","Detainees or prisoners.",
+  {x:1, acc:[/^(CROWS)$/], note:"Funkform: CROW(S). Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("CRUISE","koord","Zurück auf Reisegeschwindigkeit (nach BUSTER bzw. GATE).","Return to cruise speed (after BUSTER or GATE).",
+  {x:1});
+B("CURVE","eloka","Täuschsignal.","Deception signal.",
+  {x:1, note:"Bereich: EloKa."});
+B("DAISY","eloka","Signalmerkmale liegen innerhalb der bestätigten Parameter.","Notification that signal characteristics are within validated parameters.",
+  {x:1, note:"Bereich: EloKa, Weltraum. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DARK STAR","boden","Leuchtgeschoss hat nicht richtig gezündet.","An illumination round that fails to properly ignite.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DASH","koord","Position eines Lfz im Verband, wenn das Rufzeichen unbekannt ist.","Aircraft position within a flight. Use if specific call sign is unknown.",
+  {x:1, note:"Funkform: DASH [number]."});
+B("DATA","funk","Datenlink-Nachricht zu einem Objekt am genannten Ort.","Data link message concerning object at stated location.",
+  {x:1, note:"Funkform: DATA [object, position]."});
+B("DAZZLE","feuer","Nichtletales Niederhaltefeuer, um Sensoren des Ziels zu blenden.","Suppressive nonlethal fire on a target to degrade sensor performance below the level needed to fulfill its mission objectives.",
+  {x:1, note:"Funkform: [weapon] DAZZLE (ON/OFF). Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DECLUTTER","sicht","Zielsymbolik im Sensorbild ausblenden bzw. Anzeige entrümpeln.","1. Request for the pilot or operator to remove targeting symbology to allow the user to see a better picture of the target area. 2. Minimize on-screen graphics to prevent an object of interest from being obscured.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden."});
+B("DEFENDING","bedr","Lfz verteidigt sich gegen eine Radarbedrohung.","Aircraft is in a defensive position and maneuvering with reference to a radar threat.",
+  {x:1, note:"Funkform: DEFENDING [direction]. Bereich: Luft-Luft, Luft-Boden."});
+B("DELOUSE","luft","Unbekanntes Lfz hinter eigenem Lfz erkennen, identifizieren und ggf. bekämpfen.","Detect, identify, and engage (if required) unknown platform trailing FRIENDLY platform.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft, Weltraum."});
+B("DEPLOY","koord","In die gebriefte Position manövrieren.","Maneuver to briefed positioning.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Weltraum."});
+B("DETAILS","angriff","Anfrage nach Angriffs- bzw. Durchführungsbriefing.","Request for attack or execution brief.",
+  {x:1});
+B("DIAMONDS","sicht","Infrarot-Ereignis am Boden (Ort).","A surface infrared (IR) event location.",
+  {x:1, note:"Funkform: DIAMONDS [position]."});
+B("DIRT","bedr","Radarwarner zeigt eine Bodenbedrohung im Suchmodus (siehe MUD, SINGER).","Radar warning receiver indication of surface threat in search mode. See MUD and SINGER.",
+  {x:1, note:"Bereich: Luft-Boden, EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DOG","bedr","Geschleppter Täuschkörper (COLLARED eingefahren, LEASHED ausgefahren, SNIPPED abgetrennt).","Air towed decoy. (COLLARED): Decoy is retracted. (LEASHED): Decoy is extended. (SNIPPED): Decoy is severed from aircraft.",
+  {x:1, note:"Funkform: DOG [status]. Bereich: Luft-Luft, Boden-Luft."});
+B("DONORIZE","funk","Daten eines Lfz für den Datenaustausch im Verband eingespeist.","Aircraft data has been input into the host aircraft as a flight, team, or donor to enable target and/or data sharing among tactical data link participants.",
+  {x:1, acc:[/^(DONORIZED)$/], note:"Funkform: DONORIZE(D). Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DOWN","eloka","Genannter Emitter strahlt nicht mehr – heißt nicht: zerstört.","Referenced emitter has stopped radiating at the stated location or along the stated bearing. NOTE DOWN does not mean system destroyed.",
+  {x:1, note:"Funkform: [system] DOWN [location, direction]. Bereich: EloKa."});
+B("DRIVE-BY","bedr","Sensoren bzw. Waffen feindlicher Lfz beobachtet (z. B. Luft-Luft-Schüsse).","Threat aircraft sensors or systems observed or in use (e.g., threat aircraft AAM shots observed).",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DROP","luft","Überwachung von Emitter, Ziel bzw. Gruppe beenden und Suche wieder aufnehmen.","1. Stop or stop(ing) monitoring of specified emitter or target or GROUP and resume(ing) search responsibilities. 2. (TRACK number) Remove the emitter or target from tactical picture or track stores. 3. Remove a specific system or EOB category from search responsibilities.",
+  {x:1, acc:[/^(DROPPING)$/], note:"Funkform: DROP(PING). Bereich: Luft-Luft, Luft-Boden, EloKa, Boden-Luft."});
+B("DUFFER","eloka","Einheit mit Funkpeilausstattung.","Direction finding equipped unit.",
+  {x:1, note:"Bereich: EloKa."});
+B("DUST","boden","Start- bzw. Abfangtrümmer einer ballistischen Rakete.","Launch or post intercept debris from a ballistic missile. Location given in digital BULLSEYE format.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("DUSTOFF","heli","Sanitäts- bzw. Rettungs-Lfz (MEDEVAC).","Military medical aircraft.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("EAGLE","boden","Raketenabwehr-Flugkörper der US Navy.","United States Navy ballistic defense missile.",
+  {x:1, note:"Bereich: Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("ECHO","luft","Positive IFF-Antwort (Mode X bzw. vergleichbar).","Positive System M or Mode X (or comparable systems) reply.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("ELEVATOR","koord","Auf die genannte Höhe (tausend Fuß MSL) steigen bzw. sinken.","Directive or request call to change altitude to the specified altitude in thousands of feet MSL.",
+  {x:1, note:"Funkform: ELEVATOR [altitude]. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("EMPTY","eloka","Keine relevanten Emitter erfasst.","No emitters of interest detected.",
+  {x:1, note:"Bereich: EloKa."});
+B("ENGAGE","feuer","Feuerkommando: Einheiten sollen das bezeichnete Ziel bekämpfen (nicht bei Type 1/2 Control verwenden).","A fire control order used to direct or authorize units to fire on a designated target. NOTE Not to be utilized in a Terminal Attack Control Type I or II CAS engagement. See CLEARED TO ENGAGE.",
+  {x:1});
+B("ENGAGEMENT COMPLETE","angriff","Type-3-CAS: Pflichtmeldung des Lfz an JTAC bzw. FAC(A), dass der Waffeneinsatz abgeschlossen ist.","Mandatory call from the attack aircraft to the JTAC or FAC(A) during Type 3 CAS terminal control indicating completion of ordnance release. See also CLEARED TO ENGAGE.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("EXPECT HOLLOW","funk","Videodatenlink-Empfang wird voraussichtlich gestört (z. B. Gelände, Manöver).","A condition will likely exist that limits video data link reception (e.g., maneuvers, terrain). Pass expected time of hollow in minutes.",
+  {x:1, note:"Funkform: EXPECT HOLLOW [time]. Bereich: Luft-Boden. Bedeutung weicht von NATO (APP-7) ab."});
+B("FADED","luft","Sensorkontakt zur Gruppe verloren – letzte bekannte Position folgt.","Sensor data is lost on GROUP or CONTACT. Requires information of last known position to include number of CONTACTS and TRACK direction.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-See, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("FALCON","koord","Kräfte von Partnernationen.","Partner nation forces.",
+  {x:1, acc:[/^(FALCONS)$/], note:"Funkform: FALCON(S). Bedeutung weicht von NATO (APP-7) ab."});
+B("FAN TACK","eloka","Linke und rechte Grenze des gestörten Sektors.","Left and right hand edges of jammed sector are___and___.",
+  {x:1, note:"Bereich: EloKa."});
+B("FARM","heli","Hubschrauber-Status: Kraftstoff (PLAYTIME), Munition, Raketen, Flugkörper.","Helicopter status of fuel (expressed in PLAYTIME), ammunition, rocket, and missile (e.g., “Taz 31, FARM 2+00, 300, 14, 4”). See WHAT STATE.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FAST","luft","Zielgeschwindigkeit 600–900 kt bzw. Mach 1,0–1,5.","Target speed of 600–900 knots ground speed or Mach 1.0 to 1.5.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("FEET","koord","Überflug von Wasser bzw. Land (FEET WET / FEET DRY).","Flying over water or land.",
+  {x:1, note:"Funkform: FEET [WET/DRY]."});
+B("FENCE","koord","Cockpitschalter vor Ein- bzw. Ausflug ins Kampfgebiet einstellen.","Set cockpit switches as appropriate before entering or exiting the combat area.",
+  {x:1, note:"Funkform: FENCE [IN/OUT]."});
+B("FERRET","eloka","Fliegende elektronische Aufklärung (Lfz oder Tätigkeit).","Airborne electromagnetic reconnaissance activity or aircraft.",
+  {x:1, note:"Bereich: EloKa."});
+B("FIREBALL","boden","Feindliche ballistische Rakete.","Threat ballistic missile.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FLASHLIGHT","heli","Hubschrauber soll IR-Flutlicht einschalten (zum Boden).","Directive term for helicopter to turn on IR floodlight (pointed at ground to aid visual acquisition by escort aircraft).",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See."});
+B("FLAVOR","luft","Optisch erkannte Nationalität eines Kontakts.","Visually identified nationality of a CONTACT.",
+  {x:1});
+B("FLOCK","bedr","Zwei oder mehr feindliche Antiradarraketen (ROOSTER).","Two or more ROOSTERS.",
+  {x:1, note:"Bereich: Luft-Boden, EloKa, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FLY-BY","koord","Tiefer Überflug neben oder über Schiff bzw. Ort.","Aircraft conduct low altitude pass abeam or overhead the vessel or location. See THUMP, PEPPER.",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FOREST","funk","Netz für Variable Message Format (VMF).","Variable message format network.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FOX MIKE","funk","UKW-FM-Funk.","Frequency modulation (FM) radio.",
+  {x:1});
+B("FUEL STATE","koord","Verbleibender Kraftstoff bis BINGO (Zeit oder Pfund) – auch als Anfrage.","Aircraft fuel quantity, expressed in time or pounds, remaining until BINGO. FUEL STATE can be used as request for information. “FUEL STATE [time or pounds]” represents current status of platform.",
+  {x:1, note:"Funkform: FUEL STATE [time or pounds]. Bedeutung weicht von NATO (APP-7) ab."});
+B("FULL","boden","Flugabwehrsystem kann keine weiteren Ziele bekämpfen (Höchstzahl Flugkörper unterwegs).","Weapons system cannot support additional engagements due to reaching maximum allowable missiles away limit.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FUMBLE","waffen","Waffe hat das Ziel verfehlt oder ohne gewünschte Wirkung eingeschlagen.","Observed weapons missing target or impacting without desired weapons effects (DWE).",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("FUZZY","eloka","Signal verschlechtert sich.","Degradation of signal is occurring.",
+  {x:1, note:"Bereich: EloKa, Weltraum. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("GADABOUT","luft","Obergrenze des Höhen-Schutzbereichs für Jäger in der Raketenbekämpfungszone (MEZ).","Upper limit of height sanctuary for fighters in the missile engagement zone. (“GADABOUT 25” means the upper limit of the height sanctuary is 25,000 feet (ft); “GADABOUT 16–24” means the height sanctuary is between 16,000 and 24,000 ft.",
+  {x:1, note:"Funkform: GADABOUT [number]."});
+B("GENESIS","boden","Startpunkt einer feindlichen ballistischen Rakete.","Threat ballistic missile launch point.",
+  {x:1, note:"Funkform: GENESIS [location]. Bereich: Boden-Luft, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("GENEVA","sicht","Nach Genfer Konventionen geschütztes Lfz, Schiff oder Objekt (positiv identifiziert).","A positively identified aircraft, ship, or ground position whose markings or signals indicate it is protected under the Geneva Conventions.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("GENIE","eloka","Emitter setzt elektronische Schutzmaßnahmen ein.","Emitter is employing electromagnetic protection measures.",
+  {x:1, note:"Bereich: EloKa."});
+B("GINGERBREAD","funk","Funktäuschung (imitative Täuschung) auf diesem Netz vermutet.","Voice imitative deception is suspected on this net.",
+  {x:1});
+B("GO ACTIVE","funk","Frequenzsprungverfahren starten (z. B. HAVE QUICK, SATURN).","Initiate frequency hopping [e.g., HAVE QUICK II/Second Generation Anti-Jam Tactical Ultrahigh Frequency (UHF) Radio for North Atlantic Treaty Organization (SATURN)] operations.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("GOALIE","laser","Ersatzplattform, die eine Waffe weiterlenkt, falls die Lenkung des Hauptlenkers ausfällt.","A back-up guidance capable platform appointed to guide a weapon to the target if the primary platform’s guidance system fails after weapons release.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("GOALIE, GOALIE, GOALIE","laser","Aufforderung an den GOALIE, die Waffenlenkung zu übernehmen.","Directive call from the primary weapon guidance platform for the appointed GOALIE to assume weapon guidance responsibilities. Only add CALL SIGN modifier if required.",
+  {x:1, note:"Funkform: GOALIE, GOALIE, GOALIE [CALL SIGN]. Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("GOGGLE / DE-GOGGLE","koord","Weisung: Nachtsichtbrillen aufsetzen (GOGGLE) bzw. abnehmen (DE-GOGGLE).","Directive call for aircrew to put on or take off night vision-goggles.",
+  {x:1, acc:[/^(DE ?)?GOGGLE$/], note:"Bereich: Luft-Luft, Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("GOODWILL","boden","Grenze einer aktiven eigenen Raketenbekämpfungszone (MEZ).","Boundary of an active FRIENDLY missile engagement zone.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("GOPHER","luft","Unbekanntes Lfz hält sich nicht an Safe-Passage-Verfahren.","A BOGEY that has not conformed to safe passage routing, airspeed, or altitude procedures. Will only be used when safe passage or minimum risk routing procedures are part of an ID matrix.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("GORILLA","luft","Großer Verband unbekannter Größe aus unbekannten bzw. feindlichen Lfz.","Large force of indeterminate numbers and formation of unknown or non-friendly aircraft.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-See, Boden-Luft."});
+B("GRANDSLAM","waffen","Alle feindlichen Kontakte des Auftrags bzw. der Spur sind vernichtet.","All HOSTILE CONTACT(S) of a designated track (or against which a mission was tasked) are destroyed.",
+  {x:1});
+B("GREEN","koord","1. Richtung ohne bekannte Feindbedrohung. 2. Waffen- bzw. Kraftstoffstand erlaubt die Fortsetzung des Auftrags.","1. Direction of no known enemy threats; requires [direction] modifier. 2. Aircraft is at a weapon and/or fuel state that allows continued execution of the mission. NOTE A specific loadout or fuel state should be determined during mission planning.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See."});
+B("GREYHOUND","waffen","Eigener bodengestützter Marschflugkörper (z. B. Tomahawk).","FRIENDLY surface-launched cruise missile (e.g., Tomahawk land-attack missile).",
+  {x:1});
+B("GRIDIRON","eloka","Störsignal verhindert Entfernungs- und Richtungsbestimmung.","Jamming signal appears on my precise position indicator scope or jamming signal prevents determination of range and bearing _____% of time.",
+  {x:1, note:"Bereich: EloKa."});
+B("HANDSHAKE","funk","Link-16-Verbindung bzw. Videodatenlink hergestellt.","1. Link 16 Air Control network participation group (NPG) initiation between air control unit and controlled aircraft. 2. Video data link established.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("HARD","bedr","Enge Kurve mit hoher G-Belastung in die genannte Richtung.","High-G-force, energy sustaining turn in the indicated direction (default is a 180-degree turn).",
+  {x:1, note:"Funkform: HARD [left, right, direction]."});
+B("HEADS UP","koord","Achtung – Aktivität von Interesse.","Alert of an activity of interest.",
+  {x:1});
+B("HIGH","luft","Kontakt über 40.000 ft MSL.","CONTACT is greater than 40,000 ft MSL.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("HOLD DOWN","funk","Sender drücken für Peilung.","Key transmitter for direction-finding steer.",
+  {x:1});
+B("HOLLOW","funk","Datenlink-Nachricht nicht empfangen bzw. Videodatenlink verloren.","1. Any data link message not received. 2. Lost video data link.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("HOME PLATE","koord","Heimatflugplatz bzw. Heimatschiff.","Home airfield or ship.",
+  {x:1});
+B("HOMING","koord","Eigene Lfz auf dem Rückflug.","Friends returning for recovery.",
+  {x:1});
+B("HOOTER","eloka","Eigener Störsender.","FRIENDLY jammer.",
+  {x:1, note:"Bereich: EloKa."});
+B("HOTDOG","luft","Eigenes Lfz nähert sich einem festgelegten Mindestabstand (z. B. zur Grenze).","FRIENDLY aircraft is approaching or is at a specified standoff distance. (Color may indicate additional standoff distance). Follow briefed procedures.",
+  {x:1, note:"Funkform: HOTDOG [color]. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("HOTEL FOX","funk","Kurzwellenfunk (HF).","High frequency radio.",
+  {x:1});
+B("HOUNDDOG","waffen","Lfz ist in Position zum Waffeneinsatz (Antwort auf COVER).","Call made by an aircraft indicating aircraft is in a position to employ weapons. Used in response to COVER.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("ICE","heli","Landezone bzw. Absetzzone: Feindaktivität unter dem gebrieften Risiko.","Call that the LZ or DZ has enemy activity below the prebriefed risk. Opposite of and cancels CHERRY.",
+  {x:1, opp:"CHERRY", note:"Bereich: Luft-Luft, Luft-Boden, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("IDLE","sicht","Boden- bzw. Seefahrzeuge stehen.","Surface vehicles and/or vessels are stationary.",
+  {x:1});
+B("IMPACT","waffen","Einschlag beobachtet, Wirkung unbekannt – bzw. Ankündigung der Einschlagzeit.","1. Weapons observed impacting with unknown effects. 2. Preemptive call with estimated time of impact.",
+  {x:1, note:"Funkform: IMPACT [time]. Bereich: Luft-Boden."});
+B("INDEX","funk","Nummer einer Datenlink-Punktmeldung zur Unterscheidung mehrerer Punkte.","Unique number assigned to a tactical data link J12.6 message to differentiate between more than one POINT or MARKPOINT (e.g., “SCREWTOP 23, POINT INDEX 2 is disabled vehicle”).",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("INTERROGATE","luft","Kontakt im genannten IFF-Modus abfragen.","Interrogate the designated contact of the IFF mode indicated.",
+  {x:1});
+B("IN THE BLIND","funk","Senden ohne bestehende Gegenverbindung.","A radio term indicating an agency/aircraft/unit is transmitting without having established two way communications with desired participants. May be utilized if experiencing radio jamming.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("IN THE DARK","luft","Kontakt liegt im bekannten Radar-Totraum.","CONTACT is in known radar blind zone.",
+  {x:1});
+B("INTRUDER","bedr","Person, Einheit oder Waffe im Einsatzraum, die aufklären oder stören könnte.","An individual, unit, or weapon system in or near an operational or exercise area, which represents the threat of intelligence gathering or disruptive activity.",
+  {x:1});
+B("INVESTIGATE","angriff","ROE, PID, CDE bzw. Koordinierung am bezeichneten Ziel prüfen.","1. Verify specified element(s) of ROE, positive identification (PID), collateral damage estimation (CDE), and/or coordination of forces on the referenced target or track. 2. Verify specified element(s) of ROE, PID, clear field of fire, and/or coordination of forces on the referenced target or track.",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See."});
+B("JACKAL","funk","Überwachungsnetz (NPG 7) im Link 16.","Surveillance Network Participating Group 7 (NPG 7) of Link 16 tactical digital information link.",
+  {x:1});
+B("JAM","eloka","Störung beginnen.","Directive call to initiate jamming.",
+  {x:1, note:"Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("JAMMER","eloka","Nicht eigener Störsender.","Non-friendly jammer.",
+  {x:1, note:"Bereich: EloKa."});
+B("JELLO","sicht","Inverses Synthetisches-Apertur-Radar (ISAR).","Inverse synthetic aperture radar (SAR).",
+  {x:1});
+B("JESTER","funk","Joint Range Extension Applications Protocol (JREAP).","Joint Range Extension Applications Protocol (JREAP). (AMBER): JREAP-A (BROWN): JREAP-B (COPPER): JREAP-C",
+  {x:1, note:"Funkform: JESTER [color]."});
+B("JONESING","sicht","Mehr Zeit nötig, um die aktuelle SAR-Karte auszuwerten.","Informative call requiring additional time to analyze current SAR map.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("KICK","funk","Ungeplant auf das genannte Netz bzw. die genannte Frequenz wechseln.","Change radio or data link to a specified net or frequency, typically used for an unplanned change in frequency (e.g., CHATTERMARK). Also see PUSH.",
+  {x:1, note:"Funkform: KICK [appropriate frequency]. Bedeutung weicht von NATO (APP-7) ab."});
+B("KILL","luft","Übung: Schütze ist TALLY bei Ablauf der Flugzeit des Flugkörpers.","In training, shooters are TALLY at assessed missile timeout.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("KOBE","waffen","Einsatz eigener Hyperschallwaffen (luft- oder bodengestützt).","Employment of FRIENDLY air-launched or surface-launched hypersonic weapon(s).",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("LAME DUCK","koord","Lfz mit leichtem Notfall, z. B. Fehlersuche bei einer nicht kritischen Systemstörung.","An aircraft in a minor state of emergency (e.g., an aircraft is troubleshooting a non-critical systems malfunction).",
+  {x:1});
+B("LEAD-TRAIL","luft","Formation innerhalb einer Gruppe: zwei Kontakte hintereinander, in der Entfernung getrennt.","Inner GROUP formation of two CONTACTS separated in range.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See."});
+B("LEAKER","bedr","Luftbedrohung hat eine Verteidigungslinie durchbrochen; Meldung mit Zusatzangaben.","Airborne threat has passed through a defensive layer. Call should include amplifying information.",
+  {x:1, acc:[/^(LEAKERS)$/], note:"Funkform: LEAKER(S). Bereich: Luft-Luft, Luft-See, Boden-Luft."});
+B("LEAN","koord","Verband bzw. Element in die genannte Richtung versetzen; gebriefte Höhe, Geschwindigkeit und Formation beibehalten.","Offset package or element in specified direction maintaining briefed altitude, airspeed, and formation.",
+  {x:1, note:"Funkform: LEAN [direction]. Bereich: Luft-Luft, Luft-Boden."});
+B("LEEROY","koord","Zeitverschiebung des gesamten Auftrags in Minuten, immer bezogen auf die ursprünglich geplante Zeit und immer früher.","Timeline adjustment in minutes for entire mission; always referenced from original preplanned mission time; always means earlier. Opposite of ROLEX.",
+  {x:1, opp:"ROLEX", note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("LEVEL","luft","1. Kontakt ist auf gleicher Höhe (Ruf innerhalb des Verbands). 2. Gebriefte Höhe ist erreicht.","1. Contact is co-altitude (inter-flight call). 2.** Briefed altitude has been reached.",
+  {x:1});
+B("LIGHT","bedr","Auftragsstatus zur Bedrohung: RED = gebriefte Bedrohungen nicht ausgeschaltet, Lfz prüfen ihre Position; YELLOW = bestimmte Kräfte arbeiten weiter, die übrigen warten; GREEN = alle Lfz führen ihre Aufträge aus.","Mission status. (RED): Prebriefed threats have not been mitigated for further mission execution. Aircraft should evaluate their position relative to the threat and take appropriate actions. (YELLOW): Designated assets can continue to operate relative to the prebriefed threat while other assets should continue to hold. (GREEN): All aircraft are cleared to execute prebriefed missions.",
+  {x:1, note:"Funkform: [status] LIGHT. Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("LIGHTS","eloka","Aktives Radar strahlt absichtlich (ON) bzw. stellt die Abstrahlung ein (OFF), ggf. nach Emissionsplan.","Active radar system intentionally emitting/ceasing emissions. May be IAW briefed emissions control plan.",
+  {x:1, note:"Funkform: LIGHTS [ON/OFF]. Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("LIGHTBULB","koord","Alle Positionslichter auf hell schalten.","Turn all position lights to bright.",
+  {x:1});
+B("LINER","koord","Mit der Geschwindigkeit für größte Reichweite fliegen.","Fly at speed giving maximum cruising range.",
+  {x:1});
+B("LONG RIFLE","waffen","Einsatz einer Luft-Boden-Langstreckenwaffe mit eigenem Antrieb (z. B. Marschflugkörper, Reichweite ab ca. 100 NM); optional mit Anzahl und Flugzeit, Startort im BULLSEYE-Format.","Employment of long range (e.g., ≥100 NM maximum range) air-to-surface munition with sustained propulsion (e.g., air-launched cruise missile). Option to add follow-on modifiers for number of munitions and/or time of flight. NOTE Include launch location in BULLSEYE format and weapons track direction when appropriate.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("LOWDOWN","eloka","Anforderung des elektronischen Lagebilds (ES) bzw. des Bodenlagebilds in einem Interessengebiet.","A request for the tactical electromagnetic support or ground/surface picture in an area of interest.",
+  {x:1, note:"Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("MAP","sicht","Weisung: SAR-Radarkarte vom genannten Punkt anfertigen.","Directive call to initiate SAR mapping event on a specified point of interest.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("MAP COMPLETE","sicht","Radar hat die Kartierung beendet; die Karte wird noch verarbeitet bzw. aufgebaut (JONESING mitgemeint).","Informative call that air-to-surface radar completed mapping and waiting for the map to process/display. JONESING assumed.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("MAPPING","sicht","Multifunktionsradar arbeitet im Luft-Boden-Modus.","Multifunction radar in an air-to-ground mode.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("MARK","sicht","1. Position eines Punkts oder Objekts speichern. 2. Markierungsgeschoss (meist WP oder Leuchtgeschoss am Boden), das Lfz, Bodentruppen oder Feuerunterstützung Ziele zeigt. 3. Frage und Antwort: Lfz soll Kondensstreifen melden.","1. Record the location of a point or object of interest. 2. Spotting round, normally white phosphorus or illumination on the deck to indicate targets to aircraft, ground troops, or fire support. 3. Challenge and response term for requested aircraft to report contrails.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Boden-Boden."});
+B("MARKPOINT","funk","Im Datenlink gesetzter geografischer Punkt von Interesse ohne Zielzuweisung (J12.6 SID 9).","Data link non-designated geographic point of interest (J12.6 status information discrete (SID) 9 message).",
+  {x:1});
+B("MARSHAL","koord","Sich an einem bestimmten Punkt sammeln, meist zur Vorbereitung eines Angriffs.","Establish(ing) at a specific point, typically used to posture forces in preparation for an offensive operation.",
+  {x:1, acc:[/^(MARSHALLING)$/], note:"Funkform: MARSHAL(LING)."});
+B("MATE","luft","Nach den Identifizierungskriterien des Einsatzraums als ASSUMED FRIEND (vermutlich eigen) identifiziert.","Positively identified as an ASSUMED FRIEND IAW theater ID criteria.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("MELD","luft","1. Radarabdeckung nach gebrieften Vorgaben ausrichten. 2. Radar vom Absuchen auf die zugewiesene Gruppe umstellen. 3. Weisung an ein anderes Lfz, den Sensor auf denselben Ort zu richten.","1. Bias radar coverage IAW briefed parameters. 2. Shift radar responsibilities from sanitizing to gaining situational awareness on the assigned GROUP. 3. Directive call to another aircraft to match sensor location.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See."});
+B("MICKEY","funk","Zeitsignal für das UHF-Frequenzsprungverfahren (z. B. HAVEQUICK II, SATURN).","UHF radio frequency hopping time of day signal (e.g., HAVEQUICK II, SATURN).",
+  {x:1});
+B("MIDNIGHT","funk","C2-Sensoren fallen wegen Störung bzw. Ausfall aus.","C2 sensors are unavailable due to degradation. Opposite of SUNRISE.",
+  {x:1, opp:"SUNRISE", note:"Bereich: Luft-Luft, Boden-Luft."});
+B("MINIMIZE","funk","Frequenz ist überlastet, gestört oder wird gestört; Funksprüche kürzer halten.","The radio frequency is becoming saturated, degraded, or jammed and briefer transmissions must follow.",
+  {x:1});
+B("MONITOR","sicht","Gruppe oder Objekt mit dem Sensor weiter beobachten; taktisch wichtige Änderungen werden gemeldet.","1. Maintain(ing) sensor awareness on specified GROUP or object. Implies that tactically significant changes will be communicated. 2. Maintain contact or targeting information on a maritime surface contact.",
+  {x:1, acc:[/^(MONITORING)$/], note:"Funkform: MONITOR(ING) [GROUP or object]. Bereich: Luft-Luft, Luft-Boden, Luft-See."});
+B("MOON BEAM","laser","Nachträgliche Meldung: Laserenergie ist am genannten Ziel übergestrahlt bzw. reflektiert worden.","After-the-fact advisory report to indicate a spillover or reflection of laser energy that occurred on a specific target.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("MOSQUITO","luft","Langsames Luftziel mit kleiner Radarrückstrahlfläche.","Slow speed and low radar cross section target.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("MOVER","sicht","Unidentifizierte Bodenfahrzeuge in Bewegung.","Unidentified surface vehicle(s) in motion.",
+  {x:1, acc:[/^(MOVERS)$/], note:"Funkform: MOVER(S)."});
+B("NAILS","bedr","1. RWR zeigt das Radar eines Abfangjägers im Suchmodus. 2. 2,75-Zoll-Raketen mit Pfeilgeschossen (Flechettes).","1. Radar warning receiver indication of airborne interceptor radar in search. 2. 2.75-inch flechette rockets.",
+  {x:1, note:"Funkform: NAILS [direction]. Bereich: Luft-Luft, Luft-Boden."});
+B("NEGATE","boden","Eigene Bodenflugabwehr kann das genannte Ziel nicht bekämpfen (z. B. EAGLES NEGATE).","FRIENDLY surface-to-air weapons platform is unable to engage specified target (e.g., EAGLES NEGATE). Opposite of AFFIRM.",
+  {x:1, opp:"AFFIRM", note:"Funkform: [weapon] NEGATE. Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("NEGLECT","boden","Schiff meldet: Die letzte Salve wurde mit falschen Daten geschossen.","Used by ship to indicate the last salvo was fired on incorrect data.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("NEUTRAL","luft","Identifiziertes Lfz, Schiff oder Bodenstellung, das eigene Kräfte weder unterstützt noch bekämpft.","A positively identified aircraft, ship, or ground position whose characteristics, behavior, origin, or nationality indicate it is neither supporting nor opposing FRIENDLY forces.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("NEW PICTURE","luft","Das taktische Lagebild hat sich geändert; ersetzt alle früheren Meldungen und stellt das Lagebild für alle neu dar.","Used by controller or aircrew when tactical PICTURE has changed. Supersedes all previous calls and reestablishes PICTURE for all players.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See."});
+B("NOTCH","bedr","Lfz ist in der Defensive und manövriert in Bezug zur Bedrohung.","Aircraft is in a defensive position. Maneuver(ing) with reference to a threat.",
+  {x:1, acc:[/^(NOTCHING)$/], note:"Funkform: NOTCH(ING) [direction]. Bereich: Luft-Luft, Luft-Boden, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("OCCUPIED","sicht","Bodengerät am befohlenen Zielort vorhanden.","Ground equipment present at tasked target location. Opposite of VACANT.",
+  {x:1, opp:"VACANT", note:"Bereich: Luft-Boden."});
+B("OFFSET","angriff","In die genannte Richtung manövrieren, bezogen auf das Ziel.","Maneuver in a specified direction with reference to the target.",
+  {x:1, note:"Funkform: OFFSET [direction]."});
+B("PADLOCKED","sicht","Besatzung kann den Blick nicht von Lfz, Bodenziel oder Stellung abwenden, ohne TALLY bzw. VISUAL zu verlieren.","Aircrew cannot take eyes off an aircraft, ground target, or surface position without risk of losing TALLY or VISUAL.",
+  {x:1});
+B("PANCAKE","koord","Landen bzw. Landung anfordern, ggf. mit Grund (z. B. PANCAKE AMMO, PANCAKE FUEL).","Land or request to land (reason may be specified; e.g., PANCAKE AMMO, PANCAKE FUEL).",
+  {x:1});
+B("PARROT","funk","IFF-Transponder (SIF).","IFF selective ID feature transponder.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("PEDRO","heli","CSAR-Hubschrauber.","Combat search and rescue helicopter.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("PHANTOM","eloka","Positionsspur aus der Kreuzpeilung von SPIKES feindlicher Störsender.","A position track derived from the triangulation of SPIKES originating from HOSTILE jamming.",
+  {x:1, note:"Bereich: EloKa."});
+B("PICTURE","luft","Anforderung des einsatzrelevanten Lagebilds, im Format digitaler BULLSEYE, sofern nicht anders gebrieft.","A request to provide information pertinent to the mission in a digital bullseye format unless briefed otherwise.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See. Bedeutung weicht von NATO (APP-7) ab."});
+B("PIGEONS","koord","Kurs (missweisend) und Entfernung (NM) zum Heimatplatz (HOME PLATE).","Bearing in magnetic and range in nautical miles to HOME PLATE.",
+  {x:1, note:"Funkform: PIGEONS [bearing, range]."});
+B("PILLOW","eloka","Pulswiederholintervall (PRI).","Pulse repetition interval.",
+  {x:1, note:"Bereich: EloKa."});
+B("PINBALL","laser","Lasergelenkte Munition hat sich vom Träger getrennt und den Laserspot aufgefasst.","Laser guided munition has separated from its launching vehicle and captured laser designator.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("PING","waffen","Präzisionsmunition hat die Datenverbindung zum unterstützenden Lfz aufgebaut.","Precision-guided munition has established communication link with supporting vehicle.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("PINNACLE","eloka","Abstrahlung, die vermutlich von einer als eigen angenommenen Plattform stammt.","An emission believed to originate from a platform assumed to be FRIENDLY.",
+  {x:1, note:"Bereich: EloKa."});
+B("PLAYMATE","koord","Mitwirkendes Lfz.","Cooperating aircraft.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("POGO","funk","Auf den Kanal vor POGO wechseln; klappt keine Verbindung, auf den Kanal nach POGO; steht dort keiner, zurück auf diesen Kanal.","Switch to communication channel number preceding POGO. If unable to establish communications, switch to channel number following POGO. If no channel number follows POGO, return to this channel.",
+  {x:1, note:"Funkform: [freq] POGO [freq]."});
+B("POINT","funk","Datenlink-Sensorpunkt bzw. TOI (J12.6 SID 10). CONTACT POINT = Tracknummer des TOI aufgefasst; DROP POINT = Zielmeldung nicht mehr nötig; HOLD POINT = waffenfähige Trackdaten halten; SHOOT POINT = auf die Datenlink-Zielmeldung schießen; TARGET POINT = genannte Zielmeldung bekämpfen.","Data link sensor point or TOI, such as the J12.6 SID 10 data link message. CONTACT POINT: Indicates the aircraft has acquired the TOI TRACK NUMBER on their data link. DROP POINT: Data link target sorting message is no longer needed or desired. HOLD POINT: Maintain weapons quality track data. SHOOT POINT: Directive call to shoot data link targeting message; does not imply targeting responsibility. TARGET POINT: Target the referenced data link TARGET sorting message. (Example: “IRON FOUR, TARGET IRON ONE’S POINT”).",
+  {x:1, note:"Funkform: [type] POINT."});
+B("POND","eloka","Störplan wie angegeben bzw. befohlen ausführen.","Carry out jamming plan indicated or IAW previous orders.",
+  {x:1, note:"Bereich: EloKa."});
+B("POP","angriff","1. Steigflug für den Luft-Boden-Angriff beginnen. 2. Steigflug mit Höchstleistung aus der Tiefflugstaffelung.","1. Starting climb for A/S attack. 2. Maximum performance climb out of low-altitude structure.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden."});
+B("POPCORN","heli","CSAR-Lfz verlässt die Landezone, meist mit Zahl der Geretteten (z. B. „STING 1, POPCORN PLUS 2“).","Combat search and rescue aircraft departing the LZ. Usually followed by a number of recovered personnel, (e.g., \"STING 1, POPCORN PLUS 2\").",
+  {x:1});
+B("POP-UP","luft","1. Gruppe, die plötzlich zwischen MELD- und Bedrohungsentfernung auftaucht. 2. Kriterium, mit dem sich eigene Flugabwehr im Rahmen der ROE gegen feindliche Lfz selbst verteidigt.","1. GROUP that has suddenly appeared between the MELD and threat range. 2. Criteria used as a self-defense method, within the ROE, to protect FRIENDLY air defense elements from HOSTILE aircraft.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("POSIT","koord","Anfrage nach eigener Position; Antwort anhand eines Geländepunkts oder gemeinsamen Bezugspunkts.","Request for FRIENDLY position; response in terms of a geographic landmark or from a common reference point.",
+  {x:1});
+B("POST ATTACK","angriff","Gewünschte Richtung bzw. Weisungen nach dem Angriff.","Desired direction or directives after completion of intercept or engagement.",
+  {x:1, note:"Funkform: POST ATTACK [direction, directive]."});
+B("POSTURE","sicht","JTAC teilt den Lfz die Sensorhaltung mit (offensiv, defensiv oder neutral); sagt nichts über die taktische Lage der eigenen Bodentruppen.","Communicates sensor posture type (offensive, defensive, or neutral) by the JTAC to assets. Does not imply the FRIENDLY ground forces’ tactical situation.",
+  {x:1, note:"Funkform: [type] POSTURE. Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("PRESS","angriff","Beantragte Aktion ist genehmigt; gegenseitige Unterstützung bleibt erhalten.","1. Requested action is approved and mutual support will be maintained, assumes VISUAL. 2. Requested action is approved and mutual support will be maintained.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden."});
+B("PRINT","luft","Gültige Antwort der nichtkooperativen Zielerkennung (NCTR).","Valid non-cooperative target recognition reply.",
+  {x:1, note:"Funkform: PRINT [type]. Bereich: Luft-Luft, Boden-Luft."});
+B("PULSE","laser","Position mit blinkender IR-Energie beleuchten.","Illuminate(ing) a position with flashing IR energy.",
+  {x:1});
+B("PUPPIES","eloka","Emissionsplan (EMCON) wird wie folgt geändert.","Emission control plan is modified as follows.",
+  {x:1, note:"Bereich: EloKa."});
+B("QUAIL","bedr","Feindlicher luft- oder bodengestützter Marschflugkörper.","HOSTILE air- or surface-launched cruise missile.",
+  {x:1, note:"Bereich: Luft-Boden, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("RACKET","eloka","Aufgefangene Abstrahlung, der eine Tracknummer zugewiesen wurde.","Intercepted electromagnetic emission which has been assigned to a number of the track block.",
+  {x:1, note:"Bereich: EloKa."});
+B("RECYCLE","funk","Weisung: IFF bzw. genanntes System aus- und wieder einschalten.","Directive call for aircrew to turn IFF or selective ID feature or specified system off and on.",
+  {x:1, note:"Funkform: RECYCLE [system]. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("RED","koord","Waffen- bzw. Kraftstoffstand reicht nicht mehr, um den Auftrag fortzusetzen; Grenzwerte in der Planung festlegen.","Aircraft is at weapon and/or fuel state that is insufficient to continue execution of the mission. NOTE A specific loadout or fuel state should be determined during mission planning.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("REDWOOD","boden","Eigenes Flugabwehrfeuer ohne weitere Koordination in eine Fighter- bzw. Joint Engagement Zone einbinden (HOT) bzw. beenden (COLD); nach REDWOOD HOT halten eigene Lfz Abstand.","An informative or directive call to initiate (HOT) or cease (COLD) the integration of FRIENDLY surface-to-air fires into a fighter or joint engagement zone without further coordination. Must include modifier HOT or COLD. NOTE Friendly aircraft are expected to maintain an appropriate standoff following a REDWOOD HOT call, unless the acceptable level of risk permits otherwise.",
+  {x:1, note:"Funkform: REDWOOD [HOT or COLD]. Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("REFERENCE","koord","Genannte Richtung bzw. genannten Kurs einnehmen.","Assume stated direction or heading.",
+  {x:1, note:"Funkform: REFERENCE [direction or heading]."});
+B("REFINE","eloka","Anforderung einer genaueren Ortung eines Emitters von Interesse.","Request for better location accuracy on an emitter of interest.",
+  {x:1, note:"Bereich: EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("REMINGTON","waffen","Keine Munition mehr außer Bordkanone bzw. Selbstschutzmunition.","1. Aircraft is out of, or unable to employ remaining air-to-air ordnance, not to include gun (if equipped). 2. No ordnance remaining except gun or self-protection ammunition.",
+  {x:1, note:"Bereich: Luft-Luft, See, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("RENEGADE","luft","Ziviles Lfz, dessen Verhalten den Verdacht weckt, es könnte als Waffe benutzt werden.","A civil platform that is assessed as operating in such a manner as to raise suspicion that it might be used as a weapon.",
+  {x:1});
+B("RENT","eloka","Meldung der Merkmale eines aufgefangenen Signals.","Report of characteristics of an intercepted signal.",
+  {x:1, note:"Bereich: EloKa."});
+B("REPEAT","boden","Beim Einschießen erneut mit gleicher Feuerart und -stärke schießen; beim Wirkungsschießen dieselbe Schusszahl mit gleicher Feuerart und -stärke.","1. (during adjustment) Fire again using the same method and volume of fire. 2. (during fire for effect) Fire the same number of rounds using the same method and volume of fire.",
+  {x:1, note:"Bereich: Boden-Boden."});
+B("REPORTED","funk","Angaben stammen aus einer fremden Quelle (nicht vom eigenen Sensor).","Information provided is derived from an off-board source.",
+  {x:1, note:"Funkform: REPORTED [information]."});
+B("RE-STAKE","sicht","Neuen STAKE auf die gemeldete Zielmitte setzen, mit Bewegungsrichtung und Höhe; von der Besatzung ausgelöst.","Drive a new STAKE at the target centroid reported with direction of travel and elevation. Initiated by aircrew.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("RETROGRADE","bedr","Rückzug unter Abwehrverfahren wegen einer Bedrohung.","Withdraw(ing) while executing defensive procedures in response to a threat.",
+  {x:1, acc:[/^(RETROGRADEING|RETROGRADING)$/], note:"Funkform: RETROGRADE (ING). Bedeutung weicht von NATO (APP-7) ab."});
+B("RIDER","luft","BOGEY, das sich an die Luftraumordnung (ACO) bzw. an die Durchflugverfahren hält.","A BOGEY that is complying with airspace control order or safe passage procedures.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("RIPPED CHUTE","boden","Beobachter meldet: Der Fallschirm des Leuchtgeschosses ist gerissen bzw. hat sich gelöst.","Sent by spotter to indicate that the illumination round parachute was ripped or separated on deployment.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("RIPPLE","waffen","Zwei oder mehr Wirkmittel werden kurz nacheinander ausgelöst; meist mit Zahl, Art und Abwurfintervall, abgesprochen im Angriffsplan bzw. mit dem JTAC.","Two or more munitions will be released or fired in close succession. Typically associated with number and type of weapon with release interval. NOTE Normally discussed during the prestrike game plan between aircraft and/or between aircraft and ground tactical controller.",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("ROGER","funk","Funkspruch empfangen; heißt nicht, dass ausgeführt wird.","Radio transmission received; does not indicate compliance or reaction.",
+  {x:1});
+B("ROOSTER","bedr","Feindlicher Anti-Radar-Flugkörper (ARM).","Enemy antiradiation missile.",
+  {x:1, note:"Bereich: Luft-Boden, EloKa, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("ROTATOR","eloka","MTI-Echo, das sehr wahrscheinlich von einer drehenden Antenne stammt.","Moving target indicator returns that signifies a high probability of a rotating antenna.",
+  {x:1, note:"Bereich: EloKa."});
+B("ROVER","funk","Plattform kann ROVER-Video an den Boden senden.","Platform is Remotely Operated Video Enhanced Receiver (ROVER) video downlink capable.",
+  {x:1});
+B("SAME","funk","Besatzung hat dieselbe Information wie eben genannt.","Aircrew has the identical information as was just stated.",
+  {x:1});
+B("SATURATED","boden","Radar des Waffensystems ist voll ausgelastet; neue Ziele werden kaum noch erfasst.","Weapons system radar has exhausted all resources. Ability to detect new tracks is minimal.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SCAN","sicht","Genannten Sektor absuchen und Kontakte melden.","Search sector indicated and report any CONTACTS.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("SCORPION","bedr","Feindliches MANPADS.","Enemy man-portable air defense system (MANPADS).",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SCRAMBLE","koord","So schnell wie möglich starten.","Takeoff as quickly as possible.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft, Boden-Boden."});
+B("SCRUB","luft","MTI-Echo eines tief und langsam (100–250 kn) bzw. sehr langsam (unter 100 kn) fliegenden Luftziels.","Moving target indicator return that signifies a low, slow (100-250 knots ground speed) or very slow (<100 knots ground speed) airborne target.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("SEAD","angriff","Gebriefte SEAD-Absprachen (Unterdrückung feindlicher Luftverteidigung) ausführen.","Execute the contracts of prebriefed suppression of enemy air defense (SEAD).",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SET","koord","1. Genannte Geschwindigkeit (kn oder Mach) einstellen. 2. Sensor wird nicht mehr geschwenkt und wartet auf Updates. 3. Überwachungs-Lfz ist in Position.","1. Set (or have set) a particular speed. May be indicated in knots or Mach. 2. No longer slewing sensor and awaiting further updates. 3. Overwatch aircraft is in position.",
+  {x:1});
+B("SHOOTER","angriff","Lfz bzw. Einheit, die die Wirkmittel einsetzen soll.","Aircraft or unit designated to employ ordnance.",
+  {x:1});
+B("SHOPPING","koord","Lfz fragt FAC, JTAC oder C2 nach einem Ziel oder Auftrag.","An aircraft request to forward air controller, JTAC, or C2 platform for a target or task.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("SHOT","boden","Schuss bzw. Schüsse sind abgefeuert.","Round(s) has/have been fired.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SHREW","funk","Anhaltende Störung unbekannter Herkunft auf dem aktuellen Funkkanal, die das Lagebild beeinträchtigt.","Persistent interference from an undetermined source that is degrading situational awareness on the current radio channel.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SICK","funk","Genanntes System ist eingeschränkt bzw. nur teilweise funktionsfähig; aufgehoben durch SWEET.","System indicated is degraded or partially operative. Canceled by SWEET.",
+  {x:1, note:"Funkform: [system] SICK. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SILENT","funk","1. System für die genannte Zeit nicht verfügbar. 2. Datenlink nur auf Empfang bzw. darauf schalten. 3. Sendestelle sendet nicht; auch als Befehl mit Frequenz bzw. Station, möglichst mit geschätzter Rückkehrzeit.","1. (time) System will be unavailable for time indicated. 2. Data link is, or should be placed, in receive only. 3. Broadcast station is not transmitting. May also be used as an order and must be followed by a frequency or station designator. If possible, it should be followed by an estimated time of return to the air.",
+  {x:1, note:"Funkform: [system] SILENT. Bereich: Luft-Luft, EloKa."});
+B("SINGER","bedr","RWR zeigt einen SAM-Start an. Siehe MUD und DIRT.","Radar warning receiver indication of SAM launch. See MUD and DIRT.",
+  {x:1, note:"Funkform: SINGER [type, direction]. Bereich: Luft-Boden, EloKa."});
+B("SINGLE","luft","Eine Gruppe, ein Kontakt usw.","One GROUP, CONTACT, etc.",
+  {x:1});
+B("SKINNY","heli","Aktuelle Koordinaten der zu Rettenden.","Current survivor coordinates.",
+  {x:1});
+B("SKUNK","sicht","Noch nicht identifizierter See- oder Bodenkontakt.","A maritime or ground CONTACT that has not yet been identified.",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See. Bedeutung weicht von NATO (APP-7) ab."});
+B("SLANT","sicht","Zahl der Personen bzw. Objekte am genannten Ort (Männer/Frauen/Kinder), z. B. „SLANT 4/6/4“.","References number of people or objects noted at specified location (men/women/children). For example, in response to a request for SLANT on a target building: “SLANT 4/6/4.”",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SLAPSHOT","waffen","Sofort einen verfügbaren Anti-Radar-Flugkörper gegen die genannte Bedrohung in der genannten Richtung einsetzen.","Immediately employ a best available antiradiation missile against a specified threat at the specified bearing.",
+  {x:1, note:"Funkform: SLAPSHOT [type, bearing]. Bereich: Luft-Boden, EloKa."});
+B("SLEW","sicht","Sensor in die genannte Richtung schwenken, meist mit Maßangabe (z. B. „SLEW left one half screen“).","Move sensor in direction indicated (usually accompanied with a unit of measure). For example, “SLEW left one half screen.”",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SLIDE","koord","1. Auftrag fortsetzen, aber wegen einer Bedrohung vom Raum wegziehen; RESET ist beabsichtigt. 2. Hubschrauber seitlich versetzen.","1. Continue(ing) present mission while flowing from station in response to perceived threat, implies intent to RESET. 2. Directive or descriptive term to laterally reposition helicopter.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, EloKa, Weltraum."});
+B("SLIP","koord","Zeitverzug für ein Ereignis eines einzelnen Verbands bzw. Elements.","Time delay to individual flight or element event.",
+  {x:1, acc:[/^(SLIPPING)$/], note:"Funkform: SLIP(PING). Bereich: Luft-Luft, Luft-Boden."});
+B("SLOPE","eloka","Pulswiederholfrequenz (PRF).","Pulse repetition frequency.",
+  {x:1, note:"Bereich: EloKa."});
+B("SLOW","luft","Luftziel mit 100–250 kn über Grund.","Target with ground speed of 100–250 knots.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
+B("SMASH","koord","Antikollisionslichter ein- bzw. ausschalten.","Turn on/off anti-collision lights.",
+  {x:1, note:"Funkform: SMASH [ON/OFF]."});
+B("SMELL","luft","Identifizierung mit geringer Sicherheit.","Low confidence identification.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SNIFF","eloka","Passiver Sensor zeigt einen Radaremitter an.","Passive sensor indication of a radar emitter.",
+  {x:1, note:"Funkform: SNIFF [type]. Bereich: Luft-Luft, EloKa."});
+B("SNOOZE","eloka","Emissionsbeschränkung (EMCON) einleiten.","Initiate(ing) emission control procedures. Opposite of ALARM.",
+  {x:1, opp:"ALARM", note:"Bereich: Luft-Luft, EloKa, Weltraum."});
+B("SORT","angriff","1. Verteilung der Verantwortung innerhalb einer Gruppe (visuell, elektronisch oder beides). 2. Zuweisung konkreter Zielverantwortung.","1. Assignment of responsibility within a GROUP; criteria can be met visually, electromagnetically (e.g., radar), or both. 2. Assignment of specific targeting responsibilities.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden."});
+B("SORTED","angriff","Die Aufteilung innerhalb der Gruppe ist erfolgt.","Sort responsibility within a GROUP has been met.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See."});
+B("SOUR","funk","1. Ungültige oder keine Antwort bei der IFF-Prüfung. 2. Mit Linkname (z. B. „TIMBER SOUR“): mögliche Probleme beim Netzeintritt, Fehlersuche beginnt.","1. (mode/type) Invalid or no response to an administrative IFF or selective ID feature check. 2. (link name) (e.g., \"TIMBER SOUR\") Potential problems with net entry; initiates pre-mission link troubleshooting. Opposite of SWEET.",
+  {x:1, opp:"SWEET", note:"Bereich: Luft-Luft, Boden-Luft."});
+B("SPADES","luft","Abgefragte Gruppe bzw. Radarkontakt ohne die laut ATO geforderten IFF-Modi und -Codes.","An interrogated GROUP or radar contact that lacks all of the air tasking order (or equivalent) IFF or selective ID feature modes and codes required for the ID criteria.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-See, Boden-Luft."});
+B("SPIDER","funk","Netz der Cooperative Engagement Capability (CEC).","Cooperative engagement capability network.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SPLIT","angriff","Verbandsmitglied verlässt die Formation für einen eigenen Angriff; VISUAL bleibt evtl. nicht erhalten.","Flight member is leaving formation to pursue a separate attack; VISUAL may not be maintained.",
+  {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
+B("SPOOFER","eloka","Gegner, der elektronische bzw. taktische Täuschung einsetzt.","An entity employing electromagnetic or tactical deception measures.",
+  {x:1, note:"Bereich: Luft-Luft, EloKa."});
+B("SPOOFING","eloka","Sprechfunktäuschung wird eingesetzt.","Voice deception is being employed.",
+  {x:1, note:"Bereich: EloKa, Boden-Luft."});
+B("SPUR RIDE","heli","Notbergung: Abgeschossene Besatzung hängt sich außen an den Hubschrauber.","Attempt helicopter buddy or self-extraction by having downed crew attach themselves to the outside of the helicopter.",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SQUAWKING","luft","BOGEY antwortet mit einem anderen IFF-Modus bzw. -Code als laut ATO bzw. ID-Kriterien vorgeschrieben.","BOGEY is responding with an IFF or selective ID feature mode or code other than that prescribed by the air tasking order or ID criteria.",
+  {x:1, note:"Funkform: SQUAWKING [mode number]. Bedeutung weicht von NATO (APP-7) ab."});
+B("SQUIRTER","sicht","Bodenobjekt von Interesse verlässt den Zielraum.","A ground-borne object of interest departing the objective area.",
+  {x:1, note:"Bereich: Luft-Boden, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("STAKE","sicht","1. Bezugspunkt für die Luft-Boden-Zielbekämpfung. 2. Gesetzte Markierung im Videobild (FMV) als Bezugsrahmen.","1. Reference point for A/S targeting operations. 2. A full-motion video system mark has been set and is used as a frame of reference.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("STANDOFF","bedr","Genannte Rolle (SEAD, SUPPORT, TARGET) ausführen und außerhalb eines gebrieften Abstands zu bekannten SAM-Stellungen bleiben.","Call to execute stated role (SEAD/SUPPORT/TARGET) and remain outside of a prebriefed coordination range from known SAM locations.",
+  {x:1, note:"Funkform: STANDOFF [role]. Bereich: Luft-Luft, Luft-Boden, EloKa. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("STARE","laser","Laserspotsucher auf den genannten Code und Bezugspunkt einstellen (Steuerpunkt, Geländepunkt, Richtung und Entfernung oder Datenlinkpunkt).","Cue the laser spot search or tracker function on the specified laser code in relation to the specified reference point. Reference point may include the following: steerpoint, geographic reference, bearing and range, or data link point.",
+  {x:1, note:"Funkform: STARE [laser code, reference point]. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("STINGER","luft","1. Dreier-Formation: zwei Kontakte vorn nebeneinander, einer dahinter. 2. US-MANPADS mit IR-Lenkung.","1. Three-ship inner GROUP formation with two lead CONTACTs line abreast and the SINGLE in trail. 2. A US infrared MANPADS.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-See, Boden-Luft."});
+B("STRADDLE","boden","Beobachtung bei einer Salve mehrerer Rohre: Einschläge teils kurz, teils weit; Beobachter meldet STRADDLE mit Korrektur auf den mittleren Treffpunkt.","A spotting of STRADDLE is made for a multi-gun salvo when some rounds fall short and some fall beyond the target. The spotter announces STRADDLE followed by a correction to place the mean point of impact on the target. The term is normally used during a ship adjust or a massed fire mission.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("STRENGTH","luft","Anzahl (Stärke) eines Tracks bzw. einer Gruppe.","Numerical strength of a TRACK or GROUP.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See, Boden-Luft."});
+B("STROKE","funk","Weisung an eine dritte Trackquelle, bestmögliche durchgehende Trackdaten zur Zielbekämpfung zu liefern.","Directive call for third party track production source to provide best possible continuous track data for weapon targeting purposes.",
+  {x:1, note:"Bereich: Luft-Boden, Luft-See. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SUMMIT","boden","Gipfelhöhe der Geschossbahn (MAX ORD); bei Luftbeobachtung immer, sonst auf Anfrage; neue Meldung bei Änderung über 300 ft (Luftbeobachter) bzw. 100 m (Bodenbeobachter).","The highest point of a shell’s trajectory (also known as maximum ordnance (MAX ORD)). Sent as standard during an air observed mission and if requested by a ground spotter. Units of measurement are specified. A new SUMMIT is sent if it changes by more than 300 ft for an air observer or 100 meters for a ground observer.",
+  {x:1, note:"Bereich: Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SUNRISE","funk","C2-Sensoren sind verfügbar.","C2 sensors are available. Opposite of MIDNIGHT.",
+  {x:1, opp:"MIDNIGHT", note:"Bereich: Luft-Luft, Boden-Luft."});
+B("SUNSHINE","sicht","Ziel wird künstlich beleuchtet.","Illuminating target with artificial illumination.",
+  {x:1, note:"Bereich: Luft-Boden."});
+B("SUPPORT","angriff","Gebriefte Unterstützungsabsprachen ausführen.","Execute prebriefed support contracts.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("SUSPECT","luft","Identität eines Tracks, der nach Merkmalen, Verhalten, Herkunft oder Nationalität möglicherweise feindlich ist.","An identity applied to a track that is potentially hostile because of its characteristics, behavior, origin, or nationality.",
+  {x:1});
+B("SWEET","funk","1. Gültige Antwort bei der IFF-Prüfung. 2. Mit Linkname (z. B. „TIMBER SWEET“): Datenlink-Information empfangen. 3. Gerät arbeitet einwandfrei.; hebt SICK und BENT auf.","1. (mode, type) Valid response to an administrative IFF or selective ID feature check request. 2. (link name) (e.g., TIMBER SWEET) Confirms receipt of data link information. 3. Equipment indicated is operating efficiently. (Opposite of SOUR; cancels SICK, BENT).",
+  {x:1, opp:"SOUR", note:"Bereich: Luft-Luft, Boden-Luft."});
+B("SWITCH","sicht","1. Einstellung am genannten Gerät umschalten. 2. (CAMERA) Video auf EO bzw. IR umschalten. 3. (POLARITY) IR-Polarität black hot/white hot wechseln. 4. Verband bzw. Element wechselt auf die vorgeplante Frequenz.","1. Switch the setting on the referenced item. 2. (CAMERA) Switch full-motion video to EO or IR. 3. (POLARITY) Switch IR polarity to black hot or white hot. 4. Formation or element change to preplanned frequency.",
+  {x:1, note:"Funkform: SWITCH [item]."});
+B("TAG","eloka","1. Antwort auf COLOR (Klärung eines Emitters) mit System und Ort. 2. Meldung an den Hubschrauberführer: Das letzte Lfz des Verbands ist in der Luft.","1. Response to an emitter ambiguity resolution request (COLOR). Requires [system, location]. 2. Call to a helicopter flight lead that the last aircraft of a flight is airborne.",
+  {x:1, note:"Bereich: EloKa."});
+B("TALON","boden","THAAD-Flugkörper der US Army.","US Army Terminal High Altitude Area Defense (also known as THAAD) missile.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("TARGET","angriff","1. Zuweisung der Zielverantwortung. 2. ROE, PID, Koordination und Vorgaben des Führers sind für das Ziel erfüllt; vor dem Waffeneinsatz müssen noch Zielkorrelation, CDE und freies Schussfeld sichergestellt sein.","1. Assignment of targeting responsibilities. 2. ROE, PID, coordination of forces, and commander’s guidance requirements on the referenced target or track have been satisfied. Target or track correlation, CDE, and clear field of fire must be accomplished prior to employing ordnance or fires.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See, Boden-Luft, Boden-Boden."});
+B("TARGETABLE","angriff","Hinweis an den Verband: Die Voraussetzungen für TARGET sind laut Absprache erfüllt; vom Package Commander zu briefen bzw. in den SPINS festgelegt.","Advisory call to inform package that the ability to TARGET has been met IAW prebriefed contracts; must be briefed by package commander (or outlined in SPINS/standards).",
+  {x:1, note:"Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("TECHNICAL","sicht","Behelfskampffahrzeug, meist ein ziviles Fahrzeug mit aufgesetzter Waffe.","Improvised fighting vehicle (usually civilian vehicles modified with mounted weapons).",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("TESLA","funk","IFF Mode 5.","Mode 5 IFF.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("TIMBER","funk","Link-16-Netz.","Link 16 Network.",
+  {x:1, note:"Bereich: EloKa."});
+B("TIMECHECK","funk","IFF-Code prüfen bzw. wechseln.","Check or change IFF code.",
+  {x:1});
+B("TIMEOUT","waffen","1. BVR-Schuss: Parameter waren gültig, der Flugkörper hat das Flugzeitende erreicht. 2. Einschlag verdeckt und nicht bestätigt, die Flugzeit ist abgelaufen.","1. Shooter assesses valid BVR shot parameters have been met and missile has reached termination. 2. Munition impact is obscured and impact cannot be confirmed and time of flight has elapsed.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Boden-Luft."});
+B("TOGGLE","funk","Gebriefte Einstellungsänderung am genannten System ausführen.","Execute the briefed setting change on specified system.",
+  {x:1, note:"Funkform: TOGGLE [system]."});
+B("TORCH","waffen","1. Eigene Hochenergielaserwaffe (HEL) feuert. 2. Plattform hat eine HEL-Waffe. 3. Anforderung von HEL-Feuer auf ein Ziel (z. B. „JTAC Alpha request TORCH“). TORCH ON/OFF: HEL-Feuer begonnen bzw. eingestellt.","1. Friendly high-energy laser (HEL) weapon fire. 2. Platform is HEL weapon capable. 3. Request for HEL fires on a specified target (e.g., JTAC Alpha request TORCH). TORCH ON/OFF: Friendly HEL weapon has started/ceased firing.",
+  {x:1});
+B("TOY","eloka","HTS-Pod (Zielsystem für Anti-Radar-Flugkörper).","High-speed antiradiation missile targeting system (also known as HTS) pod.",
+  {x:1, note:"Bereich: EloKa."});
+B("TRACK","sicht","1. Flug- bzw. Bewegungsrichtung einer Gruppe oder von Kontakten. 2. Weisung: Objekt oder Raum mit Sensor bzw. visuell beobachten. 3. Hubschrauber: Racetrack einrichten (z. B. „TRACK left“). 4. Bewegungsrichtung eines Fahrzeugs bzw. Kontakts (z. B. „TALLY TECHNICAL TRACK Northwest“).","1. GROUP or CONTACTS direction of flight or movement. 2. Directive call assigning responsibility to an asset for maintaining sensor or visual observation of a defined object or area. 3. Rotary-wing directive call to establish race track (e.g., “Taz 31, TRACK left). 4. Information call stating direction of vehicle or CONTACT in motion (e.g., TALLY TECHNICAL TRACK Northwest).",
+  {x:1, note:"Funkform: TRACK [direction]. Bereich: Luft-Luft, Luft-Boden, Luft-See, Boden-Boden."});
+B("TRACK NUMBER","funk","Datensatz (Tracknummer) im Datenlink.","Data link information file.",
+  {x:1, note:"Funkform: TRACK NUMBER [number]."});
+B("TRAVEL","eloka","Radarfrequenz wechseln.","Change radar frequency.",
+  {x:1, note:"Bereich: EloKa."});
+B("TRESPASS","bedr","Angesprochener Verband fliegt in den Wirkbereich des genannten SAM-Systems an der genannten Stelle ein.","The addressed flight is entering the threat SAM ring of a specific (system) at the stated location. A specified FRIENDLY spacecraft is entering into a collection area and/or weapons engagement zone of a known or suspected threat object.",
+  {x:1, note:"Funkform: TRESPASS [system, position]. Bereich: EloKa, Weltraum."});
+B("TROJAN","bedr","Luftgestützter Täuschkörper wird ausgesetzt.","Deployment of air launch decoy.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("TUMBLEWEED","koord","Bitte um Informationen wegen eingeschränkter oder verlorener Lageübersicht (z. B. NO JOY, BLIND).","Request for information due to limited or loss of situational awareness, (e.g., NO JOY, BLIND).",
+  {x:1});
+B("UNABLE","funk","Kann der Bitte bzw. Weisung nicht nachkommen.","Cannot comply as requested or directed.",
+  {x:1});
+B("UNIFORM","funk","UHF-Funkgerät.","UHF radio.",
+  {x:1});
+B("VACANT","sicht","Bodengerät am befohlenen Zielort nicht vorhanden.","Ground equipment not present at specific or tasked target location. Opposite of OCCUPIED.",
+  {x:1, opp:"OCCUPIED", note:"Bereich: Luft-Boden."});
+B("VANISHED","luft","Sonderfall von FADED: Gruppe, ARM oder Kontakt ohne Sensordaten, nicht in einem bekannten Sensorschatten und einem Schuss eigener Kräfte zugeordnet.","Special case of FADED defined as a GROUP or ARM or CONTACT with no available sensor data and is: (1) Not in a known sensor blind zone (terrain masking or Doppler blind zone) AND (2) Correlated to a shot by FRIENDLY forces.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("VECTOR","koord","Auf den genannten Kurs drehen.","Alter heading to indicated.",
+  {x:1, note:"Funkform: VECTOR [heading]."});
+B("VERY FAST","luft","Luftziel mit über 900 kn über Grund bzw. über Mach 1,5.","Target speed greater than 900 knots ground speed or Mach 1.5.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft."});
+B("VERY SLOW","luft","Luftziel mit unter 100 kn.","Target speed less than 100 knots.",
+  {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("VICTOR","funk","VHF-AM-Funkgerät.","Very high-frequency (also known as VHF) / amplitude modulation (also known as AM) radio.",
+  {x:1});
+B("WAGON","heli","Hubschrauber-Weisung: das Ziel umkreisen (z. B. „Taz 31, WAGON left“).","Rotary-wing directive call to orbit around the target (e.g., “Taz 31, WAGON left”).",
+  {x:1, note:"Funkform: WAGON [left/right]. Bereich: Luft-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("WARNING","bedr","Luftverteidigungswarnstufe: RED = Angriff steht bevor oder läuft; YELLOW = wahrscheinlich; WHITE = unwahrscheinlich.","Air defense warning. Hostile attack is: (RED): Imminent or in progress. (YELLOW): Probable. (WHITE): Improbable.",
+  {x:1, note:"Funkform: WARNING [color]."});
+B("WATCHING","boden","Flugabwehreinheit hat das Ziel zugewiesen, kann es wegen der Entfernung noch nicht bekämpfen und bekämpft es, sobald die Kriterien erfüllt sind; Antwort auf COVER, wenn AFFIRM nicht möglich ist.","Surface to air defense unit is assigned a target for engagement responsibility; is unable to engage due to threat range; will engage when threat meets engagement criteria. WATCHING is an optional response to COVER when accepting engagement assignment but unable to respond AFFIRM.",
+  {x:1, note:"Bereich: Boden-Luft. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("WEAPONS","feuer","Feuerkontrollstatus: FREE = Feuer auf alles, was nicht als FRIENDLY identifiziert ist; TIGHT = nur auf positiv als HOSTILE identifizierte Ziele; HOLD/SAFE = nur zur Selbstverteidigung oder auf Befehl.","Weapons control status. Fire only: 1. FREE: at targets not identified as FRIENDLY IAW current ROE. 2. TIGHT: at targets positively identified as HOSTILE IAW current ROE. 3. HOLD/SAFE: in self-defense or in response to a formal order. NOTE NATO uses WEAPONS to determine munitions available or remaining, similar to WHAT STATE.",
+  {x:1, note:"Funkform: WEAPONS [status]. Bedeutung weicht von NATO (APP-7) ab."});
+B("WHAT LUCK","koord","Anfrage nach den Ergebnissen von Aufträgen.","Request for results of missions or tasks.",
+  {x:1});
+B("WOOD","funk","Datenlink-Netz für das Lagebild (SA-Netz).","Situation awareness data link network.",
+  {x:1, note:"Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("WOOFER","eloka","Abgesetzter aktiver Radartäuschkörper.","Off board active radar decoy.",
+  {x:1, note:"Bereich: EloKa."});
+B("WORDS","funk","Weisungen bzw. Anfragen von C2-Stellen zu weiteren auftragsrelevanten Informationen; in den SPINS des Einsatzraums festgelegt.","Directive calls or interrogative requests regarding further information or directives pertinent to the mission or operating area. Generated by the tactical command and control agencies and outlined in the theater-specific SPINS.",
+  {x:1});
+B("WORK","eloka","1. In die genannte Himmelsrichtung manövrieren. 2. Weisung: Ortung (Geolocation) durchführen.","1. Maneuver in the stated cardinal direction. 2. Directive call to command geolocation.",
+  {x:1, note:"Bereich: Luft-Luft, EloKa."});
+B("WORKING","eloka","1. Mit System und Ort: Plattform erfasst Daten zum genannten Emitter (EOB). 2. Plattform identifiziert ein Lfz bzw. eine Gruppe elektronisch für den BVR-Einsatz.","1. (system with location) Platform gathering EOB on a designated emitter. 2. Platform executing electronic ID on a specific aircraft or GROUP to obtain ID necessary for BVR employment.",
+  {x:1, note:"Bereich: Luft-Luft, EloKa."});
+B("YELLOW","koord","Waffen- bzw. Kraftstoffstand nähert sich der Grenze, ab der der Auftrag nicht fortgesetzt werden kann; Grenzwerte in der Planung festlegen.","Aircraft is at a weapon and/or fuel status that is approaching a level insufficient to continue execution of the mission. NOTE A specific loadout or fuel state should be determined during mission planning.",
+  {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
+B("ZAP","funk","Anforderung von Datenlink-Informationen.","Request for data link information.",
+  {x:1});
+B("ZIPLIP","funk","Nur noch kritische Informationen funken.","Limit transmissions to critical information only.",
+  {x:1});
+B("ZOOM","sicht","Brennweite des Sensors vergrößern (IN) bzw. verkleinern (OUT), meist mit „ONE“ bis „FOUR“ als Zahl der Sichtfeldstufen.","Increase or decrease the sensor’s focal length. NOTE ZOOM IN/OUT is normally followed by “ONE, TWO, THREE, or FOUR” to indicate the number of FOVs to change.",
+  {x:1, note:"Funkform: ZOOM [in/out]. Bereich: EloKa."});
+
 /* ---- Lagen: Situation -> Funkspruch ---- */
 /* L(id, Lage, Frage, richtig, [3 falsch], Erklärung, Gruppe) */
 const LAGEN = [];
@@ -601,7 +1278,7 @@ const AAN = {}; AB.forEach(a => AAN[normA(a.a)] = a);
 
 /* ---------- Zustand und Speicherung ---------- */
 const KEY = 'brevitytrainer.v1';
-const blank = () => ({v:1, updated:0, q:{}, flags:{}, recent:[], answered:0, correct:0, filt:[]});
+const blank = () => ({v:1, updated:0, q:{}, flags:{}, recent:[], answered:0, correct:0, filt:[], scope:'all'});
 function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
 let S = readLocal();
 let remote = null, syncLabel = 'Nur auf diesem Gerät gespeichert';
@@ -647,10 +1324,11 @@ const KINDS = {
 const SEQG = {s01:'laser', s02:'angriff', s03:'sicht', s04:'laser', s05:'koord'};
 const BANK = [];
 BR.forEach(b => {
-  BANK.push({id:'bm:' + b.w, kind:'bm', g:b.g, ref:b.w});
-  BANK.push({id:'bc:' + b.w, kind:'bc', g:b.g, ref:b.w});
-  BANK.push({id:'bi:' + b.w, kind:'bi', g:b.g, ref:b.w});
-  if (b.opp) BANK.push({id:'bo:' + b.w, kind:'bo', g:b.g, ref:b.w});
+  const x = b.x ? 1 : 0;
+  BANK.push({id:'bm:' + b.w, kind:'bm', g:b.g, ref:b.w, x});
+  BANK.push({id:'bc:' + b.w, kind:'bc', g:b.g, ref:b.w, x});
+  BANK.push({id:'bi:' + b.w, kind:'bi', g:b.g, ref:b.w, x});
+  if (b.opp) BANK.push({id:'bo:' + b.w, kind:'bo', g:b.g, ref:b.w, x:x || (BW[b.opp].x ? 1 : 0)});
 });
 LAGEN.forEach(l => BANK.push({id:'lg:' + l.id, kind:'lg', g:l.g, ref:l.id}));
 SEQ.forEach(s => BANK.push({id:'sq:' + s.id, kind:'sq', g:SEQG[s.id] || 'angriff', ref:s.id}));
@@ -672,9 +1350,12 @@ const MODES = {
   weak:{name:'Fehler üben', desc:'Nur Fragen, die du zuletzt falsch hattest', kinds:null, n:15}
 };
 const isB = g => GROUPS[g] && GROUPS[g].k === 'b';
+/* Wortschatz: 'core' = nur CAS-Kernwörter, 'all' = mit Erweiterung */
+const inScope = o => S.scope !== 'core' || !o.x;
+const N_CORE = BR.filter(b => !b.x).length;
 function poolFor(mode){
   const m = MODES[mode];
-  let p = BANK.filter(q => !m.kinds || m.kinds.includes(q.kind));
+  let p = BANK.filter(q => (!m.kinds || m.kinds.includes(q.kind)) && inScope(q));
   if (S.filt && S.filt.length) p = p.filter(q => S.filt.includes(q.g));
   if (mode === 'weak') p = p.filter(q => S.q[q.id] && S.q[q.id].last === 0);
   return p;
@@ -706,8 +1387,9 @@ function fillFrom(list, have, n, ex){
 function brWrongWords(b, extraEx){
   const ex = [b.w].concat(extraEx || []);
   let w = b.conf.filter(c => !ex.includes(c));
+  w = fillFrom(BR.filter(x => x.g === b.g && inScope(x)).map(x => x.w), w, 3, ex);
   w = fillFrom(BR.filter(x => x.g === b.g).map(x => x.w), w, 3, ex);
-  w = fillFrom(BR.map(x => x.w), w, 3, ex);
+  w = fillFrom(BR.filter(inScope).map(x => x.w), w, 3, ex);
   return w.slice(0, 3);
 }
 function abWrong(a){
@@ -740,6 +1422,7 @@ function materialize(q){
     m.plain = `Gegenstück zu ${b.w}?`;
     m.correct = o.w;
     let w = b.conf.filter(c => c !== o.w && c !== b.w);
+    w = fillFrom(BR.filter(x => x.opp && x.w !== b.w && x.w !== o.w && inScope(x)).map(x => x.w), w, 3, [b.w, o.w]);
     w = fillFrom(BR.filter(x => x.opp && x.w !== b.w && x.w !== o.w).map(x => x.w), w, 3, [b.w, o.w]);
     m.wrong = w.slice(0, 3); m.optCode = true;
     m.entries = [b, o];
@@ -790,7 +1473,7 @@ function checkTyped(m, raw){
   if (m.typed === 'b'){
     const b = BW[m.correct], n = normW(raw);
     if (!n) return {v:'bad', msg:'Keine Eingabe.'};
-    if (n === normW(b.w) || (b.acc || []).some(r => r.test(n))) return {v:'ok'};
+    if (n === normW(b.w) || n.replace(/ /g, '') === normW(b.w).replace(/ /g, '') || (b.acc || []).some(r => r.test(n))) return {v:'ok'};
     for (const [r, msg] of (b.near || [])) if (r.test(n)) return {v:'near', msg};
     const o = BWN[n];
     if (o) return {v:'bad', msg:`${o.w} bedeutet: ${o.de}`};
@@ -880,10 +1563,10 @@ function bar(){
   }
 }
 function groupScore(g){
-  const qs = BANK.filter(q => q.g === g);
+  const qs = BANK.filter(q => q.g === g && inScope(q));
   const seen = qs.filter(q => S.q[q.id]);
   const good = qs.filter(q => S.q[q.id] && S.q[q.id].last === 1).length;
-  return {n:qs.length, seen:seen.length, good, frac: good / qs.length};
+  return {n:qs.length, seen:seen.length, good, frac: qs.length ? good / qs.length : 0};
 }
 function cellHtml(g){
   const s = groupScore(g), pct = Math.round(s.frac * 100);
@@ -898,10 +1581,11 @@ function renderHome(){
   const modeBtn = k => { const n = poolFor(k).length; return `<button class="mode" data-start="${k}" ${n ? '' : 'disabled'}><span class="mi"><strong>${esc(MODES[k].name)}</strong><small>${esc(MODES[k].desc)}</small></span><span class="n">${n} Fragen</span></button>`; };
   $('#app').innerHTML = `
   <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a><h1>Brevity</h1>
-    <p>Codewörter nach ATP 1-02.1 und die Abkürzungen aus dem CAS-Alltag – Bedeutung, Codewort, Lagen und freie Eingabe.</p>
+    <p>Codewörter nach ATP 1-02.1 – vom CAS-Kern bis zu Luftlage, EloKa, Funk, Bodenfeuer und Hubschraubern – und die Abkürzungen aus dem CAS-Alltag.</p>
     <span class="radioline">HOG 31: IN FROM THE WEST – JTAC: CLEARED HOT</span></section>
   <section class="board">
-    <h3>Brevity</h3><div class="cells">${G_ORDER_B.map(cellHtml).join('')}</div>
+    <div class="seg" role="group" aria-label="Wortschatz wählen" style="margin-top:4px"><button data-scope="core" aria-pressed="${S.scope === 'core'}">CAS-Kern (${N_CORE})</button><button data-scope="all" aria-pressed="${S.scope !== 'core'}">Alle Wörter (${BR.length})</button></div>
+    <h3>Brevity</h3><div class="cells">${G_ORDER_B.filter(g => groupScore(g).n).map(cellHtml).join('')}</div>
     <h3>Abkürzungen</h3><div class="cells">${G_ORDER_A.map(cellHtml).join('')}</div>
     ${filt}
   </section>
@@ -985,6 +1669,7 @@ function renderStats(){
   const pct = S.answered ? Math.round(S.correct / S.answered * 100) : 0;
   const rows = G_ORDER_B.concat(G_ORDER_A).map(g => {
     const s = groupScore(g), p = Math.round(s.frac * 100);
+    if (!s.n) return '';
     const col = !s.seen ? 'var(--line)' : s.frac >= .8 ? 'var(--ok)' : s.frac >= .4 ? 'var(--cta)' : 'var(--bad)';
     return `<div class="srow"><span>${esc(GROUPS[g].l)}${isB(g) ? '' : ' <span class="muted">(Abk.)</span>'}</span><span class="sbar"><i style="width:${p}%;background:${col}"></i></span><span class="muted" style="text-align:right">${s.good}/${s.n}</span></div>`;
   }).join('');
@@ -1015,6 +1700,7 @@ document.addEventListener('click', e => {
   if (t.dataset.ans != null){ answerMC(+t.dataset.ans); return; }
   if (t.dataset.filt){ const g = t.dataset.filt; S.filt = S.filt.includes(g) ? S.filt.filter(x => x !== g) : S.filt.concat(g); save(); render(); return; }
   if (t.dataset.tab){ glossTab = t.dataset.tab; render(); return; }
+  if (t.dataset.scope){ S.scope = t.dataset.scope; S.filt = S.filt.filter(g => groupScore(g).n); save(); render(); return; }
   if (t.dataset.unflag){ delete S.flags[t.dataset.unflag]; save(); render(); return; }
   const act = t.dataset.act;
   if (act === 'next') next();
