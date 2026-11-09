@@ -26,6 +26,7 @@
     {"name": "Pod-Trainer", "url": "pods/"},
     {"name": "JTAC-Drill", "url": "drill/"},
     {"name": "Brevity-Trainer", "url": "brevity/"},
-    {"name": "Funk-Trainer", "url": "funk/"}
+    {"name": "Funk-Trainer", "url": "funk/"},
+    {"name": "Symbol-Generator", "url": "symbole/"}
   ]
 }

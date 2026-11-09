@@ -14,6 +14,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 | `drill/` | JTAC-Drill |
 | `brevity/` | Brevity-Trainer |
 | `funk/` | Funk-Trainer (Kurzlehre mit Skizzen, Behelfsantennen, Sprechfunk, Rechner, Funkgeräte) |
+| `symbole/` | Symbol-Generator: Freitext → taktisches Zeichen nach APP-6(D), gezeichnet mit milsymbol (MIT-Lizenz, `symbole/milsymbol.js`) |
 
 ## Aufbau
 

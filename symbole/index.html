@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Symbol-Generator</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+/* Symbol-Generator im Look der Trainer-Reihe */
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --radio:#0F1A1C; --radio-ink:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-m:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --radio:#06090A; --radio-ink:#F2B632; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --radio:#06090A; --radio-ink:#F2B632; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-block:12px 56px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:600}
+.muted{color:var(--muted)}
+.code{font-family:var(--font-m);font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+
+/* Kopfleiste */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding-block:8px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500;white-space:nowrap}
+.tag{font-family:var(--font-d);font-size:1rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* Übersicht */
+.hero{padding:26px 0 14px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.radioline{display:inline-block;margin-top:14px;background:var(--radio);color:var(--radio-ink);font-family:var(--font-m);font-size:.82rem;font-weight:500;letter-spacing:.04em;padding:6px 12px;border-radius:6px;max-width:100%;overflow-wrap:anywhere}
+.board{margin:16px 0 22px}
+.board h3{font-size:1rem;color:var(--muted);margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase}
+.cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+@media (min-width:560px){.cells{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 9px 12px;overflow:hidden;min-width:0}
+.cell[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1;font-variant-numeric:tabular-nums}
+.cell span{display:block;font-size:.78rem;color:var(--muted);line-height:1.25;margin-top:3px}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.filtnote{font-size:.88rem;color:var(--muted);margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:20px;border-top:1px solid var(--line)}
+.modes h3{font-size:1rem;color:var(--muted);margin:16px 0 2px;letter-spacing:.06em;text-transform:uppercase}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 2px}
+.mode .mi{flex:1;min-width:0}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.05rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.mode[disabled]{opacity:.45;cursor:default}
+.foot{margin-top:26px;font-size:.84rem;color:var(--muted);max-width:42em}
+.foot p{margin:0 0 8px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* Frage */
+.qmeta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 10px;font-size:.9rem;color:var(--muted)}
+.chip-cat{display:inline-block;font-family:var(--font-d);font-weight:700;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--bg);border-radius:5px;padding:2px 9px}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:6px 0 14px}
+.bigcode{display:inline-block;background:var(--radio);color:var(--radio-ink);font-family:var(--font-m);font-weight:700;font-size:clamp(1.5rem,7vw,2.1rem);letter-spacing:.06em;padding:10px 18px;border-radius:8px;margin:4px 0 14px;max-width:100%;overflow-wrap:anywhere}
+.defbox{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:0 10px 10px 0;padding:12px 16px;margin:4px 0 14px;font-size:1.05rem}
+.lage{background:var(--radio);color:#DCE5E2;border-radius:10px;padding:12px 16px;margin:4px 0 12px}
+.lage .lh{font-family:var(--font-m);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--radio-ink)}
+.lage p{margin:4px 0 0}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt .ot{min-width:0;overflow-wrap:anywhere}
+.opt .ot.code{white-space:normal;font-size:1.02rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.seq{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.seq .code{font-size:.92rem}
+.seq .ar{color:var(--muted);font-weight:700}
+.inp{display:block;width:100%;font-family:var(--font-m);font-weight:700;font-size:1.15rem;letter-spacing:.05em;text-transform:uppercase;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:13px 14px}
+.inp:focus{border-color:var(--ink);outline:none}
+.inp[readonly]{border-style:dashed}
+.fhint{font-size:.86rem;color:var(--muted);margin-top:5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:11px 15px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.4rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.entry{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.entry .hd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.entry .hd .code{font-size:1.05rem}
+.entry .lf{font-family:var(--font-d);font-size:1.15rem;font-weight:600}
+.entry .en{font-size:.88rem;color:var(--muted);font-style:italic;margin-top:4px}
+.entry .nt{font-size:.94rem;margin-top:6px}
+.pill{display:inline-block;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:1px 9px;color:var(--muted)}
+
+/* Ergebnis */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:26px 0 4px;font-variant-numeric:tabular-nums}
+.score small{font-size:2rem;color:var(--muted);font-weight:600}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+.misslist .code{font-size:.95rem}
+
+/* Glossar */
+.seg{display:flex;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0 10px}
+.seg button{flex:1;border:0;background:var(--surface);padding:10px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.search{display:block;width:100%;font:inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:11px 14px}
+.gl h3{font-size:1rem;color:var(--muted);margin:20px 0 4px;letter-spacing:.06em;text-transform:uppercase}
+.gl dl{margin:0}
+.gl .it{padding:10px 0;border-bottom:1px solid var(--line)}
+.gl .it .hd{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.gl .it .code{font-size:1rem}
+.gl .it p{margin:3px 0 0}
+.gl .it .en{font-size:.86rem;color:var(--muted);font-style:italic}
+.gl .empty{color:var(--muted);margin-top:16px}
+
+/* Statistik */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px;flex-wrap:wrap}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.srow{display:grid;grid-template-columns:minmax(0,10em) 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+.confirm{margin-top:10px;padding:12px 14px;border:1px solid var(--bad);background:var(--bad-bg);border-radius:8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* Symbol-Generator */
+.lbl{display:block;font-weight:600;color:var(--muted);margin:6px 0 5px}
+.inp.big{text-transform:none;letter-spacing:0;font-family:var(--font-b);font-weight:600;font-size:1.08rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 11px;font-size:.84rem;text-align:left;line-height:1.25}
+.chip:hover{border-color:var(--ink)}
+.result{margin-top:14px}
+.symbox{background:#fff;border:1px solid var(--line);border-radius:12px;min-height:160px;display:flex;align-items:center;justify-content:center;padding:16px;overflow-x:auto}
+.symbox svg{max-width:100%;height:auto}
+.kv{display:grid;grid-template-columns:minmax(0,12em) minmax(0,1fr);gap:6px 14px;margin:12px 0 6px}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:440px){.kv{grid-template-columns:1fr;gap:2px}.kv dd{margin-bottom:8px}}
+.sidc{font-size:.8rem;color:var(--muted);margin:4px 0}
+.sidc span{font-family:var(--font-m);overflow-wrap:anywhere}
+.warn{color:var(--bad);margin:10px 0 0}
+.note{color:var(--unk);margin:8px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:16px}
+.card h2{margin-bottom:6px}
+.card h3{font-size:1.02rem;margin:12px 0 2px}
+.card p{margin:4px 0}
+details summary{cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary h2::before{content:"▸ "}
+details[open] summary h2::before{content:"▾ "}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,14em),1fr));gap:10px;margin-top:12px}
+.fgrid label{display:flex;flex-direction:column;gap:4px;font-weight:600;color:var(--muted);font-size:.88rem;min-width:0}
+.fgrid select,.fgrid input{font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;font-weight:400;min-width:0;max-width:100%}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.5em,1fr));gap:8px}
+.hit{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 6px;color:#1A2326;font-size:.74rem;line-height:1.2;min-width:0}
+.hit svg{max-width:100%;height:auto}
+.hit span{overflow-wrap:anywhere}
+.tabw{overflow-x:auto}
+.ftab{border-collapse:collapse;background:#fff;border-radius:8px;margin:6px 0}
+.ftab th,.ftab td{padding:5px 4px;text-align:center;color:#1A2326;font-size:.8rem;font-weight:600}
+.ftab svg{height:auto;max-width:52px}
+.demo{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:center;background:#fff;border-radius:10px;padding:12px;margin:8px 0}
+.demo svg{max-width:100%;height:auto}
+</style>
+</head>
+<body>
+<header class="bar"><div class="bar-in"><span class="t">Symbol-Generator</span></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<script src="milsymbol.js"></script>
+<script>
+(() => {
+/* Symbol-Generator: Freitext → taktisches Zeichen nach APP-6(D) (Symbolcodes wie MIL-STD-2525D), gezeichnet mit milsymbol (MIT-Lizenz) */
+ms.setStandard('APP6');
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- Symbole (Symbolsatz 15 Landgerät, 10 Landeinheit, 01 Luft) ---------- */
+const SYMS = {
+  kpz:{s:'15',e:'120200',de:'Kampfpanzer',en:'Tank'},
+  spz:{s:'15',e:'120101',de:'Schützenpanzer (gepanzertes Kampffahrzeug)',en:'Armoured Fighting Vehicle'},
+  tpz:{s:'15',e:'120103',de:'Transportpanzer / Schützenpanzerwagen',en:'Armoured Personnel Carrier'},
+  lgf:{s:'15',e:'120110',de:'Leichtes gepanzertes Radfahrzeug (z. B. Spähwagen)',en:'Light Wheeled Armoured Vehicle'},
+  fue:{s:'15',e:'120102',de:'Gepanzertes Führungsfahrzeug',en:'Armoured Fighting Vehicle Command and Control'},
+  berge:{s:'15',e:'120300',de:'Bergepanzer',en:'Tank Recovery Vehicle'},
+  hb:{s:'15',e:'110900',de:'Haubitze / Geschütz',en:'Howitzer'},
+  mrs:{s:'15',e:'111400',de:'Mörser',en:'Mortar'},
+  mrl:{s:'15',e:'111600',de:'Mehrfachraketenwerfer',en:'Multiple Rocket Launcher'},
+  ssm:{s:'15',e:'111300',de:'Boden-Boden-Raketenstartgerät',en:'Surface-to-Surface Missile Launcher'},
+  sam:{s:'15',e:'111100',de:'Flugabwehrraketen-Startgerät',en:'Air Defence Missile Launcher'},
+  manpads:{s:'15',e:'111101',de:'Flugabwehrrakete, leicht (z. B. MANPADS)',en:'Air Defence Missile Launcher, Light'},
+  flak:{s:'15',e:'110500',de:'Flugabwehrkanone',en:'Air Defence Gun'},
+  atgm:{s:'15',e:'111200',de:'Panzerabwehrlenkflugkörper-Startgerät',en:'Antitank Missile Launcher'},
+  atrl:{s:'15',e:'111700',de:'Panzerabwehr-Raketenwerfer (z. B. RPG)',en:'Antitank Rocket Launcher'},
+  pak:{s:'15',e:'110600',de:'Panzerabwehrkanone',en:'Antitank Gun'},
+  mg:{s:'15',e:'110200',de:'Maschinengewehr',en:'Machine Gun'},
+  smg:{s:'15',e:'110203',de:'Schweres Maschinengewehr',en:'Machine Gun, Heavy'},
+  gw:{s:'15',e:'110300',de:'Granatmaschinenwaffe',en:'Grenade Launcher'},
+  rfg:{s:'15',e:'110800',de:'Rückstoßfreies Geschütz',en:'Recoilless Gun'},
+  radar:{s:'15',e:'220300',de:'Radar',en:'Radar'},
+  bruecke:{s:'15',e:'130100',de:'Brückenleger',en:'Bridge'},
+  minr:{s:'15',e:'130902',de:'Minenräumgerät auf Panzerfahrgestell',en:'Mine Clearing Equipment on Tank Chassis'},
+  minl:{s:'15',e:'131000',de:'Minenlegegerät',en:'Mine Laying Equipment'},
+  doz:{s:'15',e:'131101',de:'Pionierpanzer (gepanzerte Planierraupe)',en:'Dozer, Armoured'},
+  lkw:{s:'15',e:'140800',de:'Geländegängiger Lkw',en:'Cross Country Truck'},
+  pol:{s:'15',e:'140900',de:'Kraftstofftransporter',en:'Petroleum, Oil and Lubricant'},
+  san:{s:'15',e:'140200',de:'Sanitätsfahrzeug',en:'Medical'},
+  kfz:{s:'15',e:'140100',de:'Nutzfahrzeug',en:'Utility'},
+  pickup:{s:'15',e:'160201',de:'Pickup (z. B. Technical)',en:'Open-Bed Truck, Pickup'},
+  hel:{s:'01',e:'110200',de:'Hubschrauber',en:'Rotary Wing'},
+  helA:{s:'01',e:'110200',m1:'01',de:'Kampfhubschrauber',en:'Rotary Wing, Attack/Strike'},
+  helU:{s:'01',e:'110200',m1:'07',de:'Mehrzweckhubschrauber',en:'Rotary Wing, Utility'},
+  helC:{s:'01',e:'110200',m1:'03',de:'Transporthubschrauber',en:'Rotary Wing, Cargo'},
+  fw:{s:'01',e:'110100',de:'Militärflugzeug',en:'Fixed Wing'},
+  att:{s:'01',e:'110102',de:'Erdkampfflugzeug',en:'Fixed Wing, Attack/Strike'},
+  fb:{s:'01',e:'110105',de:'Jagdbomber',en:'Fixed Wing, Fighter/Bomber'},
+  ftr:{s:'01',e:'110104',de:'Jagdflugzeug',en:'Fixed Wing, Fighter'},
+  bmb:{s:'01',e:'110103',de:'Bomber',en:'Fixed Wing, Bomber'},
+  cgo:{s:'01',e:'110107',de:'Transportflugzeug',en:'Fixed Wing, Cargo'},
+  aew:{s:'01',e:'110116',de:'Frühwarnflugzeug',en:'Fixed Wing, Airborne Early Warning'},
+  uav:{s:'01',e:'110300',de:'Drohne (UAV)',en:'Unmanned Aircraft'},
+  u_inf:{s:'10',e:'121100',de:'Infanterie',en:'Infantry'},
+  u_mech:{s:'10',e:'121102',de:'Mechanisierte Infanterie (Panzergrenadiere, Mot.-Schützen)',en:'Infantry, Armoured/Mechanized'},
+  u_mot:{s:'10',e:'121104',de:'Motorisierte Infanterie',en:'Infantry, Motorized'},
+  u_pz:{s:'10',e:'120500',de:'Panzertruppe',en:'Armour'},
+  u_aufkl:{s:'10',e:'121300',de:'Aufklärung',en:'Reconnaissance'},
+  u_art:{s:'10',e:'130300',de:'Artillerie',en:'Field Artillery'},
+  u_artsf:{s:'10',e:'130301',de:'Panzerartillerie (Selbstfahrlafetten)',en:'Field Artillery, Self-propelled'},
+  u_rak:{s:'10',e:'130300',m1:'41',de:'Raketenartillerie',en:'Field Artillery, Multiple Rocket Launcher'},
+  u_mrs:{s:'10',e:'130800',de:'Mörser',en:'Mortar'},
+  u_fla:{s:'10',e:'130100',de:'Flugabwehr',en:'Air Defence'},
+  u_pzabw:{s:'10',e:'120400',de:'Panzerabwehr',en:'Antitank/Antiarmour'},
+  u_pi:{s:'10',e:'140700',de:'Pioniere',en:'Engineer'},
+  u_fm:{s:'10',e:'111000',de:'Fernmelder',en:'Signal'},
+  u_ew:{s:'10',e:'150500',de:'Elektronische Kampfführung',en:'Electronic Warfare'},
+  u_san:{s:'10',e:'161300',de:'Sanitätsdienst',en:'Medical'},
+  u_vers:{s:'10',e:'163400',de:'Versorgung',en:'Supply'},
+  u_inst:{s:'10',e:'161100',de:'Instandsetzung',en:'Maintenance'},
+  u_sof:{s:'10',e:'121700',de:'Spezialkräfte',en:'Special Forces'},
+  u_sn:{s:'10',e:'121500',de:'Scharfschützen',en:'Sniper'},
+  u_vb:{s:'10',e:'130400',de:'Artilleriebeobachter',en:'Field Artillery Observer'},
+  u_uav:{s:'10',e:'121900',de:'Drohnen-Einheit',en:'Unmanned Aerial Systems'},
+  u_c2:{s:'10',e:'110000',de:'Führung (C2)',en:'Command and Control'},
+  u_ca:{s:'10',e:'121000',de:'Verbundene Kräfte',en:'Combined Arms'},
+  u_none:{s:'10',e:'000000',de:'Einheit ohne Truppengattung',en:'Unspecified'}
+};
+const IDENT = {'1':'unbekannt','2':'vermutlich eigen','3':'eigen','4':'neutral','5':'vermutlich feindlich (verdächtig)','6':'feindlich'};
+const STATUS = {'0':'vorhanden','1':'vermutet bzw. geplant (gestrichelter Rahmen)','2':'voll einsatzbereit','3':'beschädigt','4':'zerstört'};
+const MOB = {'00':'–','31':'Rad, eingeschränkt geländegängig','32':'Rad, geländegängig','33':'Kette','34':'Rad und Kette','35':'gezogen','36':'Schiene','52':'amphibisch'};
+const ECH = {'00':'–','11':'Trupp / Besatzung','12':'Gruppe','13':'Halbzug','14':'Zug','15':'Kompanie / Batterie','16':'Bataillon / Abteilung','17':'Regiment','18':'Brigade','21':'Division','22':'Korps','23':'Armee'};
+const HQS = {'0':'–','2':'Gefechtsstand / Stab','1':'Attrappe','3':'Attrappe Gefechtsstand','4':'Kampfgruppe (Task Force)','6':'Gefechtsstand Kampfgruppe'};
+const DIRS = [['', '–'], ['0','Nord'], ['45','Nordost'], ['90','Ost'], ['135','Südost'], ['180','Süd'], ['225','Südwest'], ['270','West'], ['315','Nordwest']];
+const DIRN = {0:'Nord',45:'Nordost',90:'Ost',135:'Südost',180:'Süd',225:'Südwest',270:'West',315:'Nordwest'};
+
+/* ---------- Wörterbuch Geräte: [Muster (normalisiert), Symbol, Mobilität, Typbezeichnung] ---------- */
+const M = s => s.toUpperCase().replace(/\s+/g, '-');
+const CAP = s => s.replace(/\s+/g, '-').replace(/^mig/, 'MiG').replace(/^./, c => c.toUpperCase()).replace(/(\d)([a-z]+)$/, (m, d, l) => d + l.toUpperCase());
+const W = s => s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+const NONE = () => '';
+const EQ = [
+  ['bmp\\s?1ksh', 'fue', '33', M],
+  ['fuehrungsfahrzeug|fuehrungspanzer|kommandopanzer|gefechtsstandfahrzeug', 'fue', '33', NONE],
+  ['t\\s?(?:55|62|64|72|80|90|14)\\w{0,4}', 'kpz', '00', M],
+  ['leopard(?:\\s?[12]\\w{0,3})?|abrams|challenger(?:\\s?\\d)?|leclerc|merkava', 'kpz', '00', W],
+  ['bmp\\s?[123]\\w{0,3}|bmd\\s?[1-4]\\w{0,2}|brm\\s?1k|bmpt|bmp', 'spz', '33', M],
+  ['marder|puma|bradley|cv\\s?90|warrior', 'spz', '33', W],
+  ['btr\\s?(?:50|d)|mt\\s?lb\\w{0,2}|m113', 'tpz', '33', M],
+  ['btr\\s?(?:60|70|80|82|90)\\w{0,3}|btr', 'tpz', '32', M],
+  ['boxer|fuchs|stryker|patria', 'tpz', '32', W],
+  ['brdm\\s?[12]\\w{0,3}|brdm', 'lgf', '32', M],
+  ['tigr|fennek|dingo|eagle', 'lgf', '32', W],
+  ['bergepanzer|brem\\s?\\w{1,2}', 'berge', '33', s => /brem/.test(s) ? M(s) : ''],
+  ['2s(?:1|3|5|7|19|35)\\w{0,2}|pzh\\s?2000|m109\\w{0,2}', 'hb', '33', M],
+  ['2s(?:22|43)|caesar|archer', 'hb', '32', M],
+  ['d\\s?(?:20|30)|2a(?:36|65)|m777|fh\\s?70', 'hb', '35', M],
+  ['2s(?:4|9)', 'mrs', '33', M],
+  ['2s12', 'mrs', '32', M],
+  ['bm\\s?(?:21|27|30)\\w{0,2}|9a52|tornado\\s?[gs]|grad|uragan|smerch|himars', 'mrl', '32', s => /^(grad|uragan|smerch)$/.test(s) ? W(s) : M(s)],
+  ['tos\\s?1\\w{0,2}|mlrs|mars(?:\\s?(?:ii|2))?', 'mrl', '33', M],
+  ['iskander\\w{0,2}|9k720|tochka\\w{0,2}|9k79|scud', 'ssm', '32', W],
+  ['sa\\s?(?:15|19|11|17|13)\\w{0,2}|9k(?:330|331|332|37|317|35)\\w{0,2}', 'sam', '33', M],
+  ['tor(?:\\s?m\\d\\w{0,2})?|buk(?:\\s?m\\d\\w{0,2})?|tunguska|strela\\s?10\\w{0,2}', 'sam', '33', W],
+  ['sa\\s?(?:8|9|10|20|21|22|23|26)\\w{0,2}|s\\s?(?:125|300|400)\\w{0,4}', 'sam', '32', M],
+  ['osa\\w{0,3}|pantsir\\w{0,3}|strela\\s?1|pechora\\w{0,4}|patriot|iris\\s?t\\w{0,4}', 'sam', '32', W],
+  ['sa\\s?(?:7|14|16|18|24|29)|igla\\w{0,2}|verba|strela\\s?2\\w{0,2}|stinger', 'manpads', '00', s => /^sa/.test(s) ? M(s) : W(s)],
+  ['manpads|fliegerfaust', 'manpads', '00', NONE],
+  ['zsu\\s?23\\s?4|shilka|schilka|gepard', 'flak', '33', s => /zsu/.test(s) ? 'ZSU-23-4' : W(s)],
+  ['zu\\s?23(?:\\s?2)?', 'flak', '35', M],
+  ['flakpanzer|flugabwehrkanone\\w*|flak', 'flak', '00', NONE],
+  ['flugabwehrrakete\\w*|flarak|flugabwehrraketensystem', 'sam', '00', NONE],
+  ['kornet|konkurs|metis|fagot|milan|javelin|spike', 'atgm', '00', W],
+  ['palr|panzerabwehrlenkrakete\\w*|panzerabwehrlenkflugkoerper|atgm', 'atgm', '00', NONE],
+  ['rpg\\s?\\d{0,2}|panzerfaust\\w{0,2}', 'atrl', '00', s => /rpg/.test(s) ? M(s) : 'Panzerfaust'],
+  ['mt\\s?12|rapira', 'pak', '35', s => /mt/.test(s) ? 'MT-12' : 'Rapira'],
+  ['kord|dshk|nsv', 'smg', '00', M],
+  ['pkm|maschinengewehr|mg\\s?\\d{1,2}|mg', 'mg', '00', s => /pkm|mg\s?\d/.test(s) ? M(s) : ''],
+  ['ags\\s?(?:17|30)|granatmaschinenwaffe|gmw', 'gw', '00', s => /ags/.test(s) ? M(s) : ''],
+  ['spg\\s?9', 'rfg', '00', M],
+  ['zoopark\\w{0,3}|cobra', 'radar', '32', W],
+  ['artillerieortungsradar|aufklaerungsradar|radar', 'radar', '00', NONE],
+  ['mtu\\s?\\w{0,3}|brueckenleger|brueckenlegepanzer|biber', 'bruecke', '33', s => /mtu/.test(s) ? M(s) : /biber/.test(s) ? 'Biber' : ''],
+  ['ur\\s?77|keiler|minenraeum\\w*', 'minr', '33', s => /ur/.test(s) ? 'UR-77' : /keiler/.test(s) ? 'Keiler' : ''],
+  ['gmz\\w{0,2}|minenleger', 'minl', '33', s => /gmz/.test(s) ? M(s) : ''],
+  ['imr\\w{0,2}|pionierpanzer|kodiak|dachs', 'doz', '33', s => /imr/.test(s) ? M(s) : /pionier/.test(s) ? '' : W(s)],
+  ['tankwagen|tanklaster|tanklastwagen|kraftstofftransporter', 'pol', '00', NONE],
+  ['sanitaetsfahrzeug|sanka|krankenwagen', 'san', '00', NONE],
+  ['ural\\w{0,6}|kamaz\\w{0,6}|gaz\\s?66|zil\\w{0,4}', 'lkw', '00', s => s.length <= 6 ? W(s) : M(s)],
+  ['lkw|lastwagen|lastkraftwagen|transportfahrzeug', 'lkw', '00', NONE],
+  ['pickup|technical', 'pickup', '00', s => /technical/.test(s) ? 'Technical' : ''],
+  ['mi\\s?(?:24|35|28)\\w{0,3}|ka\\s?(?:50|52)\\w{0,2}|ah\\s?64\\w?|tiger|apache', 'helA', '00', CAP],
+  ['kampfhubschrauber', 'helA', '00', NONE],
+  ['mi\\s?26\\w{0,2}|ch\\s?47\\w?|chinook', 'helC', '00', CAP],
+  ['transporthubschrauber', 'helC', '00', NONE],
+  ['mi\\s?(?:8|17|171)\\w{0,4}|nh\\s?90|uh\\s?60\\w?|black\\s?hawk|h145m?', 'helU', '00', CAP],
+  ['mehrzweckhubschrauber', 'helU', '00', NONE],
+  ['hubschrauber|helikopter|heli', 'hel', '00', NONE],
+  ['su\\s?25\\w{0,3}|a\\s?10\\w?', 'att', '00', CAP],
+  ['su\\s?(?:24|34)\\w{0,3}|tornado|f\\s?15e', 'fb', '00', CAP],
+  ['su\\s?(?:27|30|33|35|57)\\w{0,3}|mig\\s?(?:29|31|35)\\w{0,3}|f\\s?(?:16|22|35)\\w?|eurofighter|typhoon|rafale|gripen', 'ftr', '00', CAP],
+  ['tu\\s?(?:22m?\\d?|95|160)\\w{0,3}', 'bmb', '00', CAP],
+  ['il\\s?76\\w{0,3}|an\\s?(?:12|26|124)|a400m|c\\s?130\\w?', 'cgo', '00', CAP],
+  ['a\\s?50\\w?|awacs|e\\s?3a?', 'aew', '00', CAP],
+  ['orlan\\s?\\d{0,2}|zala(?:\\s?\\d{2,3}\\w{0,3})?|lancet(?:\\s?\\d)?|shahed(?:\\s?\\d{3})?|geran(?:\\s?\\d)?|forpost|orion|eleron\\w{0,3}|supercam|heron|reaper|bayraktar|tb2', 'uav', '00', CAP],
+  ['drohne\\w{0,2}|uav|uas|fpv\\w{0,7}|kamikazedrohne\\w{0,2}', 'uav', '00', s => /fpv/.test(s) ? 'FPV' : /kamikaze/.test(s) ? 'Kamikaze' : ''],
+  ['kampfflugzeug|jagdflugzeug|kampfjet|jet', 'ftr', '00', NONE],
+  ['flugzeug|starrfluegler', 'fw', '00', NONE],
+  ['schuetzenpanzer|spz|ifv', 'spz', '33', NONE],
+  ['transportpanzer|tpz|schuetzenpanzerwagen|spw|apc', 'tpz', '32', NONE],
+  ['spaehwagen|spaehpanzer|panzerspaehwagen', 'lgf', '32', NONE],
+  ['panzerhaubitze|pzh|selbstfahrlafette|sfl', 'hb', '33', NONE],
+  ['haubitze|geschuetz|kanone', 'hb', '00', NONE],
+  ['moerser|2b11|2b14', 'mrs', '00', s => /2b/.test(s) ? M(s) : ''],
+  ['raketenwerfer|mehrfachraketenwerfer|mrl', 'mrl', '00', NONE],
+  ['kurzstreckenrakete|ballistische\\s+rakete', 'ssm', '00', NONE],
+  ['kampfpanzer|kpz|panzer', 'kpz', '00', NONE],
+  ['uaz\\w{0,4}|gaz\\s?\\d{2,4}|kfz|pkw|gelaendewagen|jeep|fahrzeug|fahrzeuge', 'kfz', '00', s => /uaz|gaz/.test(s) ? M(s) : '']
+].map(([re, k, mob, lab]) => ({re:new RegExp('\\s(' + re + ')(?=\\s)'), k, mob, lab}));
+
+/* ---------- Einheiten ---------- */
+const UNIT = [
+  ['artilleriebeobachter\\w*|beobachter\\w*|vb|fist|fst', 'u_vb'],
+  ['panzergrenadier\\w*|mot\\s?schuetzen\\w*|motorisierte\\s+schuetzen\\w*|mech\\w*\\s+infanterie|mechanisiert\\w*|schuetzenpanzer\\w*', 'u_mech'],
+  ['motorisierte\\s+infanterie|mot\\s+infanterie', 'u_mot'],
+  ['panzerabwehr\\w*|pzabw', 'u_pzabw'],
+  ['panzerartillerie\\w*', 'u_artsf'],
+  ['raketenartillerie\\w*|raketenwerfer\\w*', 'u_rak'],
+  ['panzer\\w*|kampfpanzer\\w*|kpz', 'u_pz'],
+  ['infanterie\\w*|jaeger\\w*|schuetzen|fallschirmjaeger\\w*|grenadier\\w*|luftlande\\w*', 'u_inf'],
+  ['aufklaerung\\w*|aufklaerer\\w*|spaeh\\w*|erkunder\\w*|aufkl', 'u_aufkl'],
+  ['artillerie\\w*|art', 'u_art'],
+  ['moerser\\w*', 'u_mrs'],
+  ['flugabwehr\\w*|fla|flak|luftverteidigung\\w*', 'u_fla'],
+  ['pionier\\w*', 'u_pi'],
+  ['fernmelde\\w*|fernmelder|fm|signal', 'u_fm'],
+  ['eloka|elektronische\\s+kampffuehrung|ew', 'u_ew'],
+  ['sanitaet\\w*|san', 'u_san'],
+  ['versorgung\\w*|logistik\\w*|nachschub\\w*', 'u_vers'],
+  ['instandsetzung\\w*', 'u_inst'],
+  ['spezialkraefte|speznas|spetsnaz|ksk|sof', 'u_sof'],
+  ['scharfschuetze\\w*|sniper', 'u_sn'],
+  ['drohnen\\w*|uav|uas', 'u_uav'],
+  ['fuehrung\\w*|c2', 'u_c2']
+].map(([re, k]) => ({re:new RegExp('^(?:' + re + ')$'), k}));
+const ECHW = [['trupp', '11'], ['team', '11'], ['besatzung', '11'], ['halbzug', '13'], ['gruppe', '12'], ['zug', '14'], ['kompanie', '15'], ['kp', '15'], ['batterie', '15'], ['staffel', '15'], ['bataillon', '16'], ['btl', '16'], ['abteilung', '16'], ['regiment', '17'], ['rgt', '17'], ['brigade', '18'], ['division', '21'], ['div', '21'], ['korps', '22'], ['armee', '23']];
+
+/* ---------- Tätigkeiten (Feld H) ---------- */
+const ACTS = [
+  ['zieht sich zurueck|ziehen sich zurueck|rueckzug|weicht aus|weichen aus|ausweichen', 'Rückzug'],
+  ['greift an|greifen an|greift|angriff|angreif\\w*', 'Angriff'],
+  ['verteidig\\w*', 'Verteidigung'],
+  ['verzoeger\\w*', 'Verzögerung'],
+  ['klaer\\w* auf|klaer\\w*|aufklaer(?:t|en|end)|erkundet|erkunden|spaeht|spaehen', 'Aufklärung'],
+  ['sicher(?:t|n|ung)', 'Sicherung'],
+  ['sperr(?:t|en|e)', 'Sperre'],
+  ['feuert|feuern|schiesst|schiessen|beschiesst|wirkt|wirken|im feuerkampf', 'feuert'],
+  ['in stellung|stellung bezogen|bezieht stellung|graebt sich ein|eingegraben|verschanzt|stellung', 'in Stellung'],
+  ['bereitstellung|bereitet sich vor|bereitraum', 'Bereitstellung'],
+  ['stoesst vor|stossen vor|vorstoss|geht vor|gehen vor|vorgehen|dringt vor', 'Vorstoß'],
+  ['marschiert|marschieren|marsch|faehrt|fahren|bewegt sich|bewegen sich|in bewegung|verlegt|verlegen', 'in Bewegung'],
+  ['haelt|halten|halt|steht|stehen|stationaer|parkt|abgestellt', 'Halt'],
+  ['tankt|betankung|betankt', 'Betankung'],
+  ['setzt ueber|uebersetzt|ueberquert|uebergang', 'Übersetzen'],
+  ['kreist|kreisen|orbit', 'kreist'],
+  ['landet|landen|gelandet', 'Landung'],
+  ['beobachtet|beobachten|beobachtung|ueberwacht', 'Beobachtung'],
+  ['stoert|stoeren|stoersender', 'Störung'],
+  ['laedt|nachladen|munitioniert', 'Nachladen']
+].map(([re, l]) => ({re:new RegExp('\\s(?:' + re + ')(?=\\s)', 'g'), l}));
+
+const EQ2UNIT = {kpz:'u_pz', spz:'u_mech', tpz:'u_mech', lgf:'u_aufkl', hb:'u_art', mrs:'u_mrs', mrl:'u_rak', ssm:'u_art', sam:'u_fla', manpads:'u_fla', flak:'u_fla', atgm:'u_pzabw', atrl:'u_pzabw', pak:'u_pzabw', uav:'u_uav', bruecke:'u_pi', minr:'u_pi', minl:'u_pi', doz:'u_pi', san:'u_san', lkw:'u_vers', pol:'u_vers', fue:'u_c2'};
+const NUMW = {ein:1, eine:1, einen:1, zwei:2, drei:3, vier:4, fuenf:5, sechs:6, sieben:7, acht:8, neun:9, zehn:10, elf:11, zwoelf:12};
+const STOP = new Set('mit und der die das den dem des ein eine einen einem einer auf in im am an bei von vom zu zur zum sich ist sind wird werden hat haben ca etwa gegen aus um bis ueber unter vor hinter neben als sowie oder x stueck stk'.split(' '));
+const DIRW = {nordwesten:315, nordosten:45, suedwesten:225, suedosten:135, nordwest:315, nordost:45, suedwest:225, suedost:135, norden:0, sueden:180, osten:90, westen:270, nord:0, sued:180, ost:90, west:270, nw:315, no:45, sw:225, so:135, n:0, s:180, o:90, w:270};
+
+const norm = s => ' ' + String(s || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss') + ' ';
+
+/* ---------- Freitext auswerten ---------- */
+function parse(input){
+  const F = {ident:'', key:'', mob:'00', ech:'00', hq:'0', status:'0', dir:'', qty:'', type:'', info:'', t:'', dtg:'', speed:''};
+  const notes = [];
+  let t = norm(input);
+  const cut = (re, fn) => { t = t.replace(re, function(){ fn.apply(null, arguments); return ' '; }); };
+  // Zeit, Geschwindigkeit, Richtung in Grad bzw. Strich (vor dem Entfernen der Satzzeichen)
+  cut(/\s(?:um\s+)?(\d{1,2})[:.](\d{2})\s*(?:uhr|z|zulu)?(?=\s)/, (m, h, mi) => { F.dtg = h.padStart(2, '0') + mi; });
+  cut(/\s(?:um\s+)(\d{4})\s*(?:uhr|z|zulu)?(?=\s)|\s(\d{4})\s*(?:uhr|z|zulu)(?=\s)/, (m, a, b) => { F.dtg = a || b; });
+  cut(/\s(?:mit\s+)?(\d{1,4})\s*(km\/h|kmh|km\s+h|kn|knoten|kts)(?=\s)/, (m, v, u) => { F.speed = v + (/^k(n|nots|ts)|knoten/.test(u) ? ' KN' : ' KM/H'); });
+  cut(/\s(?:in\s+)?(?:richtung|kurs|bewegungsrichtung|marschrichtung)\s+(\d{1,4})\s*(grad|°|strich|mil|mils)?(?=\s)/, (m, v, u) => {
+    let d = +v; if (/strich|mil/.test(u || '') || (!u && d > 360)) d = Math.round(d * 360 / 6400); F.dir = String(d % 360);
+  });
+  t = t.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ');
+  t = ' ' + t.trim() + ' ';
+  cut(/\s(?:in\s+)?(?:richtung|nach|kurs|bewegungsrichtung|marschrichtung)\s+(?:dem\s+|den\s+)?(nordwesten|nordosten|suedwesten|suedosten|nordwest|nordost|suedwest|suedost|norden|sueden|osten|westen|nord|sued|ost|west|nw|no|sw|so|n|s|o|w)(?=\s)/, (m, w) => { F.dir = String(DIRW[w]); });
+  cut(/\s(nordwaerts|suedwaerts|ostwaerts|westwaerts)(?=\s)/, (m, w) => { F.dir = String({nordwaerts:0, suedwaerts:180, ostwaerts:90, westwaerts:270}[w]); });
+  // Tätigkeiten
+  const acts = [];
+  for (const a of ACTS){ let hit = false; t = t.replace(a.re, () => { hit = true; return ' '; }); if (hit && !acts.includes(a.l)) acts.push(a.l); }
+  // Zugehörigkeit
+  cut(/\s(?:vermutlich\s+feindlich\w*|verdacht\s+feindlich|feindverdaechtig\w*|verdaechtig\w*)(?=\s)/, () => F.ident = '5');
+  cut(/\s(?:vermutlich\s+eigen\w*|angenommen\s+eigen\w*)(?=\s)/, () => F.ident = '2');
+  cut(/\s(?:feindlich\w*|feind|feinde|gegner\w*|rot|hostile|enemy)(?=\s)/, () => F.ident = F.ident || '6');
+  cut(/\s(?:eigen\w*|freund\w*|blau|friendly|verbuendet\w*)(?=\s)/, () => F.ident = F.ident || '3');
+  cut(/\s(?:neutral\w*|gruen)(?=\s)/, () => F.ident = F.ident || '4');
+  cut(/\s(?:unbekannt\w*|gelb)(?=\s)/, () => F.ident = F.ident || '1');
+  // Zustand, Stab, Attrappe, Mobilität, Gewichtsklasse
+  cut(/\s(?:zerstoert|vernichtet|ausgeschaltet|abgeschossen)(?=\s)/, () => F.status = '4');
+  cut(/\s(?:beschaedigt|getroffen)(?=\s)/, () => F.status = '3');
+  cut(/\s(?:vermutet\w*|vermutlich|geplant\w*|erwartet\w*)(?=\s)/, () => F.status = F.status === '0' ? '1' : F.status);
+  let dummy = false, hq = false, tf = false;
+  cut(/\s(?:attrappe\w*|scheinziel\w*|scheinstellung\w*)(?=\s)/, () => dummy = true);
+  let mobW = '', weight = '';
+  cut(/\s(?:auf\s+)?(?:raedern|rad|radfahrzeug\w*|bereift)(?=\s)/, () => mobW = '32');
+  cut(/\s(?:auf\s+)?(?:ketten|kette|kettenfahrzeug\w*)(?=\s)/, () => mobW = '33');
+  cut(/\s(?:gezogen\w*)(?=\s)/, () => mobW = '35');
+  cut(/\s(?:amphibisch\w*|schwimmfaehig\w*)(?=\s)/, () => mobW = '52');
+  cut(/\s(leicht\w*|mittel\w*|mittelschwer\w*|schwer\w*)(?=\s)/, (m, w) => weight = /^mittel/.test(w) ? 'm' : /^leicht/.test(w) ? 'l' : 'h');
+  // Kampfgruppe (BTG)
+  cut(/\s(?:btg|bataillonskampfgruppe|bataillonstaktische\s+gruppe)(?=\s)/, () => { F.key = 'u_ca'; F.ech = '16'; tf = true; });
+  cut(/\s(?:kampfgruppe|task\s+force)(?=\s)/, () => { tf = true; });
+  // Gefechtsstand / Stab (auch zusammengesetzt, z. B. Bataillonsgefechtsstand)
+  t = t.replace(/\s(\w*?)(gefechtsstand\w*|gefstd|stab|hauptquartier|hq|kommandoposten)(?=\s)/g, (m, pre) => { hq = true; return ' ' + (pre ? pre.replace(/s$/, '') : '') + ' '; });
+  // Größe (Echelon), auch als Wortende: Panzerkompanie, Aufklärungszug, Spähtrupp
+  let unitWord = '';
+  const toks = t.trim().split(/\s+/).filter(Boolean), keep = [];
+  for (const w of toks){
+    let used = false;
+    for (const [e, c] of ECHW){
+      if (w === e || w === e + 'n' || w === e + 'en'){ F.ech = c; used = true; break; }
+      if (w.length > e.length + 2 && w.endsWith(e) && e.length >= 3){
+        const pre = w.slice(0, -e.length).replace(/s$/, '');
+        if (UNIT.some(u => u.re.test(pre))){ F.ech = c; unitWord = unitWord || pre; used = true; break; }
+      }
+    }
+    if (!used) keep.push(w);
+  }
+  t = ' ' + keep.join(' ') + ' ';
+  // Gerät
+  let eq = null, eqLabel = '';
+  for (const e of EQ){ const m = t.match(e.re); if (m){ eq = e; eqLabel = e.lab(m[1]); t = t.replace(m[0], ' '); let r; while ((r = t.match(e.re))) t = t.replace(r[0], ' '); break; } }
+  // Einheitenwort
+  const unitIn = w => { const u = UNIT.find(x => x.re.test(w)); return u ? u.k : ''; };
+  if (unitWord) F.key = F.key || unitIn(unitWord);
+  const isUnit = F.ech !== '00' || hq || tf || (!eq && t.trim().split(/\s+/).some(w => unitIn(w)));
+  const keep2 = [];
+  for (const w of t.trim().split(/\s+/).filter(Boolean)){
+    const k = unitIn(w);
+    if (k && (isUnit || !eq)){ if (!F.key || F.key === 'u_none') F.key = k; continue; }
+    if (k === 'u_aufkl' && eq){ if (!acts.includes('Aufklärung')) acts.push('Aufklärung'); continue; }
+    keep2.push(w);
+  }
+  // Anzahl
+  let qty = '';
+  const keep3 = [];
+  for (const w of keep2){
+    let m;
+    if (!qty && (m = w.match(/^(\d{1,3})x?$/) || w.match(/^x(\d{1,3})$/))) { qty = m[1]; continue; }
+    if (!qty && NUMW[w]) { qty = String(NUMW[w]); continue; }
+    if (w === 'mehrere') { qty = qty || 'mehrere'; continue; }
+    keep3.push(w);
+  }
+  // Ergebnis zusammensetzen
+  if (isUnit){
+    if (eq && (!F.key || F.key === 'u_none') && EQ2UNIT[eq.k]){ F.key = EQ2UNIT[eq.k]; notes.push(`„${SYMS[eq.k].de}“ als Hinweis auf die Truppengattung gewertet: ${SYMS[F.key].de}.`); }
+    F.key = F.key || 'u_none';
+    if (eq && eqLabel) acts.unshift('mit ' + eqLabel);
+    if (qty) acts.unshift(qty + '×');
+    F.hq = String((tf ? 4 : 0) + (hq ? 2 : 0) + (dummy ? 1 : 0));
+  } else if (eq){
+    F.key = eq.k; F.mob = SYMS[eq.k].s === '15' ? (mobW || eq.mob) : '00'; F.type = eqLabel;
+    if (qty && qty !== '1') F.qty = qty === 'mehrere' ? 'MEHRERE' : qty;
+    F.hq = dummy ? '1' : '0';
+    if (weight){ const s = SYMS[eq.k]; const base = s.e.slice(0, 4);
+      const ok = {'1202':1, '1109':1, '1114':1, '1116':1, '1105':1, '1112':1, '1102':1, '1203':1};
+      if (ok[base]) F.ent = base + '0' + {l:1, m:2, h:3}[weight];
+      if (base === '1111') F.ent = base + {l:'01', m:'04', h:'07'}[weight];
+    }
+  }
+  F.info = acts.join(' / ');
+  if (!F.ident){ F.ident = '1'; notes.push('Keine Zugehörigkeit erkannt – als „unbekannt“ gezeichnet. Ergänze z. B. „feindlich“ oder „eigen“.'); }
+  if (!F.key) notes.push('Kein Gerät und keine Einheit erkannt – Beispiele unten unter „Was der Generator versteht“.');
+  const unknown = keep3.filter(w => !STOP.has(w) && !/^\d+$/.test(w));
+  return {F, notes, unknown};
+}
+
+/* ---------- Zeichnen ---------- */
+function sidcOf(F){
+  const S = SYMS[F.key] || SYMS.u_none;
+  const ent = F.ent && F.key && SYMS[F.key].s === '15' ? F.ent : S.e;
+  const amp = S.s === '10' ? F.ech : S.s === '15' ? F.mob : '00';
+  return '10' + '0' + F.ident + S.s + F.status + (S.s === '01' ? (F.hq === '1' ? '1' : '0') : F.hq) + amp + ent + (S.m1 || '00') + (S.m2 || '00');
+}
+function symOf(F, size){
+  const o = {size:size || 90};
+  if (F.qty) o.quantity = F.qty;
+  if (F.type) o.type = F.type;
+  if (F.info) o.additionalInformation = F.info;
+  if (F.t) o.uniqueDesignation = F.t;
+  if (F.dtg) o.dtg = F.dtg;
+  if (F.speed) o.speed = F.speed;
+  if (F.dir !== '' && F.dir != null && !isNaN(+F.dir)) o.direction = +F.dir;
+  return new ms.Symbol(sidcOf(F), o);
+}
+
+/* ---------- Oberfläche ---------- */
+const KEY = 'symbolgen.v1';
+let store = {hist:[]};
+try { const r = localStorage.getItem(KEY); if (r) store = Object.assign(store, JSON.parse(r)); } catch(e){}
+const saveStore = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} };
+let F = null, lastText = '', P = null;
+const EXAMPLES = ['3 BTR feindlich', 'BRDM 2 feindlich klärt auf Richtung West', 'Panzerkompanie feindlich greift an Richtung Süd', '2 Ka-52 feindlich kreisen',
+  'Gefechtsstand Bataillon feindlich', 'BM-21 feindlich in Stellung zerstört', 'Aufklärungszug feindlich mit BRDM-2 Richtung Nordwest', 'Zug Infanterie eigen verteidigt',
+  'Orlan-10 feindlich Kurs 270', 'SA-15 feindlich vermutet', 'T-72B3 feindlich fährt mit 30 km/h nach Westen um 08:15', 'BTG feindlich'];
+
+function opt(map, sel){ return Object.entries(map).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join(''); }
+function symOptions(sel){
+  const grp = (t, f) => `<optgroup label="${t}">${Object.entries(SYMS).filter(([k, s]) => f(k, s)).map(([k, s]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(s.de)}</option>`).join('')}</optgroup>`;
+  return `<option value=""${!sel ? ' selected' : ''}>– bitte wählen –</option>` + grp('Landgerät', (k, s) => s.s === '15') + grp('Einheiten', (k, s) => s.s === '10') + grp('Luftfahrzeuge', (k, s) => s.s === '01');
+}
+function dirOptions(sel){
+  const s = sel == null ? '' : String(sel);
+  let o = DIRS.map(([v, l]) => `<option value="${v}"${v === s ? ' selected' : ''}>${l}${v !== '' ? ' (' + v + '°)' : ''}</option>`).join('');
+  if (s !== '' && !DIRS.some(d => d[0] === s)) o += `<option value="${s}" selected>${s}°</option>`;
+  return o;
+}
+function rows(F){
+  const S = SYMS[F.key];
+  const r = [];
+  r.push(['Rahmen', `${esc(IDENT[F.ident])}`]);
+  if (S){
+    r.push([S.s === '10' ? 'Einheit' : S.s === '01' ? 'Luftfahrzeug' : 'Gerät', `${esc(S.de)} <span class="muted">(APP-6: ${esc(S.en)})</span>`]);
+    if (S.s === '15' && F.mob !== '00') r.push(['Mobilität', esc(MOB[F.mob])]);
+    if (S.s === '10' && F.ech !== '00') r.push(['Größe (über dem Rahmen)', esc(ECH[F.ech])]);
+    if (F.hq !== '0') r.push(['Stab / Kampfgruppe / Attrappe', esc(HQS[F.hq] || '')]);
+  }
+  if (F.qty) r.push(['Anzahl – Feld C (oben)', esc(F.qty)]);
+  if (F.type) r.push(['Typ – Feld V (links)', esc(F.type)]);
+  if (F.t) r.push(['Bezeichnung – Feld T (links)', esc(F.t)]);
+  if (F.info) r.push(['Tätigkeit / Zusatz – Feld H (rechts)', esc(F.info)]);
+  if (F.dtg) r.push(['Zeit – Feld W (links)', esc(F.dtg)]);
+  if (F.speed) r.push(['Geschwindigkeit – Feld Z (rechts)', esc(F.speed)]);
+  if (F.dir !== '' && F.dir != null) r.push(['Bewegungsrichtung – Pfeil (Feld Q)', `${DIRN[+F.dir] || ''} ${esc(F.dir)}°`]);
+  if (F.status !== '0') r.push(['Zustand', esc(STATUS[F.status])]);
+  return r;
+}
+function renderSym(){
+  const box = $('#symbox'), info = $('#syminfo');
+  if (!F || !F.key){ box.innerHTML = `<p class="muted" style="padding:28px 12px;text-align:center">${P ? 'Kein Symbol erkannt.' : 'Eingabe oben – das Zeichen erscheint hier.'}</p>`; info.innerHTML = P ? notesHtml() : ''; $('#tools').hidden = true; if (F) fillForm(); return; }
+  const sym = symOf(F, 90);
+  box.innerHTML = sym.asSVG();
+  info.innerHTML = notesHtml() + `<dl class="kv">${rows(F).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><p class="sidc">Symbolcode (SIDC, APP-6(D)): <span>${sidcOf(F)}</span></p>`;
+  $('#tools').hidden = false;
+  fillForm();
+}
+function notesHtml(){
+  if (!P) return '';
+  return (P.unknown.length ? `<p class="warn">Nicht verstanden: <b>${P.unknown.map(esc).join(', ')}</b></p>` : '') + P.notes.map(n => `<p class="note">${esc(n)}</p>`).join('');
+}
+function fillForm(){
+  const S = SYMS[F.key] || {};
+  $('#f-ident').innerHTML = opt(IDENT, F.ident);
+  $('#f-key').innerHTML = symOptions(F.key);
+  $('#f-mob').innerHTML = opt(MOB, F.mob); $('#w-mob').hidden = S.s !== '15';
+  $('#f-ech').innerHTML = opt(ECH, F.ech); $('#w-ech').hidden = S.s !== '10';
+  $('#f-hq').innerHTML = opt(S.s === '10' ? HQS : {'0':'–', '1':'Attrappe'}, F.hq);
+  $('#f-status').innerHTML = opt(STATUS, F.status);
+  $('#f-dir').innerHTML = dirOptions(F.dir);
+  for (const k of ['qty', 'type', 'info', 't', 'dtg', 'speed']){ const el = $('#f-' + k); if (el && document.activeElement !== el) el.value = F[k] || ''; }
+}
+function run(text){
+  lastText = text;
+  if (!text.trim()){ P = null; F = null; renderSym(); return; }
+  P = parse(text); F = P.F; renderSym();
+}
+function addHist(){
+  if (!F || !F.key) return;
+  const item = {txt:lastText, F:Object.assign({}, F), ts:Date.now()};
+  store.hist = [item].concat(store.hist.filter(h => sidcOf(h.F) + JSON.stringify([h.F.qty, h.F.type, h.F.info, h.F.dir]) !== sidcOf(F) + JSON.stringify([F.qty, F.type, F.info, F.dir]))).slice(0, 16);
+  saveStore(); renderHist();
+}
+function renderHist(){
+  const el = $('#hist');
+  if (!store.hist.length){ el.innerHTML = '<p class="muted">Noch nichts gespeichert. Mit „Merken“ legst du ein Zeichen hier ab.</p>'; return; }
+  el.innerHTML = `<div class="hgrid">${store.hist.map((h, i) => { let svg = ''; try { svg = symOf(h.F, 34).asSVG(); } catch(e){} return `<button class="hit" data-h="${i}" title="${esc(h.txt)}">${svg}<span>${esc(h.txt || SYMS[h.F.key].de)}</span></button>`; }).join('')}</div><button class="linkbtn" data-act="clearhist" style="margin-top:8px">Liste leeren</button>`;
+}
+function download(name, blob){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+}
+const fname = () => ((F.type || SYMS[F.key].de).replace(/[^\wäöüÄÖÜß-]+/g, '_') + '_' + IDENT[F.ident].split(' ')[0]).slice(0, 60);
+
+/* ---------- Legende ---------- */
+function legend(){
+  const ids = [['3', 'eigen'], ['6', 'feindlich'], ['4', 'neutral'], ['1', 'unbekannt']];
+  const kinds = [['Einheit', {key:'u_inf'}], ['Gerät', {key:'kpz'}], ['Luftfahrzeug', {key:'ftr'}]];
+  const base = {mob:'00', ech:'00', hq:'0', status:'0', dir:'', qty:'', type:'', info:'', t:'', dtg:'', speed:''};
+  const cell = (id, k) => symOf(Object.assign({}, base, k, {ident:id}), 34).asSVG();
+  const frames = `<table class="ftab"><thead><tr><th></th>${ids.map(i => `<th>${i[1]}</th>`).join('')}</tr></thead><tbody>${kinds.map(([n, k]) => `<tr><th>${n}</th>${ids.map(i => `<td>${cell(i[0], k)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const demo = symOf(Object.assign({}, base, {ident:'6', key:'lgf', mob:'32', qty:'C', type:'V', t:'T', info:'H', dtg:'W', speed:'Z', dir:'270'}), 70).asSVG();
+  const demoU = symOf(Object.assign({}, base, {ident:'6', key:'u_aufkl', ech:'14', hq:'2', info:'H', t:'T'}), 70).asSVG();
+  const words = EXWORDS.map(([h, l]) => `<h3>${h}</h3><p>${esc(l)}</p>`).join('');
+  return `<section class="card"><h2>Rahmen: Wer ist es?</h2><p class="muted">Form und Farbe des Rahmens zeigen die Zugehörigkeit – bei Einheiten, Gerät und Luftfahrzeugen leicht verschieden.</p><div class="tabw">${frames}</div></section>
+  <section class="card"><h2>Wo steht was?</h2><div class="demo"><div>${demo}</div><div>${demoU}</div></div>
+    <dl class="kv"><dt>C (oben)</dt><dd>Anzahl, nur bei Gerät</dd><dt>V (links)</dt><dd>Typ, z. B. BRDM-2</dd><dt>T (links)</dt><dd>Bezeichnung, z. B. 2./PzBtl</dd><dt>W (links unten)</dt><dd>Zeit</dd><dt>H (rechts)</dt><dd>Zusatz – hier steht die Tätigkeit, z. B. Aufklärung</dd><dt>Z (rechts unten)</dt><dd>Geschwindigkeit</dd><dt>Pfeil (Q)</dt><dd>Bewegungsrichtung – bei Bodensymbolen vom Fuß des Zeichens aus</dd><dt>Über dem Rahmen</dt><dd>Größe der Einheit (• Trupp … XX Division)</dd><dt>Fahnenstock links unten</dt><dd>Gefechtsstand bzw. Stab</dd><dt>Gestrichelter Rahmen</dt><dd>vermutet bzw. geplant</dd><dt>Balken unter dem Zeichen</dt><dd>Zustand: grün einsatzbereit, gelb beschädigt, rot zerstört</dd></dl>
+    <p class="muted" style="font-size:.88rem">APP-6 kennt für Gerät kein eigenes Zeichen für eine Tätigkeit. Die Tätigkeit steht deshalb als Text in Feld H, die Bewegung als Pfeil. Aufklärung als <b>Einheit</b> hat dagegen ein eigenes Zeichen (Schrägstrich), z. B. „Aufklärungszug feindlich“.</p></section>
+  <section class="card"><details><summary><h2 style="display:inline">Was der Generator versteht</h2></summary>${words}</details></section>`;
+}
+const EXWORDS = [
+  ['Zugehörigkeit', 'feindlich, Feind, Gegner, rot · eigen, Freund, blau · neutral · unbekannt · vermutlich feindlich, verdächtig · vermutlich eigen'],
+  ['Kampf- und Schützenpanzer', 'T-55 … T-90, T-14, Leopard, Abrams · BMP-1/2/3, BMD, BRM-1K, BMPT, Marder, Puma · Kampfpanzer, Schützenpanzer'],
+  ['Rad- und Transportpanzer, Aufklärung', 'BTR (-60/-70/-80/-82), MT-LB, BTR-D, Boxer, Fuchs · BRDM-1/2, Tigr, Fennek, Dingo · Transportpanzer, Spähwagen, Führungsfahrzeug, Bergepanzer'],
+  ['Artillerie', '2S1, 2S3, 2S5, 2S7, 2S19, 2S35, 2S43, D-30, 2A65, PzH 2000 · 2S4, 2S9, 2S12, Mörser · BM-21, BM-27, BM-30, Tornado-G, TOS-1, MARS, HIMARS · Iskander, Tochka'],
+  ['Flugabwehr und Panzerabwehr', 'SA-8 … SA-26, Tor, Buk, Tunguska, Pantsir, Strela-10, S-300/400, Patriot, IRIS-T · Igla, Verba, Stinger, MANPADS · ZSU-23-4, ZU-23-2, Gepard · Kornet, Konkurs, Metis, Milan, Javelin, RPG, MT-12'],
+  ['Weitere Geräte', 'Radar, Zoopark, Cobra · MTU, Brückenleger, UR-77, GMZ, Pionierpanzer · Ural, KamAZ, Lkw, Tankwagen, Sanitätsfahrzeug, Fahrzeug, Pickup/Technical · MG, PKM, Kord, AGS-17, SPG-9'],
+  ['Luftfahrzeuge', 'Mi-24/35/28, Ka-52, Tiger, Apache · Mi-8/17, NH90 · Mi-26, CH-47 · Su-25, Su-24/34, Su-27/30/35, MiG-29/31, F-16, F-35, Eurofighter · Tu-22M · Il-76 · A-50 · Orlan-10, Zala, Lancet, Shahed/Geran, FPV, Drohne'],
+  ['Einheiten', 'Infanterie, Jäger, Panzergrenadiere, Mot.-Schützen, Panzer, Aufklärung/Späh-, Artillerie, Raketenartillerie, Mörser, Flugabwehr, Panzerabwehr, Pioniere, Fernmelder, EloKa, Sanität, Versorgung, Instandsetzung, Spezialkräfte, Scharfschützen, Beobachter, Drohnen · BTG (Bataillonskampfgruppe) · Gefechtsstand, Stab · Attrappe'],
+  ['Größe', 'Trupp, Gruppe, Halbzug, Zug, Kompanie/Batterie, Bataillon/Abteilung, Regiment, Brigade, Division, Korps, Armee – auch zusammengesetzt: Panzerkompanie, Aufklärungszug, Spähtrupp, Bataillonsgefechtsstand'],
+  ['Tätigkeit (Feld H)', 'klärt auf · greift an · verteidigt · verzögert · zieht sich zurück · sichert · sperrt · feuert · in Stellung · Bereitstellung · stößt vor · fährt/marschiert · hält · tankt · setzt über · kreist · landet · beobachtet · stört · lädt nach'],
+  ['Richtung, Zeit, Tempo', 'Richtung/nach/Kurs West, Nordost, SW … · Kurs 270 · Richtung 4800 Strich · westwärts · um 08:15 · mit 30 km/h'],
+  ['Zustand und Sonstiges', 'zerstört, beschädigt, vermutet · auf Rädern, Kette, gezogen, amphibisch · leicht/mittel/schwer · Anzahl als Ziffer oder Wort (drei, mehrere)']
+];
+
+/* ---------- Seite ---------- */
+$('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a><h1>Symbole</h1>
+    <p>Lage eintippen – das taktische Zeichen nach APP-6 wird gezeichnet. Gerät oder Einheit, Zugehörigkeit, Anzahl, Tätigkeit und Richtung in einem Satz.</p></section>
+  <form id="qform" autocomplete="off"><label class="lbl" for="q">Was siehst du?</label>
+    <input class="inp big" id="q" placeholder="z. B. BRDM 2 feindlich klärt auf Richtung West" autocorrect="off" spellcheck="false" enterkeyhint="go">
+  </form>
+  <section class="result"><div class="symbox" id="symbox"></div><div id="syminfo"></div>
+    <div class="row" id="tools" hidden><button class="btn main" data-act="hist">Merken</button><button class="btn" data-act="png">Als Bild (PNG)</button><button class="btn" data-act="svg">Als SVG</button></div></section>
+  <p class="lbl" style="margin-top:16px">Beispiele – antippen</p>
+  <div class="chips">${EXAMPLES.map(e => `<button class="chip" data-ex="${esc(e)}">${esc(e)}</button>`).join('')}</div>
+  <details class="card" id="adj"><summary><h2 style="display:inline">Anpassen</h2> <span class="muted">– falls etwas falsch erkannt wurde</span></summary>
+    <div class="fgrid">
+      <label>Zugehörigkeit<select id="f-ident" data-f="ident"></select></label>
+      <label>Symbol<select id="f-key" data-f="key"></select></label>
+      <label id="w-mob">Mobilität<select id="f-mob" data-f="mob"></select></label>
+      <label id="w-ech">Größe<select id="f-ech" data-f="ech"></select></label>
+      <label>Stab / Attrappe<select id="f-hq" data-f="hq"></select></label>
+      <label>Zustand<select id="f-status" data-f="status"></select></label>
+      <label>Richtung<select id="f-dir" data-f="dir"></select></label>
+      <label>Anzahl (C)<input id="f-qty" data-f="qty"></label>
+      <label>Typ (V)<input id="f-type" data-f="type"></label>
+      <label>Tätigkeit / Zusatz (H)<input id="f-info" data-f="info"></label>
+      <label>Bezeichnung (T)<input id="f-t" data-f="t"></label>
+      <label>Zeit (W)<input id="f-dtg" data-f="dtg"></label>
+      <label>Geschwindigkeit (Z)<input id="f-speed" data-f="speed"></label>
+    </div></details>
+  <section class="card"><h2>Gemerkte Zeichen</h2><div id="hist"></div></section>
+  ${legend()}
+  <div class="foot"><p>Symbolcodes nach APP-6(D) bzw. MIL-STD-2525D (öffentlich freigegeben), gezeichnet mit der freien Bibliothek milsymbol (MIT-Lizenz, © Måns Beckman). Für verbindliche Lagedarstellung gelten die Vorschriften deines Verbands.</p></div>`;
+
+let tmr = null;
+$('#q').addEventListener('input', e => { clearTimeout(tmr); const v = e.target.value; tmr = setTimeout(() => run(v), 220); });
+$('#qform').addEventListener('submit', e => { e.preventDefault(); clearTimeout(tmr); run($('#q').value); $('#q').blur(); });
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ex){ $('#q').value = b.dataset.ex; run(b.dataset.ex); return; }
+  if (b.dataset.h != null){ const h = store.hist[+b.dataset.h]; if (h){ $('#q').value = h.txt; P = {unknown:[], notes:[]}; F = Object.assign({}, h.F); lastText = h.txt; renderSym(); window.scrollTo({top:0, behavior:'smooth'}); } return; }
+  const a = b.dataset.act;
+  if (a === 'hist') addHist();
+  else if (a === 'clearhist'){ store.hist = []; saveStore(); renderHist(); }
+  else if (a === 'png' && F){ const c = symOf(F, 90).asCanvas(3); c.toBlob(bl => bl && download(fname() + '.png', bl), 'image/png'); }
+  else if (a === 'svg' && F){ download(fname() + '.svg', new Blob([symOf(F, 90).asSVG()], {type:'image/svg+xml'})); }
+});
+const onForm = e => {
+  const k = e.target.dataset && e.target.dataset.f; if (!k || !F) return;
+  F[k] = e.target.value;
+  if (k === 'key'){ F.ent = ''; const s = SYMS[F.key]; if (s && s.s !== '15') F.mob = '00'; if (s && s.s !== '10'){ F.ech = '00'; if (F.hq !== '1') F.hq = '0'; } }
+  if (e.target.tagName === 'SELECT'){ if (e.type === 'change') renderSym(); }
+  else if (e.type === 'input') renderSym();
+};
+document.addEventListener('input', onForm);
+document.addEventListener('change', onForm);
+renderHist(); renderSym();
+window.__sg = {parse, sidcOf, symOf, run, get F(){ return F; }};
+})();
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
