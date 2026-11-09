@@ -4,7 +4,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 
 | Ordner | Trainer |
 |---|---|
-| `manoever/` | Manöver-Trainer |
+| `manoever/` | Manöver-Trainer, mit 3D-Erkennungsmodell T-90M unter `manoever/3d/t90m.html` (three.js r128, MIT-Lizenz, lokal in `assets/three.min.js`) |
 | `artillerie/` | Artillerie-Trainer |
 | `flugabwehr/` | Flugabwehr-Trainer |
 | `blau/` | Blau-Trainer (Fahrzeuge KR Blau, Freund oder Feind) |

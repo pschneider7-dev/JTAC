@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>T-90M – 3D-Erkennungsmodell</title>
+<meta name="theme-color" content="#E3E5DF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101411" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../../assets/app.css">
+<style>
+/* Layout: one-screen recognition bench. A framed 3D stage on top (left on wide screens),
+   the numbered key sheet under/beside it. Colour is reserved for the four feature classes;
+   the frame around the model stays neutral. */
+:root{
+  --bg:#E3E5DF; --surface:#F3F4F0; --raised:#FBFBF9; --ink:#1A201C; --muted:#56605A; --line:#C5CAC1;
+  --stage-a:#EEF0EA; --stage-b:#CBD0C6; --grid:#7F887E;
+  --c-w:#E2502F; --c-s:#E5A50A; --c-o:#1E9BC2; --c-f:#A77BE0; --on-c:#111512;
+  --wbg-a:#2C2D2C; --wbg-b:#0D0E0D; --wbg-ink:#E6E8E4;
+  --shadow:rgba(0,0,0,.34);
+  --f-display:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif;
+  --f-body:'Barlow','Segoe UI',system-ui,-apple-system,sans-serif;
+  --f-data:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101411; --surface:#181D19; --raised:#202721; --ink:#E4E8E1; --muted:#99A39B; --line:#2E362F;
+    --stage-a:#262D27; --stage-b:#121613; --grid:#6A746B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101411; --surface:#181D19; --raised:#202721; --ink:#E4E8E1; --muted:#99A39B; --line:#2E362F;
+  --stage-a:#262D27; --stage-b:#121613; --grid:#6A746B;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:10px 12px;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.app{
+  height:100%;min-height:540px;display:grid;gap:10px;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto minmax(210px,1.15fr) minmax(0,1fr);
+}
+
+/* ---------- header ---------- */
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:1px 12px}
+.bar h1{
+  margin:0;font-family:var(--f-display);font-weight:700;font-size:1.9rem;line-height:1;
+  letter-spacing:.015em;text-transform:uppercase;
+}
+.bar h1 span{font-weight:500;color:var(--muted);text-transform:none;letter-spacing:.02em}
+.kind{margin:0;font-size:.8rem;color:var(--muted);text-align:right}
+.dims{
+  grid-column:1/-1;margin:0;font-family:var(--f-data);font-size:.72rem;color:var(--muted);
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;
+}
+.dims b{font-weight:500;color:var(--ink)}
+
+/* ---------- stage ---------- */
+.stage{
+  position:relative;min-height:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  background:radial-gradient(120% 95% at 50% 30%,var(--stage-a),var(--stage-b));
+}
+.stage.is-wbg{background:radial-gradient(120% 95% at 50% 40%,var(--wbg-a),var(--wbg-b))}
+.stage.is-wbg::after{
+  content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;opacity:.5;
+  background:
+    linear-gradient(var(--wbg-ink),var(--wbg-ink)) center/1px 100% no-repeat,
+    linear-gradient(var(--wbg-ink),var(--wbg-ink)) center/100% 1px no-repeat;
+}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+.markers{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.mk{
+  position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;padding:0;
+  display:grid;place-items:center;border-radius:50%;border:2px solid var(--raised);
+  background:var(--c);color:var(--on-c);
+  font-family:var(--f-display);font-weight:700;font-size:.9rem;line-height:1;font-variant-numeric:tabular-nums;
+  pointer-events:auto;cursor:pointer;box-shadow:0 1px 4px var(--shadow);
+  transition:opacity .15s,scale .15s;will-change:transform;
+}
+.mk::before{content:"";position:absolute;inset:-7px}
+.mk.occ{opacity:0;pointer-events:none}
+.mk.sel{scale:1.3;outline:2px solid var(--ink);outline-offset:1px;z-index:2}
+
+.modes{
+  position:absolute;top:10px;left:10px;z-index:1;display:flex;overflow:hidden;
+  border:1px solid var(--line);border-radius:3px;background:var(--surface);
+}
+.modes button{
+  border:0;background:transparent;padding:7px 11px;cursor:pointer;
+  font-family:var(--f-display);font-weight:600;font-size:.9rem;letter-spacing:.07em;text-transform:uppercase;
+}
+.modes button + button{border-left:1px solid var(--line)}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+.cap{
+  position:absolute;top:12px;right:12px;z-index:1;margin:0;text-align:right;white-space:pre-line;pointer-events:none;
+  font-family:var(--f-data);font-size:.68rem;line-height:1.35;color:var(--muted);
+}
+.is-wbg .cap{color:var(--wbg-ink)}
+.hint{
+  position:absolute;left:0;right:0;bottom:50px;margin:0;text-align:center;pointer-events:none;
+  font-size:.78rem;color:var(--muted);transition:opacity .4s;
+}
+.hint.gone{opacity:0}
+.is-wbg .hint{color:var(--wbg-ink)}
+
+.views{position:absolute;left:10px;right:10px;bottom:10px;z-index:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.views::-webkit-scrollbar{display:none}
+.views button{
+  flex:none;border:1px solid var(--line);background:var(--surface);border-radius:3px;
+  padding:6px 8px;font-size:.82rem;font-weight:500;white-space:nowrap;cursor:pointer;
+}
+.fail{position:absolute;inset:0;margin:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
+.no-gl .modes,.no-gl .views,.no-gl .cap,.no-gl .hint{display:none}
+
+/* ---------- sheet ---------- */
+.sheet{
+  min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;
+}
+.ctl{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.ctl label{font-family:var(--f-display);font-weight:600;font-size:.88rem;letter-spacing:.07em;text-transform:uppercase}
+.ctl output{min-width:3.4em;font-family:var(--f-data);font-size:.74rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.ctl input[type=range]{flex:1;min-width:64px;accent-color:var(--ink)}
+.tog{
+  border:1px solid var(--line);background:var(--raised);border-radius:3px;
+  padding:5px 9px;font-size:.8rem;font-weight:500;white-space:nowrap;cursor:pointer;
+}
+.tog[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{
+  flex:1;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent;
+  padding:9px 10px 7px;cursor:pointer;color:var(--muted);
+  font-family:var(--f-display);font-weight:600;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;
+}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs .count{font-family:var(--f-data);font-size:.72rem;font-weight:400;letter-spacing:0;margin-left:3px}
+
+.panel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.legend{display:flex;flex-wrap:wrap;gap:3px 14px;list-style:none;margin:0;padding:9px 12px 8px;font-size:.76rem;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:5px}
+
+.feats{list-style:none;margin:0;padding:0}
+.feat{border-top:1px solid var(--line)}
+.feat.open{background:var(--raised)}
+.feat-h{
+  width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 14px;align-items:center;gap:11px;
+  padding:8px 12px;border:0;background:transparent;text-align:left;cursor:pointer;
+}
+.num{
+  width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:var(--c);color:var(--on-c);
+  font-family:var(--f-display);font-weight:700;font-size:.9rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.feat-n{display:block;font-weight:600;font-size:.94rem;line-height:1.25}
+.feat-s{display:block;font-size:.8rem;line-height:1.3;color:var(--muted)}
+.chev{
+  width:8px;height:8px;justify-self:center;rotate:45deg;transition:rotate .15s;
+  border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+}
+.feat-h[aria-expanded="true"] .chev{rotate:225deg}
+.feat-d{padding:2px 14px 6px 47px;font-size:.9rem}
+.feat-d p{margin:0 0 9px;max-width:62ch}
+.k{
+  display:block;margin-bottom:1px;color:var(--muted);
+  font-family:var(--f-display);font-weight:600;font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;
+}
+
+.cmp{padding:11px 14px 12px;border-top:1px solid var(--line)}
+.cmp:first-child{border-top:0}
+.cmp h3{
+  margin:0 0 3px;font-family:var(--f-display);font-weight:700;font-size:1.05rem;letter-spacing:.04em;
+  text-transform:uppercase;text-wrap:balance;
+}
+.cmp p{margin:0;font-size:.9rem;max-width:62ch}
+.fine{margin:0;padding:11px 14px 14px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted);max-width:66ch}
+
+@media (min-width:820px){
+  body{padding-block:14px 16px}
+  .app{
+    gap:12px 14px;
+    grid-template-columns:minmax(0,1fr) clamp(330px,34vw,420px);
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  .bar{grid-column:1/-1}
+  .bar h1{font-size:2.2rem}
+  .dims{font-size:.78rem}
+}
+@media (prefers-reduced-motion: reduce){
+  .mk,.chev,.hint{transition:none}
+}
+
+/* Einbindung in die JTAC-App */
+.back{grid-column:1/-1;justify-self:start;display:inline-flex;align-items:center;min-height:34px;margin:-4px 0 2px;color:var(--muted);
+  font-family:var(--f-display);font-weight:600;font-size:1rem;letter-spacing:.02em;text-decoration:none}
+.back:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <a class="back" href="../">‹ Manöver-Trainer</a>
+    <h1>T-90M <span>Proryw</span></h1>
+    <p class="kind">Russischer Kampfpanzer</p>
+    <p class="dims">L×B×H <b>9,5 × 3,78 × 2,2 m</b> · <b>48 t</b> · <b>3</b> Mann · <b>1.130 PS</b></p>
+  </header>
+
+  <section class="stage" id="stage" aria-label="3D-Modell des T-90M">
+    <canvas id="gl"></canvas>
+    <div class="markers" id="markers"></div>
+    <div class="modes" role="group" aria-label="Darstellung">
+      <button type="button" data-mode="feat" aria-pressed="true">Merkmale</button>
+      <button type="button" data-mode="orig" aria-pressed="false">Original</button>
+      <button type="button" data-mode="wbg" aria-pressed="false">WBG</button>
+    </div>
+    <p class="cap" id="cap">Raster 1 m</p>
+    <p class="hint" id="hint">Ziehen dreht · zoomen mit zwei Fingern oder Mausrad</p>
+    <div class="views" role="group" aria-label="Ansicht">
+      <button type="button" data-view="q">Schräg</button>
+      <button type="button" data-view="front">Front</button>
+      <button type="button" data-view="side">Links</button>
+      <button type="button" data-view="rear">Heck</button>
+      <button type="button" data-view="top">Oben</button>
+      <button type="button" data-view="air">Luft</button>
+    </div>
+    <p class="fail" id="fail" hidden>Die 3D-Ansicht konnte nicht starten, weil dieser Browser kein WebGL bereitstellt. Die Merkmalsliste funktioniert weiter.</p>
+  </section>
+
+  <section class="sheet" aria-label="Merkmale und Abgrenzung">
+    <div class="ctl">
+      <label for="turm">Turm</label>
+      <input type="range" id="turm" min="-180" max="180" step="5" value="0">
+      <output id="turmOut" for="turm">0°</output>
+      <button type="button" class="tog" id="autoBtn" aria-pressed="false">Drehen</button>
+      <button type="button" class="tog" id="cageBtn" aria-pressed="false">Dachgitter</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-m" aria-controls="pan-m" aria-selected="true">Merkmale <span class="count" id="count"></span></button>
+      <button type="button" role="tab" id="tab-a" aria-controls="pan-a" aria-selected="false">Abgrenzung</button>
+    </div>
+    <div class="panel" id="pan-m" role="tabpanel" aria-labelledby="tab-m">
+      <ul class="legend">
+        <li><i style="--c:var(--c-s)"></i>Schutz</li>
+        <li><i style="--c:var(--c-w)"></i>Bewaffnung</li>
+        <li><i style="--c:var(--c-o)"></i>Optik &amp; Sensorik</li>
+        <li><i style="--c:var(--c-f)"></i>Wanne &amp; Laufwerk</li>
+      </ul>
+      <ol class="feats" id="feats"></ol>
+    </div>
+    <div class="panel" id="pan-a" role="tabpanel" aria-labelledby="tab-a" hidden>
+      <div class="cmp">
+        <h3>T-72B3 / T-72B3M</h3>
+        <p>Gleiche Wanne, gleiches Laufwerk, Abgas ebenfalls links. Der Turm ist rund gegossen und kurz, ohne Heckkasten. Rundblickperiskop und fernbedienbare Waffenstation fehlen. Die Turmfront trägt Kontakt-5, der B3M hat Relikt an den Seitenschürzen.</p>
+      </div>
+      <div class="cmp">
+        <h3>T-90A</h3>
+        <p>Geschweißter Turm, aber ohne Heckkasten. Links und rechts der Kanone sitzen die beiden Schtora-Störstrahler, die dem T-90M fehlen. Reaktivpanzerung Kontakt-5, kein Rundblickperiskop.</p>
+      </div>
+      <div class="cmp">
+        <h3>T-80BVM</h3>
+        <p>Kleinere Laufrollen, in Paaren gruppiert. Die Gasturbine bläst mittig am Heck aus, nicht links an der Seite. Runder Turm mit Relikt, kein Heckkasten.</p>
+      </div>
+      <div class="cmp">
+        <h3>Dachgitter im Feld</h3>
+        <p>Im Ukrainekrieg tragen viele Fahrzeuge ein Schutzgitter über dem Turm. Von oben verdeckt es Turmdach und Aufbauten. Turmlänge, Rohr und Wannenform bleiben erkennbar. Der Schalter „Dachgitter“ blendet es ein.</p>
+      </div>
+      <p class="fine">Vereinfachtes Modell nach öffentlich bekannten Maßen und Fotos. Die Länge gilt mit Rohr nach vorn, die Höhe bis zum Turmdach. Die Proportionen stimmen ungefähr, Details sind schematisch. Die WBG-Ansicht zeigt eine angenommene Wärmeverteilung bei laufendem Motor und keine gemessene Signatur.</p>
+    </div>
+  </section>
+</div>
+
+<script src="../../assets/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+var D2R = Math.PI/180;
+var stage = document.getElementById('stage');
+var canvas = document.getElementById('gl');
+var mkLayer = document.getElementById('markers');
+var hint = document.getElementById('hint');
+var cap = document.getElementById('cap');
+var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ------------------------------------------------------------------ data */
+/* g: group the anchor rides on, p: anchor position in that group,
+   v: camera view [azimuth°, elevation°, distance factor] relative to that group */
+var FEATS = [
+ {id:'bustle',cat:'S',n:'Munitionsbunker im Turmheck',s:'Langer Turm mit Heckkasten',
+  a:'Großer Kasten hinten am Turm. Er nimmt rund 10 Schuss samt Treibladungen auf, getrennt vom Kampfraum. T-72, T-80 und T-90A haben ihn nicht.',
+  k:'Aus der Luft',b:'Der Turm wirkt von oben lang und kantig statt rund. Das sicherste Merkmal gegen T-72B3 und T-90A.',
+  g:'turret',p:[-1.72,2.24,0],v:[150,30,.62]},
+ {id:'wedge',cat:'S',n:'Relikt-Keil am Turm',s:'Große schräge Reaktivmodule',
+  a:'Große, schräg gestellte Relikt-Module links und rechts der Kanone, dahinter flache Blöcke an den Turmseiten. Die Blende mit der Kanone liegt zurückgesetzt dazwischen.',
+  k:'Aus der Luft',b:'Von oben eine Pfeilspitze nach vorn. Kontakt-5 an T-72B3 und T-90A ist kleinteiliger und liegt enger am Turm.',
+  g:'turret',p:[1.20,1.74,1.14],v:[32,26,.55]},
+ {id:'net',cat:'S',n:'Kettennetz unter dem Turm',s:'Dunkler Saum am unteren Turmrand',
+  a:'Unter den Relikt-Modulen hängt ein Netz aus Kettengeflecht um den unteren Turmrand. Es soll Hohlladungen vor dem Drehkranz abfangen.',
+  k:'Aus der Luft',b:'Aus steilem Winkel kaum zu sehen. Aus flachem Winkel schließt es die Lücke zwischen Turm und Wanne.',
+  g:'turret',p:[1.10,1.33,-1.05],v:[-38,5,.5]},
+ {id:'tslat',cat:'S',n:'Gitterpanzerung am Turmheck',s:'Stabgitter um den Heckkasten',
+  a:'Stabgitter um Rückseite und hintere Seiten des Heckkastens. Neuere Lose tragen dort teils weiche Relikt-Taschen.',
+  k:'Aus der Luft',b:'Macht den Turm hinten breiter und eckiger.',
+  g:'turret',p:[-2.60,1.80,0.45],v:[162,16,.55]},
+ {id:'gun',cat:'W',n:'125-mm-Kanone 2A46M-5',s:'Rauchabsauger in Rohrmitte',
+  a:'Glattrohr mit Wärmeschutzhülle. Der Rauchabsauger sitzt als Verdickung etwa in Rohrmitte, an der Mündung der Spiegel der Rohrvermessung. Rechts daneben das Koaxial-MG 7,62 mm.',
+  k:'Bedrohung',b:'Verschießt auch den Rohr-Lenkflugkörper 9M119M Refleks / AT-11 Sniper mit rund 5 km Reichweite. Tief und langsam fliegende Hubschrauber liegen damit im Wirkbereich.',
+  g:'gun',p:[3.01,0.30,0],v:[48,12,.8]},
+ {id:'rws',cat:'W',n:'Waffenstation mit 12,7-mm-MG Kord',s:'Fernbedient, rechts auf dem Turmdach',
+  a:'Fernbedienbare Station UDP T05BV-1 mit dem schweren MG Kord. Sie bildet mit dem Rundblickperiskop einen gemeinsamen Aufbau rechts auf dem Turmdach. Der Kommandant schießt unter Luke.',
+  k:'Bedrohung',b:'Höchster Punkt des Fahrzeugs. Das MG wirkt gegen Hubschrauber und Drohnen im Nahbereich bis etwa 1,5 km.',
+  g:'turret',p:[-0.15,2.68,0.86],v:[58,22,.45]},
+ {id:'pano',cat:'O',n:'Rundblickperiskop des Kommandanten',s:'Sensorkopf PK PAN „Falkenauge“',
+  a:'Sensorkopf mit Tag- und Wärmebildkanal, unabhängig vom Turm schwenkbar. Der Kommandant sucht das nächste Ziel, während der Richtschütze kämpft.',
+  k:'Bedeutung',b:'Fehlt bei T-72B3 und T-90A. Die Besatzung beobachtet rundum mit Wärmebild, auch nachts.',
+  g:'turret',p:[-0.74,2.96,0.52],v:[28,24,.45]},
+ {id:'sosna',cat:'O',n:'Zielgerät Sosna-U',s:'Kasten vorn links auf dem Turmdach',
+  a:'Kastenförmiges Gehäuse des Richtschützen vorn links auf dem Turmdach, mit Panzerklappe vor dem Fenster. Tag- und Wärmebildkanal, Laserentfernungsmesser und Lenkkanal für den Rohr-Lenkflugkörper.',
+  k:'Bedeutung',b:'Auch der T-72B3 trägt Sosna-U. Allein reicht das Merkmal nicht. Zusammen mit Rundblickperiskop und Heckkasten ist es eindeutig.',
+  g:'turret',p:[0.66,2.60,-0.60],v:[-28,26,.45]},
+ {id:'lwr',cat:'O',n:'Laserwarnempfänger',s:'Meldet Laser an die Besatzung',
+  a:'Der T-90M behält die Laserwarner des Schtora-Systems. Die beiden Störstrahler neben der Kanone sind entfallen. Im Modell sitzen die Sensorköpfe vereinfacht am Turmdach.',
+  k:'Bedeutung',b:'Laserentfernungsmesser und Zielbeleuchter werden der Besatzung gemeldet. Rechne mit Nebel oder Ausweichen, sobald gelasert wird.',
+  g:'turret',p:[0.62,2.28,0.93],v:[42,36,.5]},
+ {id:'wind',cat:'O',n:'Wettermast',s:'Dünner Mast hinten auf dem Turm',
+  a:'Dünner Mast mit Sensorkopf hinten auf dem Turm. Er liefert Wind- und Wetterdaten an den Feuerleitrechner.',
+  k:'Aus der Luft',b:'Nur im Nahbild zu erkennen.',
+  g:'turret',p:[-1.95,2.78,-0.55],v:[-152,22,.45]},
+ {id:'smoke',cat:'S',n:'Nebelwurfbecher 902',s:'12 Becher, Kaliber 81 mm',
+  a:'Zwölf Wurfbecher im Kaliber 81 mm, je eine Gruppe links und rechts am Turm, schräg nach oben gerichtet.',
+  k:'Bedeutung',b:'Der Nebel kann die Sicht auf das Ziel und den Laserpunkt unterbrechen.',
+  g:'turret',p:[-0.72,2.34,-1.42],v:[-82,28,.45]},
+ {id:'skirt',cat:'S',n:'Relikt-Seitenschürzen',s:'Kastenmodule an der vorderen Wannenseite',
+  a:'Dicke, kastenförmige Relikt-Module an der vorderen Wannenseite. Sie verdecken die obere Hälfte der vorderen Laufrollen.',
+  k:'Aus der Luft',b:'Gerade, kantige Seitenlinie. Die Wanne wirkt breiter als bei älteren T-72.',
+  g:'hull',p:[1.26,0.98,2.0],v:[68,8,.6]},
+ {id:'hslat',cat:'S',n:'Gitterpanzerung am Motorraum',s:'Stabgitter an der hinteren Wannenseite',
+  a:'Stabgitter an den hinteren Wannenseiten vor dem Motorraum, dahinter Gummischürzen.',
+  k:'Aus der Luft',b:'Schließt hinten an die Relikt-Schürzen an. Vorn Kasten, hinten Gitter ist typisch für T-90M und T-72B3M.',
+  g:'hull',p:[-2.3,1.02,2.06],v:[122,10,.55]},
+ {id:'bow',cat:'F',n:'Wannenbug',s:'Relikt-Kacheln, Fahrerluke mittig, Räumschild',
+  a:'Flache Bugplatte mit eingelassenen Relikt-Kacheln. Die Fahrerluke sitzt in der Mitte direkt vor dem Turm. Unter dem Bug hängt das Räumschild zum Eingraben.',
+  k:'Aus der Luft',b:'Der Turm sitzt weit vorn, das Rohr ragt gut 2,5 m über den Bug.',
+  g:'hull',p:[2.72,1.14,-0.26],v:[-14,22,.55]},
+ {id:'run',cat:'F',n:'Laufwerk der T-72-Familie',s:'6 große Laufrollen, Antrieb hinten',
+  a:'Sechs große Laufrollen in gleichmäßigem Abstand, drei Stützrollen, Leitrad vorn, Antriebsrad hinten.',
+  k:'Abgrenzung',b:'T-80: kleinere Laufrollen in Paaren. T-64: kleine Stahlrollen. Gegen den T-72 hilft das Laufwerk nicht, dort entscheidet der Turm.',
+  g:'hull',p:[-0.49,0.36,1.80],v:[90,3,.7]},
+ {id:'exh',cat:'F',n:'Abgasauslass links',s:'Heißester Punkt, nur auf der linken Seite',
+  a:'Kastenförmiger Auslass an der linken Wannenseite hinten. Der Diesel V-92S2F leistet 1.130 PS.',
+  k:'Im WBG',b:'Heißester Punkt des Fahrzeugs und nur links. Beim T-80 bläst die Gasturbine mittig am Heck aus. Im Stand kann ein Hilfsaggregat die Systeme versorgen, dann fehlt die große Abgasfahne.',
+  g:'hull',p:[-1.72,1.22,-2.22],v:[-116,14,.45]},
+ {id:'rear',cat:'F',n:'Zusatztanks und Bergebalken',s:'Zwei Fässer quer am Heck',
+  a:'Zwei 200-Liter-Fässer quer am Heck, darunter der Bergebalken.',
+  k:'Aus der Luft',b:'Die Fässer verlängern das Heck. Im Gefecht werden sie oft abgenommen, also nicht darauf verlassen.',
+  g:'hull',p:[-3.76,1.44,0.47],v:[174,16,.55]}
+];
+var CATVAR = {W:'--c-w',S:'--c-s',O:'--c-o',F:'--c-f'};
+var CATNAME = {W:'Bewaffnung',S:'Schutz',O:'Optik und Sensorik',F:'Wanne und Laufwerk'};
+var byId = {};
+FEATS.forEach(function(f,i){ f.num = i+1; byId[f.id] = f; });
+
+var state = {mode:'feat', sel:null, turm:0, auto:false, cage:false};
+var view3d = null;   // filled by init3D()
+
+/* ------------------------------------------------------------------ list */
+var featsEl = document.getElementById('feats');
+document.getElementById('count').textContent = String(FEATS.length);
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+
+FEATS.forEach(function(f){
+  var li = el('li','feat');
+  var h = el('button','feat-h'); h.type = 'button'; h.id = 'h-'+f.id;
+  h.setAttribute('aria-expanded','false'); h.setAttribute('aria-controls','d-'+f.id);
+  var num = el('span','num',String(f.num)); num.style.setProperty('--c','var('+CATVAR[f.cat]+')');
+  num.title = CATNAME[f.cat];
+  var t = el('span','feat-t'); t.appendChild(el('span','feat-n',f.n)); t.appendChild(el('span','feat-s',f.s));
+  var chev = el('span','chev'); chev.setAttribute('aria-hidden','true');
+  h.appendChild(num); h.appendChild(t); h.appendChild(chev);
+  var d = el('div','feat-d'); d.id = 'd-'+f.id; d.hidden = true;
+  var p1 = el('p'); p1.appendChild(el('span','k','Erkennen')); p1.appendChild(document.createTextNode(f.a));
+  var p2 = el('p'); p2.appendChild(el('span','k',f.k)); p2.appendChild(document.createTextNode(f.b));
+  d.appendChild(p1); d.appendChild(p2);
+  li.appendChild(h); li.appendChild(d); featsEl.appendChild(li);
+  f.li = li; f.head = h; f.detail = d;
+  h.addEventListener('click', function(){ select(state.sel === f.id ? null : f.id, true); });
+
+  var m = el('button','mk',String(f.num)); m.type = 'button'; m.hidden = true;
+  m.style.setProperty('--c','var('+CATVAR[f.cat]+')');
+  m.setAttribute('aria-label', f.num+' '+f.n);
+  m.addEventListener('click', function(){ select(f.id, true); });
+  mkLayer.appendChild(m); f.mk = m;
+});
+
+function hideHint(){ hint.classList.add('gone'); }
+setTimeout(hideHint, 6000);
+
+function select(id, fly){
+  state.sel = id; hideHint();
+  FEATS.forEach(function(f){
+    var on = f.id === id;
+    f.li.classList.toggle('open', on);
+    f.head.setAttribute('aria-expanded', on ? 'true' : 'false');
+    f.detail.hidden = !on;
+    f.mk.classList.toggle('sel', on);
+  });
+  if(id){
+    showTab('m');
+    if(state.mode !== 'feat') setMode('feat');
+    var f = byId[id];
+    f.li.scrollIntoView({block:'nearest', behavior: reduce ? 'auto' : 'smooth'});
+    if(view3d && fly) view3d.focus(f);
+  }
+  if(view3d) view3d.recolor(true);
+}
+
+/* ------------------------------------------------------------------ controls */
+function setMode(mode){
+  state.mode = mode;
+  Array.prototype.forEach.call(document.querySelectorAll('.modes button'), function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-mode') === mode ? 'true' : 'false');
+  });
+  stage.classList.toggle('is-wbg', mode === 'wbg');
+  cap.textContent = mode === 'wbg' ? 'white hot\nschematisch' : 'Raster 1 m';
+  if(view3d) view3d.modeChanged();
+}
+Array.prototype.forEach.call(document.querySelectorAll('.modes button'), function(b){
+  b.addEventListener('click', function(){ hideHint(); setMode(b.getAttribute('data-mode')); });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.views button'), function(b){
+  b.addEventListener('click', function(){ hideHint(); if(view3d) view3d.view(b.getAttribute('data-view')); });
+});
+
+var turm = document.getElementById('turm'), turmOut = document.getElementById('turmOut');
+turm.addEventListener('input', function(){
+  var d = Number(turm.value); state.turm = d;
+  turmOut.textContent = d === 0 ? '0°' : Math.abs(d)+'° '+(d > 0 ? 'R' : 'L');
+  if(view3d) view3d.turret(d);
+});
+var autoBtn = document.getElementById('autoBtn'), cageBtn = document.getElementById('cageBtn');
+function setAuto(on){ state.auto = on; autoBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); if(view3d) view3d.kick(); }
+autoBtn.addEventListener('click', function(){ setAuto(!state.auto); });
+cageBtn.addEventListener('click', function(){
+  state.cage = !state.cage; cageBtn.setAttribute('aria-pressed', state.cage ? 'true' : 'false');
+  if(view3d) view3d.cage(state.cage);
+});
+
+function showTab(which){
+  ['m','a'].forEach(function(k){
+    var on = k === which;
+    document.getElementById('tab-'+k).setAttribute('aria-selected', on ? 'true' : 'false');
+    document.getElementById('pan-'+k).hidden = !on;
+  });
+}
+document.getElementById('tab-m').addEventListener('click', function(){ showTab('m'); });
+document.getElementById('tab-a').addEventListener('click', function(){ showTab('a'); });
+
+/* ------------------------------------------------------------------ 3D */
+try{
+  if(!window.THREE) throw new Error('three.js nicht geladen');
+  view3d = init3D();
+}catch(err){
+  document.getElementById('fail').hidden = false;
+  stage.classList.add('no-gl');
+  if(window.console) console.warn(err);
+}
+
+function init3D(){
+  var T = window.THREE;
+  function token(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function lin(c){ return new T.Color(c).convertSRGBToLinear(); }
+  function clamp(v,a,b){ return v < a ? a : v > b ? b : v; }
+
+  var renderer = new T.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = T.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  renderer.setClearColor(0x000000, 0);
+
+  var scene = new T.Scene();
+  var camera = new T.PerspectiveCamera(32, 1, 0.5, 140);
+
+  var hemi = new T.HemisphereLight(0xffffff, 0x80887a, 0.66);
+  var sun = new T.DirectionalLight(0xffffff, 0.82);
+  sun.position.set(7.5, 13, 8.5); sun.target.position.set(0.9, 0, 0);
+  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -9; sun.shadow.camera.right = 9; sun.shadow.camera.top = 9; sun.shadow.camera.bottom = -9;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 45; sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.03;
+  var fill = new T.DirectionalLight(0xffffff, 0.22); fill.position.set(-8, 5, -7);
+  scene.add(hemi, sun, sun.target, fill);
+
+  var floor = new T.Mesh(new T.PlaneGeometry(70, 70), new T.ShadowMaterial({opacity:0.24}));
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+  /* base plate with a 1 m grid, like a cutting mat under a scale model */
+  var grid = null;
+  function makeGrid(){
+    if(grid){ scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    var pts = [], x, z;
+    for(x = -7; x <= 9; x++) pts.push(x, 0, -5, x, 0, 5);
+    for(z = -5; z <= 5; z++) pts.push(-7, 0, z, 9, 0, z);
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pts, 3));
+    grid = new T.LineSegments(g, new T.LineBasicMaterial({color:lin(token('--grid') || '#7F887E'), transparent:true, opacity:0.5, depthWrite:false}));
+    grid.position.y = 0.004; grid.visible = state.mode !== 'wbg';
+    scene.add(grid);
+  }
+
+  /* ---------------- palettes ---------------- */
+  var PAL = {
+    orig:   {body:'#5a6742', era:'#4f5b3b', rubber:'#272927', metal:'#3d4436', dark:'#1b1d1a', glass:'#22343a', net:'#34382f', wood:'#6e5a3a'},
+    neutral:{body:'#99a196', era:'#8e968c', rubber:'#5c615b', metal:'#80887e', dark:'#474c46', glass:'#52666c', net:'#6a6f67', wood:'#8f8b7e'}
+  };
+  var PALL = {orig:{}, neutral:{}};
+  Object.keys(PAL).forEach(function(k){ Object.keys(PAL[k]).forEach(function(b){ PALL[k][b] = lin(PAL[k][b]); }); });
+  var TINT = {body:1, era:1, metal:1, wood:1, net:1};
+  var catCol = {};
+  function readCats(){ Object.keys(CATVAR).forEach(function(k){ catCol[k] = lin(token(CATVAR[k]) || '#cccccc'); }); }
+  readCats();
+
+  /* ---------------- builders ---------------- */
+  var all = [], edgeLines = [];
+  var tank = new T.Group(); scene.add(tank);
+  var hull = new T.Group(); tank.add(hull);
+  var turret = new T.Group(); turret.position.set(0.30, 0, 0); tank.add(turret);
+  var gun = new T.Group(); gun.position.set(1.05, 1.76, 0); gun.rotation.z = 0.02; turret.add(gun);
+  var cageG = new T.Group(); cageG.visible = false; turret.add(cageG);
+  var GROUPS = {hull:hull, turret:turret, gun:gun};
+  var edgeMat = new T.LineBasicMaterial({color:0x0c0f0b, transparent:true, opacity:0.36});
+
+  function mesh(geo){
+    return new T.Mesh(geo, new T.MeshStandardMaterial({roughness:0.86, metalness:0.04, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1}));
+  }
+  function reg(m, o){
+    o = o || {};
+    m.userData = {base:o.base || 'body', feat:o.feat || null, heat:o.heat == null ? 0.25 : o.heat, noRay:!!o.noRay};
+    m.castShadow = o.shadow !== false; m.receiveShadow = true;
+    (o.parent || hull).add(m); all.push(m);
+    if(o.edges !== false){
+      var e = new T.LineSegments(new T.EdgesGeometry(m.geometry, 30), edgeMat);
+      e.raycast = function(){}; m.add(e); edgeLines.push(e);
+    }
+    return m;
+  }
+  function ext(o, more){ var r = {}, k; for(k in o) r[k] = o[k]; for(k in more) r[k] = more[k]; return r; }
+  function box(w, h, d, x, y, z, o){
+    var m = mesh(new T.BoxGeometry(w, h, d)); m.position.set(x, y, z);
+    if(o && o.rot){ m.rotation.order = o.order || 'XYZ'; m.rotation.set(o.rot[0], o.rot[1], o.rot[2]); }
+    return reg(m, o);
+  }
+  /* cylinder along axis; r = radius at the low end, o.r2 = radius at the high end */
+  function cyl(r, len, x, y, z, axis, o){
+    o = o || {};
+    var g = new T.CylinderGeometry(o.r2 == null ? r : o.r2, r, len, o.seg || 22);
+    if(axis === 'x') g.rotateZ(-Math.PI/2); else if(axis === 'z') g.rotateX(Math.PI/2);
+    var m = mesh(g); m.position.set(x, y, z);
+    return reg(m, o);
+  }
+  function profile(pts, depth, o){   // side profile in x/y, extruded across the width
+    var s = new T.Shape(pts.map(function(p){ return new T.Vector2(p[0], p[1]); }));
+    var g = new T.ExtrudeGeometry(s, {depth:depth, bevelEnabled:false}); g.translate(0, 0, -depth/2);
+    return reg(mesh(g), o);
+  }
+  /* helper for rows of blocks along a line in plan view */
+  function line(A, B){
+    var dx = B[0]-A[0], dz = B[1]-A[1], L = Math.sqrt(dx*dx + dz*dz), ux = dx/L, uz = dz/L;
+    var phi = Math.atan2(-uz, ux), nx = uz, nz = -ux, mx = (A[0]+B[0])/2, mz = (A[1]+B[1])/2;
+    if(nx*(-mx) + nz*(-mz) < 0){ nx = -nx; nz = -nz; }          // n points towards the turret centre
+    var sign = (Math.sin(phi)*nx + Math.cos(phi)*nz) > 0 ? 1 : -1;
+    return {L:L, ux:ux, uz:uz, phi:phi, nx:nx, nz:nz, sign:sign, mx:mx, mz:mz};
+  }
+  function slat(parent, cx, cy, cz, len, hgt, yaw, n, feat){
+    var g = new T.Group(); g.position.set(cx, cy, cz); g.rotation.y = yaw; parent.add(g);
+    var o = {parent:g, base:'metal', feat:feat, heat:0.2, edges:false}, i;
+    for(i = 0; i < n; i++) box(len, 0.036, 0.05, 0, -hgt/2 + hgt*(i+0.5)/n, 0, o);
+    var posts = Math.max(2, Math.round(len/0.75) + 1);
+    for(i = 0; i < posts; i++) box(0.04, hgt + 0.04, 0.065, -len/2 + len*i/(posts-1), 0, 0, o);
+  }
+  var netTex = (function(){
+    var c = document.createElement('canvas'); c.width = c.height = 128;
+    var x = c.getContext('2d'); x.clearRect(0, 0, 128, 128); x.strokeStyle = '#fff'; x.lineWidth = 5; x.lineCap = 'square';
+    for(var i = -128; i <= 256; i += 32){
+      x.beginPath(); x.moveTo(i, 0); x.lineTo(i+128, 128); x.stroke();
+      x.beginPath(); x.moveTo(i, 0); x.lineTo(i-128, 128); x.stroke();
+    }
+    var t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return t;
+  })();
+  function net(parent, x, y, z, w, h, yaw, feat, cell, flat){
+    var tex = netTex.clone(); tex.needsUpdate = true; tex.repeat.set(w/(cell*4), h/(cell*4));
+    var m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshStandardMaterial({map:tex, transparent:true, depthWrite:false, side:T.DoubleSide, roughness:0.9}));
+    m.position.set(x, y, z);
+    if(flat) m.rotation.x = -Math.PI/2; else m.rotation.y = yaw;
+    return reg(m, {parent:parent, base:'net', feat:feat, heat:0.16, edges:false, shadow:false, noRay:true});
+  }
+
+  /* ---------------- hull ---------------- */
+  profile([[-1.30,0.44],[-1.30,1.20],[2.10,1.20],[3.22,0.75],[3.28,0.69],[2.70,0.44]], 2.16, {heat:0.26});
+  profile([[-3.36,0.50],[-3.44,0.80],[-3.40,1.20],[-1.30,1.20],[-1.30,0.44],[-3.10,0.44]], 2.16, {heat:0.62});
+
+  /* bow: Relikt tiles let into the glacis, driver's hatch, dozer blade */
+  var glacis = new T.Group(); glacis.position.set(2.66, 0.975, 0); glacis.rotation.z = -0.382; hull.add(glacis);
+  [-0.29, 0.27].forEach(function(r){
+    [-0.765, -0.255, 0.255, 0.765].forEach(function(c){
+      box(0.52, 0.07, 0.49, r, 0.045, c, {parent:glacis, base:'era', feat:'bow', heat:0.2});
+    });
+  });
+  cyl(0.27, 0.05, 1.70, 1.225, 0, 'y', {feat:'bow', heat:0.3});
+  box(0.10, 0.07, 0.30, 2.02, 1.235, 0, {base:'glass', feat:'bow', heat:0.32});
+  box(0.50, 0.045, 2.30, 3.01, 0.533, 0, {rot:[0,0,0.421], base:'metal', feat:'bow', heat:0.2});
+  [-0.9, -0.45, 0, 0.45, 0.9].forEach(function(z){
+    box(0.13, 0.06, 0.12, 2.75, 0.425, z, {rot:[0,0,0.421], base:'metal', feat:'bow', heat:0.2, edges:false});
+  });
+
+  /* engine deck */
+  box(1.05, 0.05, 1.70, -2.05, 1.225, 0, {base:'dark', heat:0.85});
+  for(var gi = 0; gi < 7; gi++) box(0.03, 0.022, 1.66, -2.5 + gi*0.15, 1.26, 0, {base:'metal', heat:0.8, edges:false});
+  box(0.55, 0.08, 1.90, -3.08, 1.24, 0, {base:'dark', heat:0.95});
+  box(0.75, 0.035, 1.50, -1.0, 1.215, 0, {heat:0.45});
+
+  /* rear: fuel drums and unditching beam */
+  [1, -1].forEach(function(sg){
+    cyl(0.28, 0.86, -3.76, 1.00, 0.47*sg, 'z', {feat:'rear', heat:0.3});
+    cyl(0.292, 0.04, -3.76, 1.00, 0.69*sg, 'z', {feat:'rear', heat:0.3, edges:false});
+    cyl(0.292, 0.04, -3.76, 1.00, 0.25*sg, 'z', {feat:'rear', heat:0.3, edges:false});
+    box(0.34, 0.05, 0.08, -3.58, 0.74, 0.47*sg, {base:'metal', heat:0.4, edges:false});
+  });
+  cyl(0.09, 2.3, -3.58, 0.58, 0, 'z', {base:'wood', feat:'rear', heat:0.25});
+
+  /* exhaust on the left hull side */
+  box(0.60, 0.24, 0.50, -1.72, 1.20, -1.80, {base:'metal', feat:'exh', heat:1});
+  box(0.44, 0.13, 0.02, -1.72, 1.20, -2.055, {base:'dark', feat:'exh', heat:1, edges:false});
+
+  /* running gear, fenders, skirts — both sides */
+  var WX = [-2.20, -1.346, -0.492, 0.362, 1.216, 2.07];
+  function trackPath(p, o){
+    p.moveTo(-2.20, o); p.lineTo(2.07, o);
+    p.absarc(2.72, 0.74, 0.30 - o, -Math.PI/3, Math.PI/2, false);
+    p.absarc(-3.02, 0.76, 0.34 - o, Math.PI/2, Math.PI*1.39, false);
+    p.lineTo(-2.20, o);
+  }
+  [1, -1].forEach(function(sg){
+    var zc = 1.40*sg, i;
+    var s = new T.Shape(); trackPath(s, 0); var hole = new T.Path(); trackPath(hole, 0.05); s.holes.push(hole);
+    var tg = new T.ExtrudeGeometry(s, {depth:0.58, bevelEnabled:false, curveSegments:10}); tg.translate(0, 0, -0.29);
+    var tr = mesh(tg); tr.position.z = zc; reg(tr, {base:'rubber', heat:0.5});
+
+    WX.forEach(function(x){
+      cyl(0.375, 0.44, x, 0.415, zc, 'z', {base:'rubber', feat:'run', heat:0.55, seg:28});
+      cyl(0.295, 0.47, x, 0.415, zc, 'z', {base:'metal', feat:'run', heat:0.5, seg:28});
+      cyl(0.10, 0.52, x, 0.415, zc, 'z', {base:'metal', feat:'run', heat:0.62, seg:12});
+    });
+    cyl(0.27, 0.50, -3.02, 0.76, zc, 'z', {base:'metal', feat:'run', heat:0.6});
+    for(i = 0; i < 12; i++){
+      var a = i/12*Math.PI*2;
+      box(0.08, 0.07, 0.52, -3.02 + 0.30*Math.cos(a), 0.76 + 0.30*Math.sin(a), zc, {rot:[0,0,a], base:'metal', feat:'run', heat:0.6, edges:false});
+    }
+    cyl(0.255, 0.46, 2.72, 0.74, zc, 'z', {base:'metal', feat:'run', heat:0.45});
+    cyl(0.09, 0.50, 2.72, 0.74, zc, 'z', {base:'metal', feat:'run', heat:0.45, seg:12});
+    [-1.75, -0.07, 1.6].forEach(function(x){ cyl(0.09, 0.30, x, 0.955, zc, 'z', {base:'metal', feat:'run', heat:0.45, seg:12, edges:false}); });
+
+    box(6.36, 0.03, 0.66, -0.26, 1.135, zc, {heat:0.3});
+    box(0.52, 0.03, 0.66, 3.14, 1.0, zc, {rot:[0,0,-0.62], base:'rubber', heat:0.25});
+    box(0.34, 0.03, 0.66, -3.56, 1.03, zc, {rot:[0,0,0.75], base:'rubber', heat:0.4});
+    box(1.50, 0.17, 0.50, 0.55, 1.235, zc + 0.02*sg, {heat:0.3});
+    box(1.30, 0.17, 0.50, -0.95, 1.235, zc + 0.02*sg, {heat:0.36});
+    box(1.10, 0.15, 0.50, -2.30, 1.225, zc + 0.02*sg, {heat:0.5});
+    cyl(0.08, 0.12, 2.84, 1.24, 1.30*sg, 'x', {base:'dark', heat:0.3, seg:12});
+
+    for(i = 0; i < 6; i++){
+      var x = 2.46 - i*0.60;
+      box(0.58, 0.50, 0.14, x, 0.98, 1.80*sg, {base:'era', feat:'skirt', heat:0.22});
+      box(0.58, 0.17, 0.03, x, 0.655, 1.76*sg, {base:'rubber', heat:0.3, edges:false});
+    }
+    box(2.55, 0.46, 0.03, -2.12, 1.0, 1.72*sg, {base:'rubber', heat:0.45});
+    slat(hull, -2.12, 1.0, 1.90*sg, 2.5, 0.5, 0, 5, 'hslat');
+  });
+
+  /* ---------------- turret ---------------- */
+  (function(){
+    var TP = [[1.22,0.34],[1.00,0.96],[0.42,1.20],[-0.62,1.14],[-1.20,0.88],[-1.20,-0.88],[-0.62,-1.14],[0.42,-1.20],[1.00,-0.96],[1.22,-0.34]];
+    var s = new T.Shape(TP.map(function(p){ return new T.Vector2(p[0], -p[1]); }));
+    var g = new T.ExtrudeGeometry(s, {depth:0.44, bevelEnabled:true, bevelThickness:0.16, bevelSize:0.12, bevelSegments:1, curveSegments:1});
+    g.rotateX(-Math.PI/2); g.translate(0, 1.42, 0);
+    reg(mesh(g), {parent:turret, heat:0.3});
+  })();
+  cyl(1.08, 0.07, 0, 1.235, 0, 'y', {parent:turret, base:'metal', heat:0.35, seg:40, edges:false});
+  box(0.40, 0.44, 0.62, 1.28, 1.76, 0, {parent:turret, heat:0.32});
+
+  [1, -1].forEach(function(sg){
+    var f = line([1.50, 0.36*sg], [0.46, 1.50*sg]), i, t, cx, cz;
+    for(i = 0; i < 4; i++){
+      t = (i + 0.5)/4 - 0.5; cx = f.mx + f.ux*f.L*t; cz = f.mz + f.uz*f.L*t;
+      box(f.L/4 - 0.02, 0.42, 0.26, cx, 1.67, cz, {parent:turret, order:'YXZ', rot:[f.sign*0.28, f.phi, 0], base:'era', feat:'wedge', heat:0.2});
+      box(f.L/4 - 0.02, 0.36, 0.11, cx + f.nx*0.17, 1.975, cz + f.nz*0.17, {parent:turret, order:'YXZ', rot:[f.sign*1.02, f.phi, 0], base:'era', feat:'wedge', heat:0.2});
+    }
+    net(turret, f.mx - f.nx*0.02, 1.335, f.mz - f.nz*0.02, f.L + 0.06, 0.25, f.phi, 'net', 0.085);
+
+    var s2 = line([0.40, 1.50*sg], [-1.12, 1.22*sg]);
+    for(i = 0; i < 3; i++){
+      t = (i + 0.5)/3 - 0.5;
+      box(s2.L/3 - 0.02, 0.42, 0.20, s2.mx + s2.ux*s2.L*t, 1.72, s2.mz + s2.uz*s2.L*t, {parent:turret, order:'YXZ', rot:[s2.sign*0.12, s2.phi, 0], base:'era', feat:'wedge', heat:0.22});
+    }
+    net(turret, s2.mx, 1.375, s2.mz, s2.L, 0.27, s2.phi, 'net', 0.085);
+
+    /* smoke dischargers */
+    var sm = new T.Group(); sm.position.set(-0.80, 2.0, 1.22*sg); sm.rotation.set(0.8*sg, 0, -0.25); turret.add(sm);
+    box(0.42, 0.05, 0.22, 0, -0.10, 0, {parent:sm, base:'metal', feat:'smoke', heat:0.25});
+    for(i = 0; i < 3; i++) for(var j = 0; j < 2; j++){
+      cyl(0.045, 0.26, -0.13 + i*0.13, 0.05, (j - 0.5)*0.11, 'y', {parent:sm, base:'metal', feat:'smoke', heat:0.25, seg:10, edges:false});
+    }
+    /* bustle side cage */
+    slat(turret, -1.86, 1.76, 1.13*sg, 1.1, 0.58, 0, 5, 'tslat');
+  });
+
+  /* bustle */
+  box(1.06, 0.50, 1.90, -1.71, 1.76, 0, {parent:turret, feat:'bustle', heat:0.28});
+  box(0.90, 0.03, 0.80, -1.71, 2.02, 0.48, {parent:turret, feat:'bustle', heat:0.28});
+  box(0.90, 0.03, 0.80, -1.71, 2.02, -0.48, {parent:turret, feat:'bustle', heat:0.28});
+  slat(turret, -2.42, 1.76, 0, 2.25, 0.58, Math.PI/2, 5, 'tslat');
+
+  /* gun */
+  var G = {parent:gun, feat:'gun', heat:0.42, seg:24};
+  cyl(0.17, 0.36, 0.47, 0, 0, 'x', ext(G, {r2:0.125}));
+  cyl(0.105, 1.95, 1.625, 0, 0, 'x', G);
+  cyl(0.105, 0.10, 2.65, 0, 0, 'x', ext(G, {r2:0.155}));
+  cyl(0.155, 0.62, 3.01, 0, 0, 'x', G);
+  cyl(0.155, 0.10, 3.37, 0, 0, 'x', ext(G, {r2:0.098}));
+  cyl(0.098, 1.02, 3.93, 0, 0, 'x', G);
+  cyl(0.112, 0.13, 4.505, 0, 0, 'x', G);
+  [1.1, 1.9, 3.75, 4.2].forEach(function(x){ cyl(0.118, 0.045, x, 0, 0, 'x', ext(G, {edges:false})); });
+  box(0.11, 0.06, 0.09, 4.36, 0.135, 0, ext(G, {base:'metal'}));
+  cyl(0.024, 0.34, 0.62, 0, 0.21, 'x', {parent:gun, base:'dark', heat:0.4, seg:8, edges:false});
+
+  /* roof: Sosna-U (gunner, front left) */
+  box(0.52, 0.40, 0.36, 0.66, 2.22, -0.60, {parent:turret, feat:'sosna', heat:0.35});
+  box(0.02, 0.20, 0.26, 0.925, 2.27, -0.60, {parent:turret, feat:'sosna', base:'glass', heat:0.5, edges:false});
+  box(0.24, 0.025, 0.30, 1.04, 2.13, -0.60, {parent:turret, feat:'sosna', base:'metal', heat:0.3});
+  /* hatches */
+  cyl(0.27, 0.05, -0.10, 2.045, -0.62, 'y', {parent:turret, heat:0.3});
+  cyl(0.36, 0.16, 0.02, 2.10, 0.58, 'y', {parent:turret, heat:0.3});
+  cyl(0.29, 0.04, 0.02, 2.20, 0.58, 'y', {parent:turret, heat:0.3});
+  for(var vb = -2; vb <= 2; vb++){
+    var va = vb*0.45;
+    box(0.05, 0.07, 0.15, 0.02 + 0.37*Math.cos(va), 2.13, 0.58 + 0.37*Math.sin(va), {parent:turret, rot:[0,-va,0], base:'glass', heat:0.35, edges:false});
+  }
+  /* commander: panoramic sight with the remote weapon station around its base */
+  var RX = -0.74, RZ = 0.52;
+  cyl(0.30, 0.14, RX, 2.09, RZ, 'y', {parent:turret, base:'metal', feat:'rws', heat:0.3});
+  cyl(0.15, 0.30, RX, 2.31, RZ, 'y', {parent:turret, feat:'pano', heat:0.35});
+  box(0.27, 0.32, 0.28, RX, 2.62, RZ, {parent:turret, feat:'pano', heat:0.4});
+  box(0.02, 0.19, 0.20, RX + 0.14, 2.64, RZ, {parent:turret, feat:'pano', base:'glass', heat:0.5, edges:false});
+  box(0.14, 0.34, 0.10, RX, 2.36, RZ + 0.27, {parent:turret, base:'metal', feat:'rws', heat:0.3});
+  box(0.56, 0.11, 0.09, RX + 0.12, 2.50, RZ + 0.34, {parent:turret, feat:'rws', heat:0.35});
+  cyl(0.028, 0.78, RX + 0.79, 2.50, RZ + 0.34, 'x', {parent:turret, base:'metal', feat:'rws', heat:0.35, seg:10, edges:false});
+  box(0.26, 0.20, 0.13, RX - 0.02, 2.34, RZ + 0.44, {parent:turret, feat:'rws', heat:0.3});
+  /* laser warning heads (placement simplified) */
+  [[0.30,-1.02],[0.62,0.93],[-2.05,0.82],[-2.05,-0.82]].forEach(function(p){
+    box(0.11, 0.09, 0.13, p[0], 2.08, p[1], {parent:turret, feat:'lwr', heat:0.3});
+    box(0.02, 0.05, 0.09, p[0] + (p[0] > 0 ? 0.056 : -0.056), 2.08, p[1], {parent:turret, feat:'lwr', base:'glass', heat:0.4, edges:false});
+  });
+  /* weather mast, antenna */
+  cyl(0.025, 0.50, -1.95, 2.28, -0.55, 'y', {parent:turret, base:'metal', feat:'wind', heat:0.2, seg:8, edges:false});
+  cyl(0.06, 0.08, -1.95, 2.57, -0.55, 'y', {parent:turret, base:'metal', feat:'wind', heat:0.2, seg:12, edges:false});
+  cyl(0.012, 1.5, -1.0, 2.77, -0.80, 'y', {parent:turret, base:'dark', heat:0.15, seg:6, edges:false, shadow:false, noRay:true});
+
+  /* optional field-fitted roof screen */
+  (function(){
+    var P = {parent:cageG, base:'metal', heat:0.15, edges:false, noRay:true};
+    [[0.95,0.95],[0.95,-0.95],[-0.55,1.1],[-0.55,-1.1],[-2.1,0.9],[-2.1,-0.9]].forEach(function(p){
+      cyl(0.024, 1.1, p[0], 2.55, p[1], 'y', ext(P, {seg:6}));
+    });
+    box(4.1, 0.04, 0.04, -0.45, 3.1, 1.5, P); box(4.1, 0.04, 0.04, -0.45, 3.1, -1.5, P);
+    [1.6, 0.95, -0.55, -2.1, -2.5].forEach(function(x){ box(0.04, 0.04, 3.0, x, 3.1, 0, P); });
+    net(cageG, -0.45, 3.1, 0, 4.1, 3.0, 0, null, 0.11, true);
+  })();
+
+  /* anchors for the numbered markers */
+  FEATS.forEach(function(f){
+    f.anchor = new T.Object3D(); f.anchor.position.set(f.p[0], f.p[1], f.p[2]);
+    GROUPS[f.g].add(f.anchor); f.world = new T.Vector3();
+  });
+  var rayList = all.filter(function(m){ return !m.userData.noRay; });
+
+  /* ---------------- colouring ---------------- */
+  var blink = 0, blinkT0 = -1;
+  function recolor(startBlink){
+    if(startBlink && state.sel && !reduce){ blinkT0 = performance.now(); }
+    var mode = state.mode, sel = state.sel, i, m, u, mat, g, cc;
+    for(i = 0; i < all.length; i++){
+      m = all[i]; u = m.userData; mat = m.material;
+      if(mode === 'wbg'){
+        g = Math.pow(0.12 + 0.88*u.heat, 2.2);
+        mat.color.setRGB(g*0.45, g*0.45, g*0.45); mat.emissive.setRGB(g*0.62, g*0.62, g*0.62);
+        continue;
+      }
+      mat.emissive.setRGB(0, 0, 0);
+      if(mode === 'orig'){ mat.color.copy(PALL.orig[u.base]); continue; }
+      if(!u.feat || !TINT[u.base]){ mat.color.copy(PALL.neutral[u.base]); continue; }
+      cc = catCol[byId[u.feat].cat];
+      if(!sel){ mat.color.copy(cc); mat.emissive.copy(cc).multiplyScalar(0.05); }
+      else if(sel === u.feat){ mat.color.copy(cc); mat.emissive.copy(cc).multiplyScalar(0.22 + blink); }
+      else { mat.color.copy(PALL.neutral[u.base]).lerp(cc, 0.26); }
+    }
+    invalidate();
+  }
+  function modeChanged(){
+    var w = state.mode === 'wbg';
+    hemi.intensity = w ? 0.5 : 0.66; sun.intensity = w ? 0.2 : 0.82; fill.intensity = w ? 0.08 : 0.22;
+    floor.visible = !w; if(grid) grid.visible = !w;
+    edgeMat.opacity = w ? 0 : (state.mode === 'orig' ? 0.3 : 0.36); edgeMat.visible = !w;
+    recolor(false);
+  }
+
+  /* ---------------- camera ---------------- */
+  var CENTER = new T.Vector3(0.93, 1.2, 0);
+  var RMIN = 3.2, RMAX = 46;
+  var cam = {az:38*D2R, el:20*D2R, r:20, t:CENTER.clone()};
+  var tween = null;
+  function fitFor(az, el){
+    var hv = camera.fov*D2R/2, hh = Math.atan(Math.tan(hv)*camera.aspect);
+    var s = Math.abs(Math.sin(az)), c = Math.abs(Math.cos(az));
+    var a = 5.25*s + 1.95*c, depth = 5.25*c + 1.95*s;
+    var b = 1.55*Math.cos(el) + depth*Math.sin(el);
+    return Math.max(a/Math.tan(hh), b/Math.tan(hv))*1.08 + depth*Math.cos(el)*0.4;
+  }
+  function placeCamera(){
+    var ce = Math.cos(cam.el);
+    camera.position.set(cam.t.x + cam.r*ce*Math.cos(cam.az), cam.t.y + cam.r*Math.sin(cam.el), cam.t.z + cam.r*ce*Math.sin(cam.az));
+    camera.lookAt(cam.t);
+  }
+  function flyTo(az, el, r, t, ms){
+    r = clamp(r, RMIN, RMAX);
+    if(reduce || !ms){ cam.az = az; cam.el = el; cam.r = r; cam.t.copy(t); tween = null; invalidate(); return; }
+    var d = (az - cam.az) % (Math.PI*2); if(d > Math.PI) d -= Math.PI*2; if(d < -Math.PI) d += Math.PI*2;
+    tween = {t0:performance.now(), ms:ms, az:cam.az, daz:d, el:cam.el, del:el - cam.el, r:cam.r, dr:r - cam.r, t:cam.t.clone(), tt:t.clone()};
+    invalidate();
+  }
+  var VIEWS = {q:[38,20], front:[0,7], side:[-90,5], rear:[180,10], air:[140,50]};
+  function view(name){
+    var az, el;
+    if(name === 'top'){ el = 88; az = camera.aspect > 1.25 ? 90 : 180; }
+    else { az = VIEWS[name][0]; el = VIEWS[name][1]; }
+    az *= D2R; el *= D2R;
+    if(state.auto) setAuto(false);
+    flyTo(az, el, fitFor(az, el), CENTER, 750);
+  }
+  var tmp = new T.Vector3();
+  function focus(f){
+    var yaw = f.g === 'hull' ? 0 : state.turm*D2R;
+    var az = f.v[0]*D2R + yaw, el = f.v[1]*D2R;
+    tank.updateMatrixWorld(true); f.anchor.getWorldPosition(tmp);
+    var t = CENTER.clone().lerp(tmp, 0.8);
+    if(state.auto) setAuto(false);
+    flyTo(az, el, Math.max(4.4, fitFor(az, el)*f.v[2]), t, 800);
+  }
+
+  /* ---------------- markers ---------------- */
+  var v3 = new T.Vector3(), ray = new T.Raycaster(), lastOcc = 0, occTimer = 0;
+  function updateMarkers(){
+    var w = stage.clientWidth, h = stage.clientHeight, show = state.mode === 'feat', i, f;
+    for(i = 0; i < FEATS.length; i++){
+      f = FEATS[i];
+      if(!show){ f.mk.hidden = true; continue; }
+      f.anchor.getWorldPosition(f.world); v3.copy(f.world).project(camera);
+      if(v3.z > 1 || v3.z < -1){ f.mk.hidden = true; continue; }
+      f.mk.hidden = false;
+      f.mk.style.transform = 'translate(' + ((v3.x*0.5 + 0.5)*w).toFixed(1) + 'px,' + ((-v3.y*0.5 + 0.5)*h).toFixed(1) + 'px)';
+    }
+  }
+  function occlusion(){
+    lastOcc = performance.now();
+    if(state.mode !== 'feat') return;
+    var cp = camera.position, i, f, dist;
+    for(i = 0; i < FEATS.length; i++){
+      f = FEATS[i];
+      v3.copy(f.world).sub(cp); dist = v3.length(); v3.multiplyScalar(1/dist);
+      ray.set(cp, v3); ray.near = 0; ray.far = Math.max(0.1, dist - 0.14);
+      f.mk.classList.toggle('occ', f.id !== state.sel && ray.intersectObjects(rayList, false).length > 0);
+    }
+  }
+
+  /* ---------------- loop (renders only when something changes) ---------------- */
+  var raf = 0, lastT = 0;
+  function invalidate(){ if(!raf) raf = requestAnimationFrame(frame); }
+  function ease(k){ return k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3)/2; }
+  function frame(now){
+    raf = 0;
+    var dt = lastT ? Math.min(0.05, (now - lastT)/1000) : 0.016, again = false, k, e;
+    lastT = now;
+    if(tween){
+      k = clamp((now - tween.t0)/tween.ms, 0, 1); e = ease(k);
+      cam.az = tween.az + tween.daz*e; cam.el = tween.el + tween.del*e; cam.r = tween.r + tween.dr*e;
+      cam.t.copy(tween.t).lerp(tween.tt, e);
+      if(k >= 1) tween = null; else again = true;
+    }
+    if(state.auto && !tween){ cam.az += dt*0.32; again = true; }
+    if(blinkT0 >= 0){
+      k = (now - blinkT0)/900;
+      if(k >= 1){ blink = 0; blinkT0 = -1; } else { blink = 0.5*Math.pow(Math.sin(k*Math.PI*3), 2)*(1 - k); again = true; }
+      var hold = blinkT0; recolorQuiet(); blinkT0 = hold;
+    }
+    placeCamera();
+    renderer.render(scene, camera);
+    updateMarkers();
+    if(again){ if(now - lastOcc > 140) occlusion(); invalidate(); }
+    else { lastT = 0; clearTimeout(occTimer); occTimer = setTimeout(occlusion, 50); }
+  }
+  /* colour pass used inside the frame: must not schedule a blink or a frame itself */
+  function recolorQuiet(){
+    var sel = state.sel, i, m, u, cc;
+    if(state.mode !== 'feat' || !sel) return;
+    for(i = 0; i < all.length; i++){
+      m = all[i]; u = m.userData;
+      if(u.feat === sel && TINT[u.base]){ cc = catCol[byId[sel].cat]; m.material.emissive.copy(cc).multiplyScalar(0.22 + blink); }
+    }
+  }
+
+  /* ---------------- input ---------------- */
+  var P = new Map(), pinch = 0, mid = null;
+  function two(){ var a = Array.from(P.values()); return {d:Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), x:(a[0].x + a[1].x)/2, y:(a[0].y + a[1].y)/2}; }
+  function pan(dx, dy){
+    var s = 2*cam.r*Math.tan(camera.fov*D2R/2)/Math.max(1, stage.clientHeight);
+    camera.updateMatrixWorld(); var e = camera.matrixWorld.elements;
+    cam.t.x = clamp(cam.t.x - (e[0]*dx - e[4]*dy)*s, -4.5, 6.5);
+    cam.t.y = clamp(cam.t.y - (e[1]*dx - e[5]*dy)*s, 0, 3.4);
+    cam.t.z = clamp(cam.t.z - (e[2]*dx - e[6]*dy)*s, -2.8, 2.8);
+  }
+  canvas.addEventListener('pointerdown', function(ev){
+    try{ canvas.setPointerCapture(ev.pointerId); }catch(_){}
+    P.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+    tween = null; if(state.auto) setAuto(false);
+    hint.classList.add('gone');
+    if(P.size === 2){ var t = two(); pinch = t.d; mid = t; }
+  });
+  canvas.addEventListener('pointermove', function(ev){
+    var p = P.get(ev.pointerId); if(!p) return;
+    var dx = ev.clientX - p.x, dy = ev.clientY - p.y; p.x = ev.clientX; p.y = ev.clientY;
+    if(P.size === 1){
+      if(ev.buttons === 2 || ev.shiftKey) pan(dx, dy);
+      else { cam.az += dx*0.0075; cam.el = clamp(cam.el + dy*0.006, 2*D2R, 89*D2R); }
+    } else if(P.size === 2){
+      var t = two();
+      if(pinch > 0 && t.d > 0) cam.r = clamp(cam.r*pinch/t.d, RMIN, RMAX);
+      if(mid) pan(t.x - mid.x, t.y - mid.y);
+      pinch = t.d; mid = t;
+    }
+    invalidate();
+  });
+  function lift(ev){ P.delete(ev.pointerId); pinch = 0; mid = null; }
+  canvas.addEventListener('pointerup', lift);
+  canvas.addEventListener('pointercancel', lift);
+  canvas.addEventListener('wheel', function(ev){
+    ev.preventDefault(); tween = null; hint.classList.add('gone');
+    cam.r = clamp(cam.r*Math.exp(ev.deltaY*0.0012), RMIN, RMAX); invalidate();
+  }, {passive:false});
+  canvas.addEventListener('contextmenu', function(ev){ ev.preventDefault(); });
+
+  /* ---------------- sizing, theme, start ---------------- */
+  var started = false;
+  function resize(){
+    var w = stage.clientWidth, h = stage.clientHeight; if(!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
+    if(!started){
+      started = true;
+      var az = 38*D2R, el = 20*D2R, r = fitFor(az, el);
+      if(reduce){ cam.az = az; cam.el = el; cam.r = r; }
+      else { cam.az = az + 0.75; cam.el = 11*D2R; cam.r = r*1.14; flyTo(az, el, r, CENTER, 1500); }
+    }
+    invalidate();
+  }
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  function retheme(){ readCats(); makeGrid(); recolor(false); }
+  new MutationObserver(retheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  if(window.matchMedia){
+    var mq = matchMedia('(prefers-color-scheme: dark)');
+    if(mq.addEventListener) mq.addEventListener('change', retheme); else if(mq.addListener) mq.addListener(retheme);
+  }
+  makeGrid(); recolor(false); resize();
+
+  return {
+    focus:focus, view:view, recolor:recolor, modeChanged:modeChanged, kick:invalidate,
+    turret:function(deg){ turret.rotation.y = -deg*D2R; invalidate(); },
+    cage:function(on){ cageG.visible = on; invalidate(); }
+  };
+}
+})();
+</script>
+<script src="../../assets/app.js" defer></script>
+</body>
+</html>
