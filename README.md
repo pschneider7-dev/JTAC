@@ -13,6 +13,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 | `pods/` | Pod-Trainer |
 | `drill/` | JTAC-Drill |
 | `brevity/` | Brevity-Trainer |
+| `funk/` | Funk-Trainer (Kurzlehre mit Skizzen, Behelfsantennen, Sprechfunk, Rechner, Funkgeräte) |
 
 ## Aufbau
 

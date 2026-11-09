@@ -25,6 +25,7 @@
     {"name": "Waffen-Trainer", "url": "waffen/"},
     {"name": "Pod-Trainer", "url": "pods/"},
     {"name": "JTAC-Drill", "url": "drill/"},
-    {"name": "Brevity-Trainer", "url": "brevity/"}
+    {"name": "Brevity-Trainer", "url": "brevity/"},
+    {"name": "Funk-Trainer", "url": "funk/"}
   ]
 }

@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Funk-Trainer</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+/* Funk-Trainer im Look der Trainer-Reihe (Grundgerüst wie Brevity-Trainer) */
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA; --unk:#7A6A2E; --unk-bg:#F1E9CF;
+  --cta:#E0A526; --cta-ink:#1A2326; --radio:#0F1A1C; --radio-ink:#F2B632; --f1:#CFDCD7; --f2:#B9CCC5; --f3:#A3BBB3;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-m:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+    --cta:#E3AA2E; --cta-ink:#111719; --radio:#06090A; --radio-ink:#F2B632; --f1:#22312F; --f2:#2B3D3A; --f3:#365049; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18; --unk:#D9C17A; --unk-bg:#2E2913;
+  --cta:#E3AA2E; --cta-ink:#111719; --radio:#06090A; --radio-ink:#F2B632; --f1:#22312F; --f2:#2B3D3A; --f3:#365049; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-block:12px 56px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:600}
+.muted{color:var(--muted)}
+.code{font-family:var(--font-m);font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+
+/* Kopfleiste */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding-block:8px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500;white-space:nowrap}
+.tag{font-family:var(--font-d);font-size:1rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* Übersicht */
+.hero{padding:26px 0 14px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.radioline{display:inline-block;margin-top:14px;background:var(--radio);color:var(--radio-ink);font-family:var(--font-m);font-size:.82rem;font-weight:500;letter-spacing:.04em;padding:6px 12px;border-radius:6px;max-width:100%;overflow-wrap:anywhere}
+.board{margin:16px 0 22px}
+.board h3{font-size:1rem;color:var(--muted);margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase}
+.cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+@media (min-width:560px){.cells{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cell{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 9px 12px;overflow:hidden;min-width:0}
+.cell[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.25rem;line-height:1;font-variant-numeric:tabular-nums}
+.cell span{display:block;font-size:.78rem;color:var(--muted);line-height:1.25;margin-top:3px}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.filtnote{font-size:.88rem;color:var(--muted);margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:20px;border-top:1px solid var(--line)}
+.modes h3{font-size:1rem;color:var(--muted);margin:16px 0 2px;letter-spacing:.06em;text-transform:uppercase}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 2px}
+.mode .mi{flex:1;min-width:0}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.05rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.mode[disabled]{opacity:.45;cursor:default}
+.foot{margin-top:26px;font-size:.84rem;color:var(--muted);max-width:42em}
+.foot p{margin:0 0 8px}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+
+/* Frage */
+.qmeta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 10px;font-size:.9rem;color:var(--muted)}
+.chip-cat{display:inline-block;font-family:var(--font-d);font-weight:700;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--bg);border-radius:5px;padding:2px 9px}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:6px 0 14px}
+.bigcode{display:inline-block;background:var(--radio);color:var(--radio-ink);font-family:var(--font-m);font-weight:700;font-size:clamp(1.5rem,7vw,2.1rem);letter-spacing:.06em;padding:10px 18px;border-radius:8px;margin:4px 0 14px;max-width:100%;overflow-wrap:anywhere}
+.defbox{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:0 10px 10px 0;padding:12px 16px;margin:4px 0 14px;font-size:1.05rem}
+.lage{background:var(--radio);color:#DCE5E2;border-radius:10px;padding:12px 16px;margin:4px 0 12px}
+.lage .lh{font-family:var(--font-m);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--radio-ink)}
+.lage p{margin:4px 0 0}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt .ot{min-width:0;overflow-wrap:anywhere}
+.opt .ot.code{white-space:normal;font-size:1.02rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.seq{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.seq .code{font-size:.92rem}
+.seq .ar{color:var(--muted);font-weight:700}
+.inp{display:block;width:100%;font-family:var(--font-m);font-weight:700;font-size:1.15rem;letter-spacing:.05em;text-transform:uppercase;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:13px 14px}
+.inp:focus{border-color:var(--ink);outline:none}
+.inp[readonly]{border-style:dashed}
+.fhint{font-size:.86rem;color:var(--muted);margin-top:5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:11px 15px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.4rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.entry{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.entry .hd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.entry .hd .code{font-size:1.05rem}
+.entry .lf{font-family:var(--font-d);font-size:1.15rem;font-weight:600}
+.entry .en{font-size:.88rem;color:var(--muted);font-style:italic;margin-top:4px}
+.entry .nt{font-size:.94rem;margin-top:6px}
+.pill{display:inline-block;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:1px 9px;color:var(--muted)}
+
+/* Ergebnis */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:26px 0 4px;font-variant-numeric:tabular-nums}
+.score small{font-size:2rem;color:var(--muted);font-weight:600}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+.misslist .code{font-size:.95rem}
+
+/* Glossar */
+.seg{display:flex;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0 10px}
+.seg button{flex:1;border:0;background:var(--surface);padding:10px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.search{display:block;width:100%;font:inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:11px 14px}
+.gl h3{font-size:1rem;color:var(--muted);margin:20px 0 4px;letter-spacing:.06em;text-transform:uppercase}
+.gl dl{margin:0}
+.gl .it{padding:10px 0;border-bottom:1px solid var(--line)}
+.gl .it .hd{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.gl .it .code{font-size:1rem}
+.gl .it p{margin:3px 0 0}
+.gl .it .en{font-size:.86rem;color:var(--muted);font-style:italic}
+.gl .empty{color:var(--muted);margin-top:16px}
+
+/* Statistik */
+.stat-top{display:flex;gap:28px;margin:18px 0 6px;flex-wrap:wrap}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.srow{display:grid;grid-template-columns:minmax(0,10em) 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+.confirm{margin-top:10px;padding:12px 14px;border:1px solid var(--bad);background:var(--bad-bg);border-radius:8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* Kurzlehre */
+.ph{font-size:clamp(2rem,8vw,2.8rem);font-weight:700;margin:18px 0 6px}
+.kick{font-family:var(--font-d);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-size:.9rem;margin:18px 0 0}
+.lesson .ph{margin-top:2px}
+.lb{margin-top:18px}
+.lb h2{margin:0 0 6px}
+.lb p,.lb li{max-width:40em}
+.lb p{margin:6px 0}
+.lb ul{margin:6px 0;padding-left:1.15em}
+.lb li{margin:4px 0}
+.tip{background:var(--unk-bg);border-left:4px solid var(--unk);border-radius:0 8px 8px 0;padding:10px 14px}
+.tlist{margin-top:10px;border-top:1px solid var(--line)}
+.abc{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--font-m);font-size:.9rem}
+.abc b{display:inline-block;width:1.1em;color:var(--muted)}
+
+/* Skizzen */
+.figbox{margin:8px 0 6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.fig{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.fig text{font-family:var(--font-b);font-size:11px;fill:var(--ink)}
+.fig .sm{font-size:9.5px}
+.fig .tc{text-anchor:middle}
+.fig .te{text-anchor:end}
+.fig .mu{fill:var(--muted)}
+.fig .b1{fill:var(--f1)} .fig .b2{fill:var(--f2)} .fig .b3{fill:var(--f3)}
+.fig .m{fill:var(--muted);opacity:.55}
+.fig .a{fill:var(--cta)}
+.fig .gr{stroke:var(--muted);stroke-width:2;fill:none}
+.fig .io{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4;fill:none}
+.fig .pt{fill:var(--ink)} .fig .pt.ok{fill:var(--ok)} .fig .pt.bad{fill:var(--bad)} .fig .pt.mid{fill:var(--cta)}
+.fig .w1{stroke:var(--cta);stroke-width:2.2;fill:none;stroke-dasharray:6 3}
+.fig .w2{stroke:var(--cta);stroke-width:2.2;fill:none}
+.fig .w3{stroke:var(--ok);stroke-width:2.2;fill:none}
+.fig .dz{stroke:var(--bad);stroke-width:3}
+.fig .ax{stroke:var(--muted);stroke-width:1.2}
+.fig .lfz{fill:var(--ink)}
+.fig .mast{stroke:var(--muted);stroke-width:3}
+.fig .rope{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 2}
+.fig .iso{fill:var(--surface);stroke:var(--ink);stroke-width:1}
+.fig .ant{stroke:var(--cta);stroke-width:2.6;stroke-linecap:round}
+.fig .ant.dash{stroke-dasharray:5 3}
+.fig .coax{stroke:var(--ink);stroke-width:2;fill:none}
+.fig .rad{fill:var(--ink)}
+.fig .tree{stroke:var(--ok);stroke-width:2;fill:none}
+.fig .hill{fill:var(--f2);stroke:var(--muted);stroke-width:1.5}
+.fig .arc{stroke:var(--ink);stroke-width:1;fill:none}
+.fig .lobe{fill:var(--cta);fill-opacity:.18;stroke:var(--cta);stroke-width:1}
+.fig .pl{stroke:var(--bad);stroke-width:2}
+.fig .gnd{stroke:var(--ok);stroke-width:2.6;fill:none}
+
+/* Fragen */
+.qimg{margin:4px 0 14px}
+.qimg img,.devc img{display:block;width:100%;max-height:300px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--line)}
+.credit{font-size:.74rem;color:var(--muted);margin-top:3px}
+.inp.num{text-transform:none;max-width:12em}
+.seq .sq{font-weight:600;font-size:.95rem}
+
+/* Rechner und Funkgeräte */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:14px}
+.card h2{margin-bottom:8px}
+.lbl{display:block;font-weight:600;color:var(--muted);margin:8px 0 4px;min-width:11em}
+.inrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 10px;margin-bottom:6px}
+.inrow .lbl{width:100%;margin-bottom:0}
+.sel{font:inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:12px 10px}
+.kv{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr);gap:6px 14px;margin:10px 0 6px}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.kv dt.code{color:var(--ink);white-space:normal}
+.res dd{font-family:var(--font-m);font-weight:700}
+.devc figure{margin:0 0 10px}
+@media (max-width:420px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
+</style>
+</head>
+<body>
+<header class="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+
+<script>
+(() => {
+/* Funk-Trainer – Kurzlehre, Skizzen und Gerätedaten (öffentliche Quellen: ATP 6-02.53, FM 24-18, ACP 125, Herstellerdatenblätter) */
+const GROUPS = {
+  grund:   {l:"Grundlagen", i:"Frequenz, Wellenlänge, Bänder, AM und FM"},
+  ausb:    {l:"Ausbreitung und Reichweite", i:"Bodenwelle, Raumwelle, Sichtlinie, Funkhorizont"},
+  ant:     {l:"Antennen", i:"Länge, Polarisation, Richtwirkung, Kabel und Anpassung"},
+  behelf:  {l:"Behelfsantennen", i:"Dipol, Inverted-V, Ground-Plane, Langdraht, NVIS"},
+  aufbau:  {l:"Aufbau, Standort, Erdung", i:"Wo und wie du die Antenne aufbaust"},
+  sicher:  {l:"Sicherheit", i:"Stromleitungen, Strahlung, Gewitter, Akkus"},
+  sprech:  {l:"Sprechfunk", i:"Betriebswörter, Buchstabieren, Zahlen, Funkprobe"},
+  netze:   {l:"JTAC-Netze und PACE", i:"Welches Netz auf welchem Band, Ausweichplan"},
+  stoer:   {l:"Störung, Peilung, Schutz", i:"Störung erkennen, Gegenmaßnahmen, Frequenzsprung, Krypto"},
+  satcom:  {l:"SATCOM", i:"UHF-Satellitenfunk, Antenne ausrichten, MUOS"},
+  strom:   {l:"Strom und Akkus", i:"Laufzeit, Kälte, Pufferbatterie"},
+  fehler:  {l:"Fehlersuche", i:"Keine Verbindung – was prüfst du zuerst?"},
+  geraete: {l:"Funkgeräte", i:"PRC-117G, -152A, -148, -160 und -163"}
+};
+const G_ORDER = ["grund","ausb","ant","behelf","aufbau","sicher","sprech","netze","stoer","satcom","strom","fehler","geraete"];
+
+/* ---------- Skizzen (SVG, Farben aus den Theme-Variablen) ---------- */
+const SV = (vb, body, label) => `<svg class="fig" viewBox="${vb}" role="img" aria-label="${label}">${body}</svg>`;
+const T = (x, y, t, o) => `<text x="${x}" y="${y}"${o ? ' ' + o : ''}>${t}</text>`;
+const FIG = {
+  baender(){
+    const x = f => 14 + (Math.log10(f) - Math.log10(2)) / (Math.log10(3200) - Math.log10(2)) * 312;
+    const band = (a, b, y, h, cls, t) => `<rect class="${cls}" x="${x(a)}" y="${y}" width="${x(b) - x(a)}" height="${h}" rx="2"/>` + (t ? T((x(a) + x(b)) / 2, y + h / 2 + 4, t, 'class="tc"') : '');
+    return SV('0 0 340 176',
+      band(3, 30, 18, 26, 'b1', 'HF') + band(30, 300, 18, 26, 'b2', 'VHF') + band(300, 3000, 18, 26, 'b3', 'UHF') +
+      [3, 30, 300, 3000].map(f => `<line class="ax" x1="${x(f)}" y1="46" x2="${x(f)}" y2="54"/>` + T(x(f), 66, f + ' MHz', 'class="tc sm"')).join('') +
+      band(30, 88, 80, 12, 'm', '') + T(x(30) + 2, 106, 'VHF FM 30–88: Truppenfunk', 'class="sm"') +
+      band(118, 137, 114, 12, 'm', '') + T(x(118) - 4, 140, 'Flugfunk AM 118–137', 'class="sm te"') +
+      band(225, 400, 80, 12, 'a', '') + T(x(225) + 22, 76, 'Mil. UHF 225–400', 'class="sm"') +
+      band(960, 1215, 114, 12, 'm', '') + T(x(960) + 8, 140, 'Link 16', 'class="sm te"') +
+      band(3, 30, 150, 10, 'm', '') + T(x(3), 172, 'HF: Weitverbindung, NVIS', 'class="sm"'), 'Frequenzbänder HF, VHF und UHF');
+  },
+  ausbreitung(){
+    return SV('0 0 340 170',
+      `<path class="gr" d="M0 150 Q170 128 340 150"/>` +
+      `<path class="io" d="M0 40 Q170 18 340 40"/>` + T(170, 16, 'Ionosphäre', 'class="tc sm mu"') +
+      `<circle class="pt" cx="30" cy="144" r="4"/>` + T(30, 164, 'Sender', 'class="tc sm"') +
+      `<path class="w1" d="M34 142 Q80 136 118 136"/>` + T(104, 124, 'Bodenwelle', 'class="tc sm"') +
+      `<path class="w2" d="M34 140 L170 30 L306 140"/>` + T(250, 74, 'Raumwelle', 'class="sm"') +
+      `<path class="w3" d="M34 140 L52 34 L72 138"/>` + T(56, 60, 'NVIS', 'class="sm" text-anchor="end" dx="-6"') +
+      `<line class="dz" x1="122" y1="146" x2="296" y2="146"/>` + T(209, 126, 'tote Zone', 'class="tc sm mu"') +
+      `<circle class="pt" cx="306" cy="142" r="4"/>`, 'Bodenwelle, Raumwelle und NVIS');
+  },
+  horizont(){
+    return SV('0 0 340 160',
+      `<path class="gr" d="M0 120 Q170 92 340 120"/>` +
+      `<line class="ax" x1="40" y1="112" x2="40" y2="96"/>` + T(40, 140, 'Antenne 2 m', 'class="tc sm"') +
+      `<path class="lfz" d="M292 26 l14 0 l6 -4 l2 4 l8 0 l-8 3 l-22 0z"/>` + T(300, 16, 'Lfz 15 000 ft', 'class="tc sm"') +
+      `<line class="w2" x1="40" y1="96" x2="296" y2="28"/>` +
+      T(170, 152, 'Funkhorizont ≈ 1,23 × (√h₁ + √h₂) NM, h in ft', 'class="tc sm mu"'), 'Funkhorizont zwischen Bodenantenne und Lfz');
+  },
+  dipol(){
+    return SV('0 0 340 150',
+      `<line class="gr" x1="0" y1="138" x2="340" y2="138"/>` +
+      `<line class="mast" x1="24" y1="138" x2="24" y2="36"/><line class="mast" x1="316" y1="138" x2="316" y2="36"/>` +
+      `<line class="rope" x1="24" y1="40" x2="40" y2="40"/><line class="rope" x1="300" y1="40" x2="316" y2="40"/>` +
+      `<rect class="iso" x="40" y="36" width="8" height="8"/><rect class="iso" x="292" y="36" width="8" height="8"/>` +
+      `<line class="ant" x1="48" y1="40" x2="164" y2="40"/><line class="ant" x1="176" y1="40" x2="292" y2="40"/>` +
+      `<rect class="iso" x="164" y="35" width="12" height="10"/><path class="coax" d="M170 45 L170 112 Q170 124 158 124 L120 124"/>` +
+      `<rect class="rad" x="96" y="114" width="24" height="18" rx="3"/>` + T(108, 148, 'Funkgerät', 'class="tc sm"') +
+      T(106, 30, 'λ/4 ≈ 71/f m', 'class="tc sm"') + T(234, 30, 'λ/4 ≈ 71/f m', 'class="tc sm"') +
+      T(236, 84, 'Gesamt ≈ 143/f m', 'class="tc"') + T(236, 100, 'stärkste Abstrahlung', 'class="tc sm mu"') + T(236, 112, 'quer zum Draht', 'class="tc sm mu"'), 'Halbwellendipol');
+  },
+  invv(){
+    return SV('0 0 340 150',
+      `<line class="gr" x1="0" y1="138" x2="340" y2="138"/>` +
+      `<line class="mast" x1="170" y1="138" x2="170" y2="20"/>` +
+      `<line class="ant" x1="168" y1="22" x2="66" y2="112"/><line class="ant" x1="172" y1="22" x2="274" y2="112"/>` +
+      `<rect class="iso" x="58" y="110" width="8" height="8"/><rect class="iso" x="274" y="110" width="8" height="8"/>` +
+      `<line class="rope" x1="62" y1="118" x2="44" y2="138"/><line class="rope" x1="278" y1="118" x2="296" y2="138"/>` +
+      `<path class="arc" d="M146 44 Q170 60 194 44"/>` + T(146, 74, '≥ 90°', 'class="tc"') +
+      `<path class="coax" d="M170 24 L178 24 L178 128 L210 128"/><rect class="rad" x="210" y="120" width="24" height="16" rx="3"/>` +
+      T(92, 60, 'λ/4', 'class="tc sm"') + T(248, 60, 'λ/4', 'class="tc sm"') + T(170, 14, 'Speisepunkt oben am Mast', 'class="tc sm mu"'), 'Inverted-V');
+  },
+  gp(){
+    return SV('0 0 340 160',
+      `<line class="gr" x1="0" y1="148" x2="340" y2="148"/>` +
+      `<line class="ant" x1="170" y1="14" x2="170" y2="84"/>` + T(186, 50, 'Strahler λ/4', 'class="sm"') +
+      `<rect class="iso" x="164" y="84" width="12" height="10"/>` +
+      `<line class="ant" x1="164" y1="92" x2="104" y2="138"/><line class="ant" x1="176" y1="92" x2="236" y2="138"/><line class="ant dash" x1="170" y1="94" x2="148" y2="132"/>` +
+      `<line class="rope" x1="104" y1="138" x2="96" y2="148"/><line class="rope" x1="236" y1="138" x2="244" y2="148"/>` +
+      T(84, 120, 'Radials λ/4', 'class="sm" text-anchor="end"') + T(244, 116, 'ca. 45° nach unten', 'class="sm"') +
+      `<path class="coax" d="M171 94 L171 128 Q171 138 181 138 L196 138"/><rect class="rad" x="196" y="131" width="24" height="14" rx="3"/>` +
+      `<line class="rope" x1="170" y1="14" x2="170" y2="4"/>` + T(178, 10, 'an Ast bzw. Seil hochziehen', 'class="sm mu"'), 'Ground-Plane-Behelfsantenne');
+  },
+  langdraht(){
+    return SV('0 0 340 162',
+      `<line class="gr" x1="0" y1="138" x2="340" y2="138"/>` +
+      `<path class="tree" d="M300 138 L300 70 M300 30 L276 80 L324 80 Z"/>` +
+      `<rect class="rad" x="20" y="114" width="28" height="20" rx="3"/>` + T(34, 108, 'Gerät + Tuner', 'class="tc sm"') +
+      `<line class="ant" x1="48" y1="118" x2="276" y2="44"/><rect class="iso" x="276" y="40" width="8" height="8"/><line class="rope" x1="284" y1="44" x2="300" y2="46"/>` +
+      `<line class="ant dash" x1="48" y1="134" x2="160" y2="136"/>` + T(104, 128, 'Gegengewicht', 'class="tc sm"') +
+      T(160, 64, 'möglichst lang und hoch', 'class="tc sm"') + T(170, 156, 'Abstrahlung vor allem in Drahtrichtung', 'class="tc sm mu"'), 'Langdrahtantenne');
+  },
+  nvis(){
+    return SV('0 0 340 172',
+      `<path class="io" d="M0 26 Q170 8 340 26"/>` + T(170, 6, 'Ionosphäre', 'class="tc sm mu" dy="8"') +
+      `<line class="gr" x1="0" y1="146" x2="340" y2="146"/>` +
+      `<path class="hill" d="M118 146 Q160 66 206 146 Z"/>` +
+      `<line class="ant" x1="30" y1="128" x2="120" y2="128"/><rect class="iso" x="22" y="124" width="8" height="8"/>` +
+      `<line class="w3" x1="75" y1="126" x2="150" y2="22"/><line class="w3" x1="150" y1="22" x2="240" y2="140"/>` +
+      `<circle class="pt" cx="246" cy="142" r="4"/>` + T(246, 164, 'Gegenstelle hinter Höhenzug', 'class="tc sm"') +
+      `<line class="ax" x1="128" y1="128" x2="128" y2="146"/>` + T(70, 112, 'Dipol 0,1–0,25 λ hoch', 'class="tc sm"'), 'NVIS-Antenne');
+  },
+  whip(){
+    return SV('0 0 340 160',
+      `<line class="gr" x1="0" y1="148" x2="340" y2="148"/>` +
+      `<line class="ant" x1="170" y1="58" x2="170" y2="138"/><rect class="rad" x="158" y="134" width="24" height="14" rx="3"/>` +
+      `<path class="lobe" d="M170 100 C120 50 40 70 40 100 C40 130 120 150 170 100 Z"/><path class="lobe" d="M170 100 C220 50 300 70 300 100 C300 130 220 150 170 100 Z"/>` +
+      `<path class="lfz" d="M156 18 l14 0 l6 -4 l2 4 l8 0 l-8 3 l-22 0z"/>` + T(194, 22, 'Lfz genau über dir: schwach', 'class="sm"') +
+      T(54, 52, 'rundum stark', 'class="sm"'), 'Strahlungsdiagramm einer Stabantenne');
+  },
+  standort(){
+    return SV('0 0 340 170',
+      `<path class="gr" d="M0 150 L60 150 Q90 150 120 110 Q150 60 180 56 Q210 60 240 100 Q270 140 340 140"/>` +
+      `<circle class="pt bad" cx="44" cy="146" r="5"/>` + T(44, 166, 'Senke: schlecht', 'class="tc sm"') +
+      `<circle class="pt ok" cx="212" cy="70" r="5"/>` + T(222, 50, 'knapp unter dem Kamm, zur Gegenstelle hin: gut', 'class="sm" text-anchor="middle"') +
+      `<circle class="pt mid" cx="180" cy="52" r="5"/>` + T(140, 40, 'auf dem Kamm: weit, aber sichtbar', 'class="sm" text-anchor="end" dx="40" dy="-14"') +
+      `<line class="mast" x1="300" y1="140" x2="300" y2="76"/><line class="pl" x1="290" y1="80" x2="340" y2="74"/>` + T(300, 160, 'Stromleitung: Abstand!', 'class="tc sm"'), 'Standortwahl');
+  },
+  erdung(){
+    return SV('0 0 340 150',
+      `<line class="gr" x1="0" y1="96" x2="340" y2="96"/>` +
+      `<rect class="rad" x="40" y="70" width="40" height="26" rx="3"/>` + T(60, 64, 'Funkgerät', 'class="tc sm"') +
+      `<path class="gnd" d="M80 90 L130 90 L130 140"/>` + `<line class="mast" x1="130" y1="92" x2="130" y2="142"/>` + T(140, 128, 'Erdungsstab, feuchter Boden', 'class="sm"') +
+      `<line class="ant dash" x1="200" y1="92" x2="320" y2="92"/><line class="ant dash" x1="200" y1="92" x2="300" y2="70"/>` + T(260, 58, 'Gegengewicht (Radials), wenn', 'class="tc sm"') + T(260, 112, 'Boden trocken, felsig, Sand, Frost', 'class="tc sm mu"') +
+      T(100, 22, 'kurze, dicke Verbindung', 'class="tc sm"') + `<path class="arc" d="M100 28 L104 84"/>`, 'Erdung und Gegengewicht');
+  },
+  sat(){
+    return SV('0 0 340 170',
+      `<path class="gr" d="M0 150 L340 150"/>` +
+      `<rect class="lfz" x="270" y="16" width="22" height="12" rx="2"/><line class="ant" x1="256" y1="22" x2="270" y2="22"/><line class="ant" x1="292" y1="22" x2="306" y2="22"/>` + T(282, 44, 'Satellit über dem Äquator', 'class="tc sm"') +
+      `<line class="mast" x1="70" y1="150" x2="70" y2="122"/><line class="ant" x1="56" y1="132" x2="96" y2="110"/>` +
+      `<line class="w2" x1="96" y1="110" x2="270" y2="26"/>` +
+      `<path class="arc" d="M120 150 Q124 136 116 126"/>` + T(140, 140, 'Elevation (in Mitteleuropa ca. 20–35°)', 'class="sm"') +
+      T(70, 166, 'Antenne zeigt grob nach Süden – freie Sicht!', 'class="sm" text-anchor="start" dx="-60"'), 'SATCOM-Antenne ausrichten');
+  }
+};
+
+/* ---------- Kurzlehre: je Thema einige Blöcke ---------- */
+const LEHRE = {
+  grund: [
+    {h:'Frequenz und Wellenlänge', p:['Die **Frequenz** gibt an, wie oft die Funkwelle pro Sekunde schwingt: 1 MHz sind eine Million Schwingungen pro Sekunde. Die **Wellenlänge** ist die Strecke, die eine Schwingung lang ist.', 'Faustformel: **λ (m) = 300 / f (MHz)**. 30 MHz → 10 m, 300 MHz → 1 m. Je höher die Frequenz, desto kürzer Welle und Antenne.']},
+    {h:'Die Bänder', fig:'baender', li:['**HF** (Kurzwelle) 3–30 MHz: weit, auch hinter den Horizont.', '**VHF** 30–300 MHz: Truppenfunk (FM, 30–88 MHz) und ziviler Flugfunk (AM, 118–137 MHz).', '**UHF** 300–3000 MHz – im militärischen Flugfunk heißt aber der ganze Bereich **225–400 MHz** „UHF“.', 'Merkhilfe: jedes Band ist zehnmal so hoch wie das vorige – 3, 30, 300, 3000.']},
+    {h:'AM, FM und SSB', li:['**AM** (Amplitudenmodulation): Die Sprache ändert die Stärke der Welle. Rauschanfälliger, aber zwei gleichzeitige Sender hört man beide – deshalb Flugfunk.', '**FM** (Frequenzmodulation): Die Sprache ändert die Frequenz leicht. Klarer, aber der Stärkere überdeckt den Schwächeren ganz (Capture-Effekt) – Bodenfunk.', '**SSB** (Einseitenband, meist USB): sparsame Sprechfunk-Betriebsart auf HF.', '**Digitale Wellenformen** (z. B. SINCGARS, ANW2C, SRW) übertragen Sprache und Daten, oft im Netzwerk.']},
+    {h:'Leistung, Simplex, Klartext', li:['Mehr Leistung bringt weniger als gedacht: vierfache Leistung ≈ doppelte Reichweite im freien Raum. Bei VHF/UHF begrenzt meist die **Sichtlinie** – Höhe schlägt Leistung.', '**Simplex**: alle auf einer Frequenz, einer spricht (Sprechtaste). Das ist taktischer Sprechfunk.', '**PT** (plain text) = Klartext, **CT** (cipher text) = verschlüsselt.']},
+  ],
+  ausb: [
+    {h:'Drei Wege der Funkwelle', fig:'ausbreitung', li:['**Bodenwelle**: folgt der Erdoberfläche, vor allem bei HF; einige 10 km, über Wasser weiter.', '**Raumwelle**: HF wird an der Ionosphäre zurückgeworfen – Hunderte bis Tausende km. Dazwischen liegt eine **tote Zone**, in der man nichts hört.', '**Direkte Welle (Sichtlinie)**: VHF und UHF. Was zwischen den Antennen liegt (Berg, Haus, Wald), schwächt oder blockiert.']},
+    {h:'NVIS – Steilstrahlung für HF', p:['Bei NVIS (Near Vertical Incidence Skywave) strahlt die Antenne fast senkrecht nach oben. Die Welle kommt im Umkreis von 0 bis ca. 400 km zurück – **ohne tote Zone** und auch **hinter Bergen und in Tälern**.', 'Dafür: niedrige Frequenz (etwa 2–10 MHz) und eine waagerechte, niedrig hängende Antenne.']},
+    {h:'Tag und Nacht bei HF', p:['Die Ionosphäre ändert sich mit Tageszeit, Jahreszeit und Sonnenaktivität. Faustregel: **nachts tiefere, tagsüber höhere Frequenzen**. Deshalb gibt es für HF meist Tag- und Nachtfrequenzen.']},
+    {h:'Funkhorizont', fig:'horizont', p:['Bei VHF/UHF reicht die Verbindung etwa bis zum Funkhorizont, der wegen der Erdkrümmung von der Antennenhöhe abhängt:', '**Reichweite (NM) ≈ 1,23 × (√h₁ + √h₂)**, Höhen in ft. In km: ≈ 4,1 × (√h₁ + √h₂) mit Höhen in m.', 'Beispiel: Du am Boden (6 ft) und ein Lfz in 15 000 ft: 1,23 × (2,4 + 122) ≈ 153 NM. Zwei Bodenstationen mit je 2 m Antennenhöhe: nur ca. 12 km – und das nur ohne Gelände dazwischen.']},
+    {h:'Gelände, Wald, Stadt', li:['Höhenzüge schatten ab; VHF wird an Kanten etwas gebeugt, UHF kaum.', 'Wald dämpft, nasses Laub stark – UHF stärker als VHF.', 'In der Stadt: Abschattung und Reflexionen (Mehrwegeempfang, Verbindung „flattert“). Oft hilft schon ein paar Meter Standortwechsel.', 'Über Wasser und flachem Gelände geht es am weitesten.']},
+  ],
+  ant: [
+    {h:'Die Antenne muss zur Frequenz passen', p:['Eine Antenne arbeitet am besten, wenn ihre Länge zur Wellenlänge passt: **Halbwellendipol** ≈ λ/2, **Viertelwellenstrahler** ≈ λ/4 gegen Erde bzw. Gegengewicht.', 'Praxisformeln (mit Verkürzungsfaktor): Dipol gesamt ≈ **143 / f** m, λ/4 ≈ **71 / f** m.', 'Eine falsche oder beschädigte Antenne kostet mehr Reichweite als jede Leistungsstufe.']},
+    {h:'Polarisation', p:['Steht die Antenne senkrecht, ist die Welle **vertikal polarisiert**, liegt sie waagerecht, **horizontal**. Sender und Empfänger müssen gleich ausgerichtet sein, sonst geht viel Signal verloren.', 'VHF/UHF-Boden- und Flugfunk: vertikal. HF-Dipole: meist horizontal. SATCOM-Antennen: zirkular.']},
+    {h:'Rundstrahler und Richtantenne', fig:'whip', li:['**Stabantenne (Peitsche)**: strahlt rundum gleich, aber kaum senkrecht nach oben. Ein Lfz direkt über dir kommt deshalb schlechter an – Lfz versetzen lassen oder Antenne neigen.', '**Richtantenne** (z. B. Yagi, SATCOM-Antenne): bündelt in eine Richtung – mehr Reichweite, weniger Störung von der Seite, schwerer zu peilen. Muss ausgerichtet werden.']},
+    {h:'Kabel, Stecker, Anpassung', li:['Funkgerät, Kabel und Antenne sind auf **50 Ω** ausgelegt. Passt die Antenne nicht (hohes **Stehwellenverhältnis**, SWR/VSWR), kommt die Leistung nicht heraus – das Gerät regelt herunter oder meldet einen Fehler.', 'Bei HF macht ein **Antennenanpassgerät (Tuner/Koppler)** Draht- und Peitschenantennen passend.', 'Lange Koaxkabel dämpfen, bei UHF stärker als bei VHF. Kabel nicht knicken, Stecker (BNC, TNC, N) trocken und fest.', '**Gegengewicht**: Draht bzw. Radials am Masseanschluss – ersetzt bei λ/4-Antennen die Erde.']},
+  ],
+  behelf: [
+    {h:'Wann Behelfsantenne?', p:['Wenn die Peitsche nicht reicht (Entfernung, Gelände), abgebrochen ist oder du mehr Höhe brauchst. Material: isolierter Draht (Feldkabel), Koaxkabel, Isolatoren aus Kunststoff, Schnur zum Abspannen, Steine oder Heringe.', 'Erst rechnen: λ = 300/f, dann Drahtlängen. Lieber etwas zu lang schneiden – kürzen geht, verlängern nicht.']},
+    {h:'Halbwellendipol', fig:'dipol', li:['Zwei Drähte je **λ/4 ≈ 71/f m**, in der Mitte das Koaxkabel (Innenleiter an einen Draht, Schirm an den anderen).', 'Waagerecht zwischen zwei Bäumen oder Masten, Enden mit Isolatoren.', 'Strahlt am stärksten **quer zum Draht** – Draht quer zur Richtung der Gegenstelle spannen.', 'Senkrecht aufgehängt (vertikaler Dipol) ist er rundstrahlend und vertikal polarisiert – gut für VHF.']},
+    {h:'Inverted-V', fig:'invv', li:['Ein Dipol, dessen Mitte oben am Mast oder Ast hängt; die Schenkel laufen schräg nach unten.', 'Winkel zwischen den Schenkeln **mindestens 90°**.', 'Braucht nur **einen** hohen Punkt und strahlt fast rundum.']},
+    {h:'Ground-Plane („Dschungelantenne“)', fig:'gp', li:['Senkrechter Strahler **λ/4** plus 3–4 **Radials λ/4**, die etwa **45° nach unten** laufen.', 'Rundstrahlend und vertikal polarisiert – die klassische VHF-FM-Behelfsantenne, um die Antenne über Bewuchs zu bringen.', 'Beispiel 40 MHz: λ/4 ≈ 71/40 ≈ 1,8 m für Strahler und jedes Radial.']},
+    {h:'Langdraht', fig:'langdraht', li:['Ein langer Draht (mindestens λ/2, besser mehrere λ) vom Gerät schräg nach oben zu einem Baum.', 'Braucht bei HF ein **Anpassgerät** und ein **Gegengewicht** bzw. eine Erde.', 'Lange Drähte strahlen vor allem in **Drahtrichtung** – zur Gegenstelle hin spannen.']},
+    {h:'NVIS-Antenne', fig:'nvis', li:['Waagerechter Dipol **niedrig** über dem Boden: etwa **0,1–0,25 λ**.', 'Strahlt steil nach oben – Verbindung im Umkreis bis ca. 400 km, auch über Berge hinweg.', 'Behelf mit HF-Manpack: Peitsche waagerecht abspannen bzw. nach hinten neigen.']},
+    {h:'Merke', tip:'Antennenenden führen beim Senden Hochspannung: nicht anfassen, mit Isolatoren und Schnur abspannen, nie mit Draht. Der strahlende Draht darf keine nassen Äste berühren.'},
+  ],
+  aufbau: [
+    {h:'Standort', fig:'standort', li:['**Hoch**, aber nicht als Silhouette auf dem Kamm: knapp unter dem Kamm auf der Seite zur Gegenstelle.', 'Nicht in Senken, Tälern, direkt hinter Gebäuden oder Fahrzeugen.', 'Abstand zu Metallflächen, Stahlbeton, Brücken – und vor allem zu **Stromleitungen**.', 'Im Wald: Lichtung suchen oder die Antenne über die Baumkronen bringen.']},
+    {h:'Abgesetzt und getarnt', li:['Gepeilt wird die **Antenne**, nicht der Gefechtsstand: Antennen abgesetzt aufbauen (Fernbedienung, langes Kabel).', 'Nur so hoch wie nötig, Antenne nicht unnötig über die Deckung ragen lassen.', 'Mehrere Funkgeräte: Antennen möglichst weit auseinander und nicht auf gleicher Höhe – sonst stören sie sich gegenseitig.']},
+    {h:'Erdung und Gegengewicht', fig:'erdung', li:['**Schutz**: ableiten bei Blitz oder Stromfehlern. **Funktion**: λ/4- und HF-Drahtantennen brauchen einen Gegenpol.', '**Erdungsstab** tief in feuchten Boden, ggf. Wasser angießen; Verbindung kurz und dick.', 'Bei trockenem, felsigem, sandigem oder gefrorenem Boden hilft ein **Gegengewicht** (Radials auf oder knapp über dem Boden) mehr als ein Erdungsstab.', 'Im Fahrzeug übernimmt die Fahrzeugmasse diese Aufgabe – Masseband prüfen.']},
+    {h:'Mast und Kabel', li:['Mast in drei Richtungen (je 120°) abspannen, Heringe fest, Abspannungen nicht über Wege.', 'Koaxkabel ohne Knicke führen, Zugentlastung, Stecker gegen Nässe abkleben.', 'Nach dem Aufbau: **Funkprobe** mit der Gegenstelle.']},
+  ],
+  sicher: [
+    {h:'Stromleitungen', p:['Häufigste tödliche Gefahr beim Antennenbau. Mast und Antenne **nie in der Nähe von Stromleitungen** aufbauen – Abstand mindestens **doppelte Mast- bzw. Antennenhöhe**. Auch beim Fahren: lange Fahrzeugantennen unter Leitungen und Brücken herunterbinden.']},
+    {h:'Hochfrequenz', li:['Sendeantennen beim Senden **nicht berühren** (Verbrennungen).', 'Abstand halten zu Antennen mit hoher Leistung (Fahrzeugverstärker, SATCOM) – nicht direkt vor eine sendende Richtantenne stellen.', 'Erst Antenne anschließen, dann senden – Senden ohne Antenne kann das Gerät beschädigen.']},
+    {h:'Gewitter', p:['Bei Gewitter keine Antennen aufbauen, hohe Antennen abbauen, Abstand zu Masten, Erdung angeschlossen lassen.']},
+    {h:'Lithiumakkus', p:['Beschädigte, aufgeblähte oder heiße Lithiumakkus und -batterien sofort aussondern – sie können brennen und giftige Gase abgeben. Nicht öffnen, nicht kurzschließen, nicht ins Feuer.']},
+  ],
+  sprech: [
+    {h:'Grundregeln', li:['Erst **zuhören**, ob das Netz frei ist; erst denken, dann sprechen.', 'Sprechtaste drücken, **kurz warten**, dann sprechen – bei Verschlüsselung und Frequenzsprung braucht das Gerät einen Moment.', 'Kurz, klar, normale Lautstärke, Mikrofon nah am Mund, mit dem Rücken zum Wind.', 'Keine Klarnamen, keine Einheiten oder Orte im Klartext, wenn unverschlüsselt.']},
+    {h:'Rufen und Funkprobe', p:['Aufbau: **Gerufener – THIS IS – Rufender**. Beispiel: „HOG 31, THIS IS STALKER 11, RADIO CHECK, OVER.“ – „STALKER 11, THIS IS HOG 31, LOUD AND CLEAR, OVER.“', 'Signalstärke: LOUD, GOOD, WEAK, VERY WEAK, FADING. Lesbarkeit: CLEAR, READABLE, DISTORTED, WITH INTERFERENCE, INTERMITTENT, UNREADABLE.']},
+    {h:'Die wichtigsten Betriebswörter', li:['**ROGER**: empfangen. **WILCO**: verstanden, wird ausgeführt (enthält ROGER – nie „ROGER WILCO“).', '**OVER**: Antwort erwartet. **OUT**: Ende, keine Antwort – nie „OVER AND OUT“.', '**SAY AGAIN**: bitte wiederholen – nie „REPEAT“, das heißt bei der Artillerie „nochmal schießen“.', '**I SPELL**, **BREAK**, **WAIT**, **WAIT OUT**, **CORRECTION**, **READ BACK** – alle im Übungsteil „Sprechfunk“.']},
+    {h:'Buchstaben und Zahlen', p:['NATO-Alphabet: ALFA, BRAVO, CHARLIE … ZULU (Achtung: ALFA und JULIETT so geschrieben).', 'Zahlen: ZE-RO, WUN, TOO, TREE, FOW-ER, FIFE, SIX, SEV-EN, AIT, NIN-ER; Komma bzw. Punkt: DAY-SEE-MAL. Ziffern einzeln sprechen: 266.100 = „TOO SIX SIX DAY-SEE-MAL WUN“.']},
+  ],
+  netze: [
+    {h:'Welches Netz auf welchem Band', li:['**Zum Lfz**: UHF AM (225–400 MHz), Ausweich VHF AM oder FM.', '**Zur eigenen Truppe und zum Führer**: VHF FM (30–88 MHz), meist mit Frequenzsprung und verschlüsselt.', '**Zur übergeordneten Stelle bzw. für Anforderungen** über große Entfernung: SATCOM oder HF.', '**Daten**: digitale CAS-Nachrichten (VMF, DACAS), Link 16 über die Lfz, Videoempfang (ROVER).', 'Ein JTAC betreibt deshalb meist mehrere Netze gleichzeitig – z. B. Manpack für UHF und SATCOM plus Handfunkgerät für VHF FM.']},
+    {h:'PACE-Plan', p:['Für jedes wichtige Netz gibt es einen Ausweichplan: **P**rimary, **A**lternate, **C**ontingency, **E**mergency. Beispiel Luft-Boden: P = UHF AM, A = VHF AM, C = SATCOM über die Führungsstelle, E = optische Signale (Markierung, Pyro, IR).', 'Wechsel nach Absprache bzw. Zeit – jeder muss wissen, wann auf die nächste Stufe gewechselt wird.']},
+    {h:'Fernmeldeunterlagen', p:['Frequenzen, Rufzeichen, Authentisierung und Schlüsselzeiten stehen in den Fernmeldeunterlagen (z. B. SOI) bzw. für Lfz in ATO und SPINS. Vor dem Einsatz: alles eingestellt, geprüft und als Presets gespeichert.']},
+    {h:'Relais', p:['Kommt keine direkte Verbindung zustande, hilft eine Relaisstation (Retransmission) oder ein Lfz als Relais – Betriebswort **RELAY TO**.']},
+  ],
+  stoer: [
+    {h:'Störung erkennen', li:['Anzeichen: plötzliches Rauschen, Töne, Pulse, Musik, ständig belegter Kanal, Verbindung bricht ab, obwohl das Gerät in Ordnung ist.', 'Test: **Antenne abschrauben** (nur im Empfang!). Wird das Geräusch deutlich leiser oder ist weg → es kommt **von außen** (Störung). Bleibt es → eher **Gerätefehler**.', 'Nicht im Klartext durchgeben, dass du gestört wirst.']},
+    {h:'Gegenmaßnahmen', li:['Weiterarbeiten – der Gegner will, dass du aufgibst.', 'Gelände zwischen Störer und eigene Antenne bringen, Standort wechseln, Antenne ausrichten bzw. Richtantenne.', 'Leistung erhöhen (kostet Peilschutz), Relais nutzen, auf Ausweichfrequenz nach Plan wechseln.', 'Störung an die übergeordnete Stelle melden.']},
+    {h:'Peilschutz', li:['Kurz senden, so selten wie möglich.', 'So **wenig Leistung** wie nötig.', 'Richtantennen und Gelände als Deckung zum Feind.', 'Antennen abgesetzt, Standort wechseln, EMCON nach Befehl.']},
+    {h:'Frequenzsprung und Verschlüsselung', li:['**SINCGARS** (VHF FM) und **HAVE QUICK**/**SATURN** (UHF) springen viele Male pro Sekunde zwischen Frequenzen – schwer zu stören und zu peilen.', 'Dafür müssen alle Geräte im Netz **dieselbe Uhrzeit** (TOD), denselben Sprungsatz bzw. dasselbe Tageswort (WOD) und dieselbe Netznummer haben.', 'Verschlüsselung: Schlüssel werden mit einem **Füllgerät** geladen; alle brauchen denselben gültigen Schlüssel. Klartext geht, verschlüsselt nicht → zuerst Schlüssel prüfen.', 'Fremde Station gibt sich als eigene aus → **authentisieren**.']},
+  ],
+  satcom: [
+    {h:'UHF-SATCOM (TACSAT)', p:['Taktischer Satellitenfunk läuft über Satelliten in rund 36 000 km Höhe über dem Äquator, meist im UHF-Bereich um 240–320 MHz. Vorteil: Verbindung über Hunderte bis Tausende km ohne Relais.', 'Betriebsarten: fester Kanal (dedicated) oder **DAMA** bzw. **IW**, die einen Kanal zeitlich auf viele Nutzer aufteilen. **MUOS** ist das neue System – auch mit Handfunkgerät und Peitsche, sogar in Bewegung.']},
+    {h:'Antenne ausrichten', fig:'sat', li:['Richtantenne nach **Azimut** (Kompassrichtung) und **Elevation** (Winkel über dem Horizont) aus den Fernmeldeunterlagen ausrichten.', 'In Mitteleuropa zeigt sie grob nach **Süden**, etwa 20–35° hoch – je nach Satellit.', '**Freie Sicht** zum Satelliten: keine Bäume, Gebäude oder Hänge in der Richtung.', 'Polarisation (zirkular) und Antennentyp passend; Abstand zur Antenne beim Senden.']},
+    {h:'Laufzeit', p:['Der Weg zum Satelliten und zurück kostet etwa eine Viertelsekunde je Richtung. Nach „OVER“ kurz warten und nicht ins Wort fallen.']},
+  ],
+  strom: [
+    {h:'Laufzeit planen', li:['Senden, hohe Leistung, Breitband-Wellenformen und SATCOM verbrauchen am meisten.', 'Leistung so niedrig wie möglich – spart Strom **und** erschwert die Peilung.', 'Ersatzakkus für die ganze Einsatzdauer mitnehmen; vor dem Einsatz voll laden und Ladezustand prüfen.', 'Im Fahrzeug: Fahrzeugadapter bzw. Verstärker nutzen; bei langen Einsätzen Ladegerät oder Solarpanel.']},
+    {h:'Kälte', p:['Bei Kälte sinkt die nutzbare Kapazität stark. Ersatzakkus **am Körper warm halten**, Akku erst kurz vor Gebrauch einsetzen.']},
+    {h:'Pufferbatterie', p:['Viele Geräte halten Schlüssel und Uhrzeit mit einer kleinen Pufferbatterie, während der Hauptakku gewechselt wird. Ist sie leer, sind nach dem Akkuwechsel **Schlüssel und Uhrzeit weg** – neu laden bzw. stellen.']},
+  ],
+  fehler: [
+    {h:'Von innen nach außen prüfen', li:['**1. Strom**: Gerät an, Akku geladen und richtig eingerastet?', '**2. Einstellung**: richtiger Kanal bzw. Preset, Frequenz, Betriebsart (AM/FM, PT/CT, Wellenform), Lautstärke, Rauschsperre (Squelch)?', '**3. Zubehör**: Handapparat bzw. Headset und Sprechtaste in Ordnung? Anderen Hörer probieren.', '**4. Antenne und Kabel**: richtige Antenne für das Band, fest, unbeschädigt, Stecker sauber?', '**5. Krypto und Zeit**: Schlüssel geladen und gleich, Uhrzeit synchron (bei Frequenzsprung)?', '**6. Standort**: Sichtlinie, Entfernung, Gelände, Antennenhöhe?', '**7. Gegenstelle**: Ist sie auf Empfang, richtig eingestellt, überhaupt da?']},
+    {h:'Typische Muster', li:['Du hörst die Gegenstelle, sie dich nicht → Sendeseite: Sprechtaste, Mikrofon, Leistung, Antenne.', 'Klartext geht, verschlüsselt nicht → Schlüssel.', 'Feste Frequenz geht, Frequenzsprung nicht → Uhrzeit, Sprungsatz, Netznummer.', 'Verbindung kommt und geht → Gelände, Entfernung, Lfz-Position, Akku.', 'Rauschen bleibt auch ohne Antenne → Gerät; verschwindet → Störung von außen.']},
+  ],
+  geraete: [
+    {h:'Überblick', li:['**AN/PRC-117G**: Manpack (L3Harris), 30–2000 MHz – das „große“ Gerät für UHF-Flugfunk, SATCOM und Breitband-Daten.', '**AN/PRC-152A**: Handfunkgerät (L3Harris), 30–520 MHz – VHF und UHF in einem.', '**AN/PRC-148 JEM**: Handfunkgerät (Thales), 30–512 MHz – leicht und weit verbreitet.', '**AN/PRC-160**: HF/VHF-Manpack (L3Harris), 1,5–60 MHz – Weitverbindung ohne Satellit.', '**AN/PRC-163**: Zwei-Kanal-Handfunkgerät (L3Harris) – zwei Netze gleichzeitig, MUOS-SATCOM.', 'Details mit Bildern: „Funkgeräte“ auf der Startseite.']},
+  ]
+};
+
+/* ---------- Funkgeräte (öffentliche Herstellerangaben) ---------- */
+const DEV = [
+  {id:'117g', n:'AN/PRC-117G', h:'L3Harris (Falcon III)', typ:'Manpack', f:'30–2000 MHz', fx:'Schmalband VHF 30–225 und UHF 225–512 MHz, Breitband 225–2000 MHz',
+   p:'Schmalband 10 W, SATCOM 20 W, Breitband 20 W Spitze (5 W Mittel); mit Fahrzeugverstärker bis 50 W', w:'ca. 5,4 kg mit Akkus',
+   wf:'AM/FM, SINCGARS, HAVE QUICK I/II, SATURN (optional), UHF-SATCOM (DAMA), Breitband-Netzwerk ANW2C und SRW, ROVER-Videoempfang im L-Band (optional)',
+   jtac:'Hauptgerät vieler JTAC: UHF-Flugfunk, SATCOM zur Führungsstelle, Breitband-Daten. Groß und schwer, dafür viel Leistung.'},
+  {id:'152a', n:'AN/PRC-152A', h:'L3Harris (Falcon III)', typ:'Handfunkgerät', f:'30–520 MHz und 762–870 MHz', fx:'Schmalband VHF 30–225 und UHF 225–512 MHz, Breitband 225–450 MHz',
+   p:'0,25–5 W einstellbar, 10 W kurzzeitig für SATCOM', w:'ca. 1,1–1,2 kg mit Akku und Antenne',
+   wf:'AM/FM, SINCGARS, HAVE QUICK I/II, P25 (optional), UHF-SATCOM, Breitband-Netzwerk ANW2C',
+   jtac:'Zweitgerät am Mann: VHF FM zur Truppe oder UHF AM zum Lfz, kleiner Ausweich für SATCOM.'},
+  {id:'148', n:'AN/PRC-148 JEM', h:'Thales (MBITR-Familie)', typ:'Handfunkgerät', f:'30–512 MHz', fx:'VHF und UHF durchgehend, Raster 5 bzw. 6,25 kHz',
+   p:'0,1–5 W einstellbar', w:'ca. 0,87 kg',
+   wf:'AM/FM, SINCGARS, HAVE QUICK I/II, P25, UHF-SATCOM (IW, per Software), Relaisbetrieb',
+   jtac:'Bewährtes leichtes Handfunkgerät, lange Standard bei Spezialkräften und TACP.'},
+  {id:'160', n:'AN/PRC-160', h:'L3Harris (Falcon III)', typ:'HF/VHF-Manpack', f:'1,5–60 MHz', fx:'HF 1,5–30 MHz und VHF 30–60 MHz',
+   p:'HF 1, 5 oder 20 W PEP; VHF 1, 5 oder 10 W FM', w:'ca. 4,1 kg ohne Akku',
+   wf:'HF-Sprechfunk (SSB), automatischer Verbindungsaufbau ALE (2G, 3G, 4G), Breitband-HF-Daten bis 120 kbit/s, VHF FM',
+   jtac:'Weitverbindung ohne Satellit – z. B. Rückfallebene, wenn SATCOM gestört oder nicht verfügbar ist; mit NVIS auch im Gebirge.'},
+  {id:'163', n:'AN/PRC-163', h:'L3Harris (Falcon IV)', typ:'Zwei-Kanal-Handfunkgerät', f:'Kanal 1: 30–512 MHz (mit Lücken) und SATCOM; Kanal 2: 225–450 MHz und 1300–2600 MHz', fx:'Kanal 1: VHF 30–88 und 118–174, UHF 225–512 MHz, UHF-SATCOM und MUOS; Kanal 2: UHF 225–450 MHz und L/S-Band 1300–2600 MHz',
+   p:'0,25–5 W, 10 W SATCOM, 3,2 W im L/S-Band', w:'ca. 1,25 kg mit Akku',
+   wf:'Schmalband (u. a. SINCGARS, HAVE QUICK), MUOS-SATCOM, Breitband-Netzwerk; zwei Netze gleichzeitig',
+   jtac:'Ein Gerät für zwei Netze, z. B. UHF zum Lfz und VHF zur Truppe – oder SATCOM unterwegs mit Peitsche (MUOS).'}
+];
+
+/* ---------- Fragen ---------- */
+const QS = [];
+/* M: Verständnisfrage, L: Lage (Fehlersuche), D: Funkgerät, F: Bildfrage zu einer Skizze */
+const M = (id, g, q, a, w, ex, fig) => QS.push({id, kind:'mc', g, q, a, w, ex, fig});
+const L = (id, g, lage, q, a, w, ex) => QS.push({id, kind:'lage', g, lage, q, a, w, ex});
+const D = (id, q, a, w, ex) => QS.push({id, kind:'dev', g:'geraete', q, a, w, ex});
+const SQ = (id, g, q, a, w, ex) => QS.push({id, kind:'seq', g, q, a, w, ex});
+
+/* Grundlagen */
+M('g1','grund','Wie lang ist die Welle bei 30 MHz?','10 m',['1 m','100 m','3 m'],'λ = 300 / f = 300 / 30 = 10 m.');
+M('g2','grund','Welches Band reicht von 30 bis 300 MHz?','VHF',['HF','UHF','SHF'],'HF 3–30, VHF 30–300, UHF 300–3000 MHz – jeweils eine Null mehr.');
+M('g3','grund','In welchem Bereich liegt der militärische UHF-Flugfunk?','225–400 MHz',['118–137 MHz','30–88 MHz','960–1215 MHz'],'Formal beginnt UHF erst bei 300 MHz – im Flugfunk heißt aber der ganze Bereich 225–400 MHz „UHF“.');
+M('g4','grund','Ein Lfz gibt dir 266.100 als Frequenz. Auf welchem Funk stellst du sie ein?','UHF-Flugfunk (AM)',['VHF FM – unter 300 MHz ist VHF','HF – mit Tuner','SATCOM – das ist ein Satellitenkanal'],'Formal liegt 266,1 MHz noch im VHF-Bereich, praktisch ist es militärischer UHF-Flugfunk (225–400 MHz, AM). Der Punkt ist das Dezimalkomma: 266,1 MHz.');
+M('g5','grund','Warum nutzt der Flugfunk AM?','Senden zwei gleichzeitig, hört man beide – nichts wird unbemerkt verschluckt',['AM rauscht weniger als FM','AM braucht keine Antenne','AM ist immer verschlüsselt'],'Bei FM würde der stärkere Sender den schwächeren ganz überdecken (Capture-Effekt) – ein ABORT könnte unbemerkt untergehen.');
+M('g6','grund','Was ist der Capture-Effekt bei FM?','Der stärkere Sender überdeckt den schwächeren vollständig',['Beide Sender sind mit Pfeifton zu hören','Das Gerät schaltet auf AM um','Die Frequenz springt automatisch'],'Deshalb merkt man bei FM oft nicht, dass gleichzeitig jemand anderes gesendet hat.');
+M('g7','grund','Wo liegt der VHF-FM-Truppenfunk?','30–88 MHz',['118–137 MHz','225–400 MHz','3–30 MHz'],'Brevity: FOX MIKE = VHF FM.');
+M('g8','grund','Was bedeutet „CT“ in der Anzeige des Funkgeräts?','Verschlüsselt (cipher text)',['Klartext','Kanaltest','Kalibrierung'],'PT = plain text (Klartext), CT = cipher text (verschlüsselt).');
+M('g9','grund','Vierfache Sendeleistung bringt im freien Raum etwa …','doppelte Reichweite',['vierfache Reichweite','16-fache Reichweite','keine Änderung'],'Die Leistung verteilt sich auf eine Kugelfläche; Reichweite wächst nur mit der Wurzel der Leistung. In der Praxis begrenzt bei VHF/UHF meist die Sichtlinie.');
+M('g10','grund','Was bringt bei VHF/UHF meist mehr als zusätzliche Leistung?','Antennenhöhe und freie Sichtlinie',['Andere Tageszeit','Längeres Kabel','Wechsel von AM auf FM'],'Höhe schlägt Leistung – bei Sichtlinienverbindungen entscheidet, was zwischen den Antennen liegt.');
+M('g11','grund','Welche Betriebsart nutzt der Sprechfunk auf HF meist?','Einseitenband (USB)',['FM','AM','SINCGARS'],'SSB/USB ist sparsam in Bandbreite und Leistung – Standard für HF-Sprechfunk.');
+M('g12','grund','Welche Wellenlänge hat 300 MHz?','1 m',['10 m','0,1 m','3 m'],'λ = 300 / 300 = 1 m.');
+M('g13','grund','Was bedeutet Simplex-Betrieb?','Alle auf einer Frequenz, immer nur einer spricht',['Senden und Empfangen gleichzeitig','Zwei Frequenzen über ein Relais','Nur Datenübertragung'],'Taktischer Sprechfunk ist Simplex: Sprechtaste drücken, sprechen, loslassen.');
+
+/* Ausbreitung */
+M('a1','ausb','Wodurch erreicht HF Entfernungen von Tausenden km?','Reflexion an der Ionosphäre (Raumwelle)',['Bodenwelle','Satellit','Sehr hohe Sendeleistung'],'',  'ausbreitung');
+M('a2','ausb','Was ist die „tote Zone“ bei HF?','Bereich zwischen Ende der Bodenwelle und erstem Auftreffen der Raumwelle',['Bereich direkt unter einer UHF-Antenne','Gebiet ohne Satellitenempfang','Bereich hinter einem Störsender'],'Dort kommt weder Bodenwelle noch Raumwelle an – NVIS vermeidet sie.');
+M('a3','ausb','Wofür ist NVIS gut?','HF-Verbindung im Umkreis bis ca. 400 km, auch hinter Bergen',['UHF zum Lfz über 200 NM','SATCOM ohne Satellit','VHF FM über 100 km'],'Steilstrahlung nach oben, Rückkehr im Nahbereich – ohne tote Zone.');
+M('a4','ausb','Welche Frequenzen nimmt man für NVIS?','Niedrige HF-Frequenzen, etwa 2–10 MHz',['Hohe HF-Frequenzen, 20–30 MHz','VHF 30–88 MHz','UHF 225–400 MHz'],'Hohe Frequenzen gehen bei steilem Einfall durch die Ionosphäre hindurch und kommen nicht zurück.');
+M('a5','ausb','HF-Verbindung in der Nacht: Was gilt meist?','Eher tiefere Frequenz wählen',['Eher höhere Frequenz wählen','Keine Änderung nötig','Auf VHF wechseln'],'Faustregel: nachts tiefer, tagsüber höher – daher Tag- und Nachtfrequenzen.');
+M('a6','ausb','Du am Boden, Lfz in 10 000 ft. Funkhorizont etwa?','ca. 125 NM',['ca. 12 NM','ca. 40 NM','ca. 1000 NM'],'1,23 × (√6 + √10 000) ≈ 1,23 × (2,4 + 100) ≈ 126 NM.','horizont');
+M('a7','ausb','Zwei Bodenstationen, Antennen je 2 m hoch, flaches Gelände. Funkhorizont etwa?','ca. 12 km',['ca. 2 km','ca. 50 km','ca. 120 km'],'4,1 × (√2 + √2) ≈ 4,1 × 2,8 ≈ 12 km – deshalb sind Höhe und Behelfsantennen so wichtig.');
+M('a8','ausb','Was dämpft UHF besonders stark?','Nasses Laub und dichter Wald',['Trockene Luft','Nacht','Wasserflächen'],'Über Wasser geht es dagegen besonders weit.');
+M('a9','ausb','In der Stadt „flattert“ die Verbindung. Einfachste erste Maßnahme?','Standort um wenige Meter verändern',['Leistung auf Minimum','Auf HF wechseln','Antenne waagerecht legen'],'Reflexionen überlagern sich – schon ein paar Meter ändern das Bild.');
+M('a10','ausb','Warum reicht UHF zum Lfz viel weiter als zu einer Bodenstation?','Das Lfz ist hoch – der Funkhorizont wächst mit der Höhe',['UHF wird an der Ionosphäre reflektiert','Lfz senden mit 1000 W','Bodenstationen nutzen FM'],'Funkhorizont ≈ 1,23 × (√h₁ + √h₂) NM.');
+M('a11','ausb','Wie verhält sich VHF an einer Geländekante im Vergleich zu UHF?','VHF wird etwas gebeugt, UHF kaum',['UHF wird stärker gebeugt','Beide gleich','VHF wird vollständig reflektiert'],'Je länger die Welle, desto besser kommt sie „um die Ecke“.');
+
+/* Antennen */
+M('n1','ant','Halbwellendipol für 50 MHz – Gesamtlänge etwa?','ca. 2,9 m',['ca. 1,4 m','ca. 6 m','ca. 0,7 m'],'143 / 50 ≈ 2,9 m, also je Schenkel ca. 1,4 m.');
+M('n2','ant','Ein Lfz kreist genau über dir, die Verbindung über die Peitsche wird schlecht. Warum?','Eine senkrechte Stabantenne strahlt kaum nach oben',['Das Lfz ist zu weit weg','Dopplereffekt','Capture-Effekt'],'Lfz bitten, den Kreis zu versetzen, oder die Antenne neigen.','whip');
+M('n3','ant','Welche Polarisation nutzen VHF/UHF-Boden- und Flugfunk?','Vertikal',['Horizontal','Zirkular','Egal'],'Stabantennen stehen senkrecht. Zirkular nutzt SATCOM, horizontal meist der HF-Dipol.');
+M('n4','ant','Das Gerät meldet hohes VSWR. Was ist wahrscheinlich?','Antenne oder Kabel passt nicht oder ist defekt',['Akku leer','Schlüssel abgelaufen','Störung von außen'],'Die Leistung wird zurückgeworfen – Antenne, Kabel, Stecker und Band prüfen.');
+M('n5','ant','Wozu dient bei HF ein Antennenanpassgerät (Tuner)?','Es macht Draht- und Peitschenantennen für die Frequenz passend',['Es verschlüsselt','Es verstärkt auf 1 kW','Es filtert Störsender heraus'],'HF-Antennen sind fast nie genau resonant – der Tuner gleicht aus.');
+M('n6','ant','Was ist ein Gegengewicht?','Draht bzw. Radials am Masseanschluss als Ersatz für die Erde',['Gewicht am Mastfuß','Ein zweites Funkgerät','Ferritkern im Kabel'],'λ/4-Antennen brauchen einen Gegenpol – Erde, Fahrzeugmasse oder Gegengewicht.');
+M('n7','ant','Warum hilft eine Richtantenne beim Peilschutz?','Sie strahlt vor allem in eine Richtung – von der Seite schwer zu empfangen',['Sie sendet nur verschlüsselt','Sie braucht weniger Strom','Sie springt in der Frequenz'],'Außerdem stört ein Störsender von der Seite weniger.');
+M('n8','ant','Langes, dünnes Koaxkabel zur UHF-Antenne …','dämpft das Signal spürbar',['erhöht die Reichweite','ist bei UHF egal','ersetzt das Gegengewicht'],'Je höher die Frequenz, desto größer die Kabelverluste.');
+M('n9','ant','λ/4-Strahler für 75 MHz – Länge etwa?','ca. 0,95 m',['ca. 1,9 m','ca. 4 m','ca. 0,25 m'],'71 / 75 ≈ 0,95 m.');
+M('n10','ant','Auf welche Impedanz sind Funkgerät, Kabel und Antenne meist ausgelegt?','50 Ω',['300 Ω','8 Ω','600 Ω'],'Passt die Antenne nicht zu 50 Ω, steigt das Stehwellenverhältnis.');
+
+/* Behelfsantennen */
+const ANTNAMES = ['Halbwellendipol','Inverted-V','Ground-Plane („Dschungelantenne“)','Langdraht','NVIS-Antenne (niedriger Dipol)'];
+const ANTW = a => ANTNAMES.filter(x => x !== a).slice(0, 3);
+M('b1','behelf','Welche Behelfsantenne ist das?','Halbwellendipol',ANTW('Halbwellendipol'),'Zwei Drähte je λ/4 waagerecht zwischen zwei Masten, Speisung in der Mitte.','dipol');
+M('b2','behelf','Welche Behelfsantenne ist das?','Inverted-V',ANTW('Inverted-V'),'Dipol mit Speisepunkt oben am Mast, Schenkel schräg nach unten, Winkel ≥ 90°.','invv');
+M('b3','behelf','Welche Behelfsantenne ist das?','Ground-Plane („Dschungelantenne“)',['Halbwellendipol','Inverted-V','Langdraht'],'Senkrechter λ/4-Strahler mit Radials, die etwa 45° nach unten laufen.','gp');
+M('b4','behelf','Welche Behelfsantenne ist das?','Langdraht',['Halbwellendipol','Inverted-V','Ground-Plane („Dschungelantenne“)'],'Langer Draht schräg nach oben, mit Anpassgerät und Gegengewicht.','langdraht');
+M('b5','behelf','Welche Behelfsantenne ist das?','NVIS-Antenne (niedriger Dipol)',['Inverted-V','Ground-Plane („Dschungelantenne“)','Langdraht'],'Waagerechter Dipol nur 0,1–0,25 λ über dem Boden – strahlt steil nach oben.','nvis');
+M('b6','behelf','Winkel zwischen den Schenkeln einer Inverted-V mindestens?','90°',['30°','45°','180°'],'Bei zu spitzem Winkel heben sich die Schenkel teilweise auf.');
+M('b7','behelf','Wie laufen die Radials einer Behelfs-Ground-Plane?','Etwa 45° nach unten',['Waagerecht nach oben','Senkrecht in den Boden','Parallel zum Strahler'],'So passt die Antenne besser zu 50 Ω und strahlt flach ab.');
+M('b8','behelf','In welche Richtung strahlt ein Halbwellendipol am stärksten?','Quer zum Draht',['In Drahtrichtung','Senkrecht nach oben','Gleich in alle Richtungen'],'Den Draht also quer zur Richtung der Gegenstelle spannen.');
+M('b9','behelf','NVIS-Dipol bei 5 MHz (λ = 60 m): Wie hoch hängt er etwa?','6–15 m',['1 m','30–60 m','direkt auf dem Boden'],'0,1–0,25 λ = 6–15 m. Notfalls tiefer – aber nicht auf den Boden legen.');
+M('b10','behelf','Ground-Plane für 40 MHz – Länge von Strahler und Radials?','je ca. 1,8 m',['je ca. 3,6 m','je ca. 0,9 m','je ca. 7,5 m'],'λ/4 ≈ 71 / 40 ≈ 1,8 m.');
+M('b11','behelf','Womit spannst du Antennendrähte ab?','Isolatoren und Schnur – nie mit Draht',['Direkt mit Draht an den Baum','Mit Koaxkabel','Ohne Isolator, das ist egal'],'Die Enden führen beim Senden Hochspannung; Draht als Abspannung verstimmt die Antenne.');
+M('b12','behelf','Wie schneidest du den Draht für eine Behelfsantenne?','Lieber etwas zu lang – kürzen geht, verlängern nicht',['Genau 300/f lang','Lieber zu kurz','Beliebig lang, bei VHF richtet es der Tuner'],'Die Rechnung ist eine Näherung; abgleichen durch Kürzen.');
+M('b13','behelf','Peitsche abgebrochen, VHF FM auf 45 MHz. Behelf?','Draht mit λ/4 ≈ 1,6 m senkrecht hochziehen, Radials bzw. Gegengewicht dazu',['Ohne Antenne senden','45 m Draht auslegen','Gerät auf AM umstellen'],'71 / 45 ≈ 1,6 m – eine Ground-Plane aus Feldkabel.');
+M('b14','behelf','Ein Langdraht über mehrere λ strahlt vor allem …','in Drahtrichtung',['quer zum Draht','senkrecht nach oben','zum Gerät zurück'],'Deshalb zur Gegenstelle hin spannen.');
+
+/* Aufbau, Standort, Erdung */
+M('u1','aufbau','Bester Standort auf einem Höhenzug?','Knapp unter dem Kamm, auf der Seite zur Gegenstelle',['Genau auf dem Gipfel als Silhouette','Im Tal dahinter','Unten auf der abgewandten Seite'],'Weite Sicht zur Gegenstelle, ohne sich auf dem Kamm abzuzeichnen.','standort');
+M('u2','aufbau','Warum Antennen abgesetzt vom Gefechtsstand aufbauen?','Gepeilt wird die Antenne – nicht der Gefechtsstand',['Weil das Kabel sonst zu kurz ist','Für bessere Polarisation','Wegen der Pufferbatterie'],'Fernbedienung bzw. langes Kabel nutzen.');
+M('u3','aufbau','Worauf achtest du beim Erdungsstab?','Tief in feuchten Boden, kurze und dicke Verbindung',['Möglichst langes, dünnes Kabel','In trockenen Sand','An den Mast hängen statt in den Boden'],'Ggf. Wasser angießen.','erdung');
+M('u4','aufbau','Boden gefroren bzw. felsig – was hilft der HF-Antenne mehr als ein Erdungsstab?','Ein Gegengewicht (Radials)',['Mehr Leistung','Eine kürzere Antenne','Wasser auf das Funkgerät'],'Radials auf oder knapp über dem Boden ersetzen die schlechte Erde.');
+M('u5','aufbau','Zwei Funkgeräte, Antennen direkt nebeneinander – eines stört das andere beim Senden. Abhilfe?','Antennen weiter auseinander und in unterschiedliche Höhe',['Beide auf dieselbe Frequenz','Antennen zusammenbinden','Leistung auf Maximum'],'Gegenseitige Störung (Cosite) sinkt mit dem Abstand.');
+M('u6','aufbau','Wie spannst du einen Mast ab?','In drei Richtungen, je etwa 120°',['In eine Richtung, gegen den Wind','In zwei gegenüberliegende Richtungen','Gar nicht'],'');
+M('u7','aufbau','Du musst im Wald funken. Was tust du?','Lichtung suchen oder Antenne über die Baumkronen bringen',['Antenne im dichtesten Teil verstecken','Immer auf HF wechseln','Antenne flach auf den Boden legen'],'Nasses Laub dämpft VHF und besonders UHF.');
+M('u8','aufbau','Was kommt nach dem Antennenaufbau?','Funkprobe mit der Gegenstelle',['Sofort Leistung auf Maximum','Antenne abbauen','Gerät neu starten'],'');
+
+/* Sicherheit */
+M('s1','sicher','Mindestabstand von Mast bzw. Antenne zu einer Stromleitung?','Mindestens doppelte Mast- bzw. Antennenhöhe',['1 m','Halbe Masthöhe','Kein Abstand nötig, wenn geerdet'],'Fällt der Mast, darf er die Leitung nicht erreichen – häufigste tödliche Gefahr beim Antennenbau.','standort');
+M('s2','sicher','Darfst du die Sendeantenne beim Senden anfassen?','Nein – Verbrennungsgefahr durch Hochfrequenz',['Ja, bei Handfunkgeräten immer','Ja, wenn geerdet','Nur bei FM'],'');
+M('s3','sicher','Senden ohne angeschlossene Antenne …','vermeiden – es kann das Gerät beschädigen',['spart Strom','ist unbedenklich und verbessert den Peilschutz','ist für die Funkprobe vorgeschrieben'],'Erst Antenne anschließen, dann senden.');
+M('s4','sicher','Ein Gewitter zieht auf. Was tust du?','Keine Antennen aufbauen, hohe Antennen abbauen, Abstand zum Mast',['Mast höher stellen','Erdung lösen','Unter dem Mast Schutz suchen'],'');
+M('s5','sicher','Ein Lithiumakku ist aufgebläht. Was tust du?','Sofort aussondern – Brand- und Giftgasgefahr',['Weiter nutzen, bis er leer ist','Am Ofen trocknen','Aufstechen, damit das Gas entweicht'],'');
+M('s6','sicher','Fahrt unter Stromleitungen mit langer Fahrzeugantenne?','Antenne herunterbinden',['Antenne ausfahren','Gerät ausschalten genügt','Kein Risiko bei Gummiantennen'],'');
+
+/* Sprechfunk (zusätzlich zu den Betriebswörtern) */
+M('p1','sprech','Reihenfolge beim Rufen?','Gerufener – THIS IS – Rufender',['Rufender – THIS IS – Gerufener','THIS IS – Gerufener – Rufender','Gerufener – Rufender – THIS IS'],'„HOG 31, THIS IS STALKER 11, …“');
+M('p2','sprech','Warum sagt man für „wiederholen“ nicht REPEAT?','REPEAT bedeutet bei der Artillerie „noch einmal schießen“',['REPEAT ist zu lang','REPEAT ist ein Rufzeichen','REPEAT bedeutet „Ende“'],'Richtig ist SAY AGAIN.');
+M('p3','sprech','Was ist falsch an „ROGER WILCO“?','WILCO enthält ROGER bereits',['Nichts','ROGER muss hinter WILCO stehen','WILCO heißt „nein“'],'');
+M('p4','sprech','Was ist falsch an „OVER AND OUT“?','OVER erwartet eine Antwort, OUT beendet – das widerspricht sich',['Nichts','Es heißt OUT AND OVER','OUT ist kein Betriebswort'],'');
+M('p5','sprech','Wie sprichst du die Frequenz 266.100?','TOO SIX SIX DAY-SEE-MAL WUN',['ZWEIHUNDERTSECHSUNDSECHZIG KOMMA EINS','TWO SIXTY-SIX POINT ONE HUNDRED','TOO SIX SIX WUN ZE-RO ZE-RO'],'Ziffern einzeln, Komma als DAY-SEE-MAL; im Flugfunk hört man auch „POINT“. Nachgestellte Nullen lässt man weg.');
+M('p6','sprech','Die Gegenstelle meldet „WEAK BUT READABLE“. Bedeutet?','Schwach, aber verständlich',['Laut und klar','Unverständlich','Verzerrt'],'');
+M('p7','sprech','Du hast dich im Spruch versprochen. Betriebswort?','CORRECTION',['WRONG','DISREGARD','NEGATIVE'],'CORRECTION, dann richtig weiter. WRONG antwortet auf ein falsches Zurücklesen der Gegenstelle.');
+M('p8','sprech','Warum nach dem Drücken der Sprechtaste kurz warten?','Verschlüsselung bzw. Frequenzsprung brauchen einen Moment',['Damit das Mikrofon warm wird','Weil FM das vorschreibt','Damit der Akku lädt'],'Sonst fehlt der erste Teil des Spruchs.');
+M('p9','sprech','Sofortige Funkstille anordnen?','SILENCE, SILENCE, SILENCE',['MINIMIZE','WAIT OUT','OUT, OUT, OUT'],'Aufheben mit SILENCE LIFTED. MINIMIZE heißt nur „kürzer funken“.');
+M('p10','sprech','Gegenstelle meldet „LOUD BUT DISTORTED“. Was prüfst du?','Sprechweise und Mikrofon: zu nah, zu laut, Wind?',['Antenne','Schlüssel','Frequenz'],'Laut kommt an – also kein Antennen- oder Reichweitenproblem.');
+
+/* JTAC-Netze und PACE */
+M('k1','netze','Mit dem CAS-Lfz funkst du primär auf …','UHF AM (225–400 MHz)',['VHF FM (30–88 MHz)','HF USB','Link 16'],'Ausweich meist VHF AM bzw. FM.');
+M('k2','netze','Mit der eigenen Kampftruppe meist auf …','VHF FM (30–88 MHz)',['UHF AM','SATCOM','HF ALE'],'');
+M('k3','netze','Wofür steht PACE?','Primary, Alternate, Contingency, Emergency',['Plan, Act, Check, Evaluate','Primary, Auxiliary, Contact, Escape','Position, Altitude, Course, ETA'],'');
+M('k4','netze','Anforderung an die übergeordnete Stelle, 200 km entfernt, kein Relais. Womit?','SATCOM oder HF',['UHF AM direkt','VHF FM direkt','Handfunkgerät mit Peitsche über Sichtlinie'],'');
+M('k5','netze','Warum hat ein JTAC oft mehrere Funkgeräte?','Er betreibt mehrere Netze gleichzeitig',['Als Ersatz, falls eines nass wird','Jedes Gerät speichert nur einen Kanal','Wegen der Gewichtsverteilung'],'Lfz, eigene Truppe, Führungsstelle, Daten.');
+M('k6','netze','Wo stehen Frequenzen und Rufzeichen der Lfz?','In ATO und SPINS',['Nur in der ACO','Im 9-Line','Auf dem Kniebrett des JTAC, sonst nirgends'],'');
+M('k7','netze','Keine direkte Verbindung – ein Lfz hört beide Stationen. Betriebswort?','RELAY TO',['WAIT OUT','I SPELL','SAY AGAIN'],'');
+M('k8','netze','Was könnte die „Emergency“-Stufe im PACE-Plan Luft-Boden sein?','Optische Signale (Markierung, Pyro, IR)',['UHF AM','VHF AM','SATCOM'],'');
+
+/* Störung, Peilung, Schutz */
+M('t1','stoer','Rauschen auf dem Kanal. Antenne ab (nur Empfang) – Rauschen weg. Folgerung?','Störung kommt von außen über die Antenne',['Gerätefehler','Akku leer','Schlüssel falsch'],'');
+M('t2','stoer','Rauschen bleibt auch ohne Antenne. Folgerung?','Eher Gerätefehler oder Rauschsperre offen',['Störsender in der Nähe','Ionosphärenstörung','Gegenstelle sendet'],'');
+M('t3','stoer','Deine Verbindung wird gestört. Erste Reaktion?','Weiterarbeiten und den Spruch durchbringen',['Sofort abschalten und abwarten','Im Klartext melden, dass ihr gestört werdet','Leistung auf Minimum'],'Der Gegner will, dass du aufgibst oder dich verrätst.');
+M('t4','stoer','Wie nutzt du Gelände gegen einen Störsender?','Höhenzug zwischen Störer und eigene Antenne bringen',['Antenne auf den höchsten Punkt Richtung Feind','Antenne nahe zum Störer','Gelände spielt keine Rolle'],'');
+M('t5','stoer','Was verschlechtert den Peilschutz?','Lange Sprüche mit voller Leistung',['Kurze Sprüche','Wenig Leistung','Richtantenne'],'');
+M('t6','stoer','Was brauchen HAVE QUICK-Geräte im Netz gemeinsam?','Gleiche Uhrzeit, gleiches Tageswort (WOD), gleiche Netznummer',['Gleiche Sendeleistung','Gleiche Akkus','Gleiche Antennenhöhe'],'');
+M('t7','stoer','Eine fremde Station meldet sich mit einem eigenen Rufzeichen – du zweifelst. Was tust du?','Authentisieren',['Ignorieren','Ohne Absprache Frequenz wechseln','Mit Klarnamen nachfragen'],'');
+M('t8','stoer','Womit werden Schlüssel in das Funkgerät geladen?','Mit einem Füllgerät',['Über die Antenne','Per Sprachbefehl','Durch Akkuwechsel'],'');
+M('t9','stoer','Was ist SINCGARS?','Frequenzsprungverfahren im VHF-FM-Truppenfunk',['UHF-Satellitenfunk','HF-Verbindungsaufbau','Lasercode-Verfahren'],'Gegenstück im UHF-Flugfunk: HAVE QUICK bzw. SATURN.');
+M('t10','stoer','Brevity für anhaltende Störung unbekannter Herkunft auf deinem Kanal?','SHREW',['MUSIC','SNOOZE','WOOD'],'MINIMIZE fordert kürzere Sprüche, KICK einen ungeplanten Frequenzwechsel.');
+
+/* SATCOM */
+M('c1','satcom','Wohin zeigt die UHF-SATCOM-Antenne in Mitteleuropa grob?','Nach Süden, etwa 20–35° hoch',['Nach Norden, flach','Senkrecht nach oben','Nach Osten, flach'],'Die Satelliten stehen über dem Äquator.','sat');
+M('c2','satcom','Warum zeigt die Antenne nach Süden?','Geostationäre Satelliten stehen über dem Äquator',['Dort ist die Ionosphäre dünner','Wegen des Erdmagnetfelds','Das ist Vorschrift wegen Peilschutz'],'');
+M('c3','satcom','SATCOM im Wald: Antenne richtig ausgerichtet, aber keine Verbindung. Was tust du?','Freie Sicht zum Satelliten schaffen – Lichtung, anderer Hang',['Leistung auf Minimum','Peitsche statt Richtantenne','Auf FM umschalten'],'');
+M('c4','satcom','Was ist DAMA?','Ein Satellitenkanal wird zeitlich auf viele Nutzer aufgeteilt',['Ein Verschlüsselungsverfahren','Eine HF-Betriebsart','Eine Antennenform'],'Nachfolger: Integrated Waveform (IW).');
+M('c5','satcom','Was ist das Besondere an MUOS?','SATCOM auch mit Handfunkgerät und Peitsche, sogar in Bewegung',['HF ohne Antenne','Laserkommunikation','Nur Daten, keine Sprache'],'');
+M('c6','satcom','Wie hoch stehen die Kommunikationssatelliten etwa?','ca. 36 000 km',['ca. 400 km','ca. 3600 km','ca. 360 000 km'],'Geostationär – sie stehen scheinbar still über einem Punkt am Äquator.');
+M('c7','satcom','Was beachtest du nach „OVER“ über SATCOM?','Kurz warten – die Laufzeit beträgt etwa 0,25 s je Richtung',['Sofort weitersprechen','Dreimal OVER sagen','Leistung erhöhen'],'');
+M('c8','satcom','In welchem Bereich arbeitet UHF-SATCOM etwa?','ca. 240–320 MHz',['30–88 MHz','118–137 MHz','2–10 MHz'],'');
+M('c9','satcom','Du richtest die SATCOM-Antenne mit dem Kompass aus. Was beachtest du?','Kompass zeigt magnetisch: Missweisung und Metall in der Nähe beachten',['Nichts, der Kompass zeigt rechtweisend','Kompass nur nachts nutzen','Azimut ist bei SATCOM egal'],'');
+
+/* Strom und Akkus */
+M('e1','strom','-15 °C, der Akku ist schnell leer. Was tust du?','Ersatzakkus am Körper warm halten',['Akkus kühl lagern','Leistung erhöhen','Akku öffnen und trocknen'],'');
+M('e2','strom','Was verbraucht am meisten Strom?','Senden mit hoher Leistung, SATCOM und Breitband-Daten',['Empfang mit Rauschsperre','Display ohne Beleuchtung','Standby'],'');
+M('e3','strom','Nach dem Akkuwechsel geht verschlüsselt nichts mehr, die Uhrzeit ist falsch. Ursache?','Pufferbatterie leer – Schlüssel und Uhrzeit verloren',['Falsche Antenne','Störung von außen','Neuer Akku zu voll'],'Schlüssel neu laden, Uhrzeit stellen, Pufferbatterie tauschen.');
+M('e4','strom','Weniger Sendeleistung …','spart Strom und verbessert den Peilschutz',['beschädigt das Gerät','verkürzt die Akkulaufzeit','schaltet die Verschlüsselung ab'],'');
+M('e5','strom','Was gilt vor dem Einsatz?','Akkus voll laden, Ladezustand prüfen, Ersatz für die ganze Dauer',['Akkus erst im Einsatz laden','Nur einen Akku mitnehmen','Akkus leer lagern'],'');
+
+/* Fehlersuche-Lagen */
+L('f1','fehler','Du hörst HOG 31 laut und klar. HOG hört dich nicht.','Was prüfst du zuerst?','Sendeseite: Sprechtaste bzw. Handapparat, Leistung, Antenne',['Schlüssel','Rauschsperre','Lautstärke'],'Empfang geht – also liegt es am Senden. Anderen Handapparat probieren.');
+L('f2','fehler','Im Klartext klappt die Verbindung, verschlüsselt kommt nichts an.','Was prüfst du?','Schlüssel: geladen, gleich und gültig?',['Antenne','Akku','Standort'],'');
+L('f3','fehler','Auf fester Frequenz geht es, mit HAVE QUICK nicht.','Was prüfst du?','Uhrzeit (TOD), Tageswort (WOD), Netznummer',['Antennenlänge','Lautstärke','Polarisation'],'');
+L('f4','fehler','Das Lfz kreist westlich hinter einem Höhenzug. Auf derselben Seite der Kreisbahn bricht die Verbindung jedes Mal ab.','Was tust du?','Sichtlinie verbessern: höherer Standort oder Lfz Kreis versetzen bzw. höher fliegen lassen',['Schlüssel wechseln','Lautstärke erhöhen','Auf HF wechseln'],'');
+L('f5','fehler','Das Lfz steht genau über dir, die Verbindung über die Peitsche wird schlechter.','Was tust du?','Lfz Kreis versetzen lassen oder Antenne neigen – die Peitsche strahlt kaum nach oben',['Leistung reduzieren','Frequenz wechseln','Antenne abschrauben'],'');
+L('f6','fehler','VHF FM zum Zugführer, 3 km entfernt. Ihr steht beide im Tal hinter einer Ortschaft.','Was hilft?','Höherer Standort, Behelfsantenne hochziehen oder Relais',['Auf UHF AM wechseln','Leistung minimal','Peitsche kürzen'],'');
+L('f7','fehler','HF zur Führungsstelle klappt tagsüber gut, nachts ist die Verbindung weg.','Was tust du?','Tiefere Nachtfrequenz wählen',['Höhere Frequenz wählen','Antenne senkrecht stellen','Leistung reduzieren'],'');
+L('f8','fehler','HF zu einer Gegenstelle 60 km entfernt hinter einem Gebirge. Peitsche senkrecht – nichts.','Was tust du?','NVIS: Antenne waagerecht bzw. niedriger Dipol, niedrige Frequenz',['Auf UHF wechseln','Peitsche senkrecht verlängern','Leistung minimal'],'');
+L('f9','fehler','Das Gerät zeigt beim Senden auf UHF „High VSWR“.','Was prüfst du?','Antenne, Kabel und Stecker – passt die Antenne zum Band?',['Schlüssel','Uhrzeit','Lautstärke'],'');
+L('f10','fehler','Auf UHF AM hörst du Pfeifen und zwei Stimmen gleichzeitig.','Was ist passiert und was sagst du?','Zwei Stationen haben gleichzeitig gesendet – SAY AGAIN',['Störsender – Frequenz wechseln','Gerätefehler – neu starten','Capture-Effekt – auf FM wechseln'],'Genau dafür nutzt der Flugfunk AM.');
+L('f11','fehler','Das Gerät zeigt gar nichts an.','Was prüfst du zuerst?','Strom: Akku geladen, eingerastet, Kontakte sauber',['Antenne','Schlüssel','Frequenz'],'');
+L('f12','fehler','Du hörst gar nichts, auch keine anderen Stationen – das Netz ist sonst aktiv.','Was prüfst du?','Lautstärke, Rauschsperre und richtigen Kanal bzw. Preset',['Pufferbatterie','Erdung','Polarisation'],'');
+L('f13','fehler','SATCOM: kein Zugang zum Kanal, die Antenne zeigt nach Norden.','Was tust du?','Antenne nach Azimut und Elevation neu ausrichten – grob Süden',['Leistung erhöhen','Peitsche aufschrauben','Auf HF wechseln'],'');
+L('f14','fehler','Zwei Funkgeräte im Gefechtsstand: Wenn eines sendet, rauscht das andere stark.','Was tust du?','Antennen weiter auseinander und in unterschiedliche Höhe',['Beide abschalten','Gleiche Frequenz einstellen','Leistung beider erhöhen'],'');
+
+/* Reihenfolgen */
+SQ('q1','behelf','Behelfs-Dipol bauen – in welcher Reihenfolge?',['λ berechnen','Drähte zuschneiden','Isolatoren und Koax anbringen','Aufhängen und abspannen','Funkprobe'],
+  [['Drähte zuschneiden','λ berechnen','Aufhängen und abspannen','Isolatoren und Koax anbringen','Funkprobe'],['λ berechnen','Aufhängen und abspannen','Drähte zuschneiden','Funkprobe','Isolatoren und Koax anbringen'],['Funkprobe','λ berechnen','Drähte zuschneiden','Isolatoren und Koax anbringen','Aufhängen und abspannen']],'');
+SQ('q2','aufbau','Antenne im Feld aufbauen – in welcher Reihenfolge?',['Standort prüfen (Stromleitungen)','Antenne aufbauen und abspannen','Erdung bzw. Gegengewicht','Kabel anschließen','Funkprobe'],
+  [['Antenne aufbauen und abspannen','Standort prüfen (Stromleitungen)','Kabel anschließen','Funkprobe','Erdung bzw. Gegengewicht'],['Kabel anschließen','Funkprobe','Standort prüfen (Stromleitungen)','Antenne aufbauen und abspannen','Erdung bzw. Gegengewicht'],['Standort prüfen (Stromleitungen)','Kabel anschließen','Funkprobe','Antenne aufbauen und abspannen','Erdung bzw. Gegengewicht']],'Erst Sicherheit, ganz zuletzt senden.');
+SQ('q3','satcom','SATCOM einrichten – in welcher Reihenfolge?',['Azimut und Elevation ermitteln','Standort mit freier Sicht','Antenne ausrichten','Kanal und Betriebsart einstellen','Verbindung prüfen'],
+  [['Antenne ausrichten','Azimut und Elevation ermitteln','Verbindung prüfen','Standort mit freier Sicht','Kanal und Betriebsart einstellen'],['Kanal und Betriebsart einstellen','Verbindung prüfen','Antenne ausrichten','Azimut und Elevation ermitteln','Standort mit freier Sicht'],['Standort mit freier Sicht','Verbindung prüfen','Azimut und Elevation ermitteln','Antenne ausrichten','Kanal und Betriebsart einstellen']],'');
+SQ('q4','sprech','Funkprobe – richtige Reihenfolge?',['HOG 31','THIS IS','STALKER 11','RADIO CHECK','OVER'],
+  [['STALKER 11','THIS IS','HOG 31','RADIO CHECK','OVER'],['THIS IS','STALKER 11','HOG 31','OVER','RADIO CHECK'],['HOG 31','STALKER 11','THIS IS','RADIO CHECK','OUT']],'Gerufener – THIS IS – Rufender – Anliegen – OVER.');
+SQ('q5','fehler','Fehlersuche – sinnvolle Reihenfolge?',['Strom','Einstellung','Handapparat','Antenne und Kabel','Krypto und Uhrzeit'],
+  [['Krypto und Uhrzeit','Antenne und Kabel','Strom','Einstellung','Handapparat'],['Antenne und Kabel','Strom','Krypto und Uhrzeit','Handapparat','Einstellung'],['Einstellung','Krypto und Uhrzeit','Strom','Handapparat','Antenne und Kabel']],'Von innen nach außen – das Einfachste zuerst.');
+
+/* Funkgeräte */
+D('d1','Welches dieser Geräte deckt HF ab?','AN/PRC-160',['AN/PRC-117G','AN/PRC-152A','AN/PRC-163'],'1,5–60 MHz: HF und unteres VHF.');
+D('d2','Welches ist ein Zwei-Kanal-Handfunkgerät?','AN/PRC-163',['AN/PRC-152A','AN/PRC-148 JEM','AN/PRC-117G'],'Zwei Netze gleichzeitig in einem Handfunkgerät.');
+D('d3','Frequenzbereich der PRC-117G?','30–2000 MHz',['1,5–60 MHz','30–512 MHz','118–137 MHz'],'');
+D('d4','Höchste Leistung der PRC-152A im normalen Betrieb?','5 W',['20 W','50 W','0,5 W'],'Kurzzeitig 10 W für SATCOM.');
+D('d5','SATCOM-Sendeleistung der PRC-117G?','20 W',['5 W','100 W','1 W'],'');
+D('d6','Welches Gerät stammt von Thales?','AN/PRC-148 JEM',['AN/PRC-152A','AN/PRC-160','AN/PRC-163'],'Die anderen sind von L3Harris.');
+D('d7','Welches Handfunkgerät kann zwei Netze gleichzeitig und MUOS-SATCOM?','AN/PRC-163',['AN/PRC-148 JEM','AN/PRC-152A','AN/PRC-160'],'');
+D('d8','Wie heißt der automatische Verbindungsaufbau auf HF, z. B. bei der PRC-160?','ALE',['DAMA','SINCGARS','ROVER'],'Automatic Link Establishment: Das Gerät sucht selbst die beste Frequenz.');
+D('d9','Welches Gerät kann optional ROVER-Video im L-Band empfangen?','AN/PRC-117G',['AN/PRC-160','AN/PRC-148 JEM','AN/PRC-152A'],'');
+D('d10','Gewicht der PRC-148 JEM etwa?','ca. 0,9 kg',['ca. 5 kg','ca. 2,5 kg','ca. 0,3 kg'],'');
+D('d11','Welches Gerät nimmst du für eine Weitverbindung ohne Satellit?','AN/PRC-160',['AN/PRC-152A','AN/PRC-148 JEM','AN/PRC-163'],'');
+D('d12','Frequenzbereich der PRC-148 JEM?','30–512 MHz',['1,5–60 MHz','30–2000 MHz','225–400 MHz'],'');
+D('d13','Wofür nutzt ein JTAC die PRC-117G typischerweise?','UHF-Flugfunk, SATCOM und Breitband-Daten',['Nur HF-Weitverbindung','Nur VHF FM zur Truppe','Nur Videoempfang'],'');
+
+/* ---------- Betriebswörter (ACP 125) ---------- */
+const PW = [
+  ['ROGER','Ich habe deinen letzten Spruch einwandfrei erhalten.'],
+  ['WILCO','Ich habe verstanden und werde es ausführen (enthält ROGER).'],
+  ['OVER','Ende meines Spruchs – ich erwarte eine Antwort.'],
+  ['OUT','Ende des Funkverkehrs – keine Antwort erwartet.'],
+  ['SAY AGAIN','Wiederhole deinen letzten Spruch bzw. den genannten Teil.'],
+  ['I SAY AGAIN','Ich wiederhole meinen Spruch bzw. den genannten Teil.'],
+  ['I SPELL','Ich buchstabiere das nächste Wort.'],
+  ['BREAK','Hier trenne ich Teile des Spruchs bzw. den Spruch von anderem Text.'],
+  ['WAIT','Ich muss kurz unterbrechen (wenige Sekunden).'],
+  ['WAIT OUT','Ich muss länger unterbrechen und melde mich wieder.'],
+  ['CORRECTION','Ich habe einen Fehler gemacht – richtig ist …'],
+  ['WRONG','Dein letzter Spruch bzw. dein Zurücklesen war falsch – richtig ist …'],
+  ['READ BACK','Lies den Spruch genau so zurück, wie du ihn erhalten hast.'],
+  ['I READ BACK','Ich lese den Spruch wie erhalten zurück.'],
+  ['THAT IS CORRECT','Du hast richtig zurückgelesen bzw. das ist richtig.'],
+  ['VERIFY','Prüfe den Spruch beim Absender und bestätige ihn.'],
+  ['FIGURES','Es folgen Zahlen.'],
+  ['RADIO CHECK','Wie hörst du mich? (Funkprobe)'],
+  ['SILENCE','Sofort Funkstille (dreimal gesprochen).'],
+  ['SILENCE LIFTED','Die Funkstille ist aufgehoben.'],
+  ['DISREGARD THIS TRANSMISSION','Dieser Spruch war fehlerhaft – nicht beachten.'],
+  ['NOTHING HEARD','Ich höre die gerufene Station nicht.'],
+  ['UNKNOWN STATION','Das Rufzeichen der Station ist mir unbekannt.'],
+  ['THIS IS','Der Spruch kommt von der Station, deren Rufzeichen jetzt folgt.'],
+  ['ALL AFTER','Alles nach … (zusammen mit SAY AGAIN).'],
+  ['ALL BEFORE','Alles vor … (zusammen mit SAY AGAIN).'],
+  ['SPEAK SLOWER','Sprich langsamer.'],
+  ['AUTHENTICATE','Die Station soll sich mit der Authentisierungstabelle ausweisen.'],
+  ['RELAY TO','Gib diesen Spruch an die genannte Station weiter.'],
+  ['SEND','Sende deinen Spruch – ich bin bereit.'],
+  ['FLASH','Höchste Vorrangstufe – sofort weiterleiten.'],
+  ['ROUTINE','Niedrigste Vorrangstufe.']
+];
+const ABC = ['ALFA','BRAVO','CHARLIE','DELTA','ECHO','FOXTROT','GOLF','HOTEL','INDIA','JULIETT','KILO','LIMA','MIKE','NOVEMBER','OSCAR','PAPA','QUEBEC','ROMEO','SIERRA','TANGO','UNIFORM','VICTOR','WHISKEY','XRAY','YANKEE','ZULU'];
+const NUMS = ['ZE-RO','WUN','TOO','TREE','FOW-ER','FIFE','SIX','SEV-EN','AIT','NIN-ER'];
+const NUMW = {0:['NULL','OH','NOUGHT'],1:['ONE','WON','EINS'],2:['TWO','ZWO','TU'],3:['THREE','TRI','DREI'],4:['FOUR','FOR','VIER'],5:['FIVE','FÜNF','FAIF'],6:['SEX','SIKS','SECHS'],7:['SIEBEN','SEFFEN','SEBEN'],8:['EIGHT','ACHT','EIT'],9:['NINE','NEUN','NOVEMBER']};
+
+/* ---------- Rechenaufgaben (feste Werte, damit der Lernstand je Aufgabe gespeichert werden kann) ---------- */
+const CALC = [];
+[3, 6, 7.5, 10, 15, 30, 40, 50, 60, 75, 100, 150, 250, 300].forEach(f => CALC.push({id:'lam:' + f, g:'grund', t:'lam', f}));
+[3.5, 5, 7, 10, 14, 30, 40, 50, 60, 70].forEach(f => CALC.push({id:'dip:' + f, g:'behelf', t:'dip', f}));
+[30, 40, 45, 50, 60, 75, 88, 150, 250].forEach(f => CALC.push({id:'qw:' + f, g:'ant', t:'qw', f}));
+[[6, 1000], [6, 5000], [6, 10000], [6, 15000], [6, 20000], [6, 25000], [400, 10000], [1000, 15000], [100, 100]].forEach(([a, b]) => CALC.push({id:'hor:' + a + '-' + b, g:'ausb', t:'hor', a, b}));
+
+/* ---------- Bilder der Funkgeräte (Wikimedia Commons) ---------- */
+const IMGS = [{"src": "img/prc117g-1.webp", "dev": "117g", "cred": "Foto: US Marine Corps (M. Moore, A. Su), gemeinfrei, Wikimedia Commons"}, {"src": "img/prc152a-1.webp", "dev": "152a", "cred": "Foto: US Marine Corps, gemeinfrei, Wikimedia Commons"}, {"src": "img/prc152a-2.webp", "dev": "152a", "cred": "Foto: US Air Force, gemeinfrei, Wikimedia Commons"}, {"src": "img/prc148-1.webp", "dev": "148", "cred": "Foto: US Marine Corps, gemeinfrei, Wikimedia Commons"}, {"src": "img/prc160-2.webp", "dev": "160", "cred": "Foto: M. Moore, A. Su, gemeinfrei, Wikimedia Commons"}, {"src": "img/prc163-2.webp", "dev": "163", "cred": "Foto: J. Mike (US Navy), gemeinfrei, Wikimedia Commons"}];
+
+/* ---------- Hilfen ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const uniq = a => [...new Set(a)];
+const nf = (x, d) => Number(x).toLocaleString('de-DE', {maximumFractionDigits: d == null ? 1 : d});
+const r2 = x => x >= 10 ? Math.round(x * 10) / 10 : x >= 1 ? Math.round(x * 100) / 100 : Math.round(x * 1000) / 1000;
+const DEVN = DEV.map(d => d.n);
+const DEVBY = {}; DEV.forEach(d => DEVBY[d.id] = d);
+
+/* ---------- Zustand ---------- */
+const KEY = 'funktrainer.v1';
+const blank = () => ({v:1, updated:0, q:{}, flags:{}, recent:[], answered:0, correct:0});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+function save(){ S.updated = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+/* ---------- Fragenbank ---------- */
+const KINDS = {mc:{l:'Verständnis'}, lage:{l:'Lage'}, seq:{l:'Reihenfolge'}, dev:{l:'Funkgerät'}, img:{l:'Bild'},
+  pwm:{l:'Betriebswort'}, pwc:{l:'Betriebswort'}, abc:{l:'Buchstabieren'}, num:{l:'Zahlen'}, calc:{l:'Rechnen'}};
+const BANK = [];
+QS.forEach(q => BANK.push({id:q.kind + ':' + q.id, kind:q.kind, g:q.g, ref:q}));
+PW.forEach(p => { BANK.push({id:'pwm:' + p[0], kind:'pwm', g:'sprech', ref:p}); BANK.push({id:'pwc:' + p[0], kind:'pwc', g:'sprech', ref:p}); });
+ABC.forEach((w, i) => BANK.push({id:'abc:' + w, kind:'abc', g:'sprech', ref:i}));
+NUMS.forEach((w, i) => BANK.push({id:'num:' + i, kind:'num', g:'sprech', ref:i}));
+CALC.forEach(c => BANK.push({id:'calc:' + c.id, kind:'calc', g:c.g, ref:c}));
+IMGS.forEach(im => BANK.push({id:'img:' + im.src, kind:'img', g:'geraete', ref:im}));
+
+const MODES = {
+  mix:{name:'Gemischte Runde', desc:'Alle Fragetypen aus allen Themen', kinds:null, n:20},
+  mc:{name:'Verständnis', desc:'Grundlagen, Antennen, Aufbau, Netze, SATCOM, Reihenfolgen', kinds:['mc','seq'], n:15},
+  lage:{name:'Fehlersuche-Lagen', desc:'Keine Verbindung – was prüfst du?', kinds:['lage'], n:10},
+  calc:{name:'Rechnen', desc:'Wellenlänge, Antennenlänge, Funkhorizont', kinds:['calc'], n:10},
+  sprech:{name:'Sprechfunk', desc:'Betriebswörter, Buchstabieralphabet, Zahlen', kinds:['pwm','pwc','abc','num'], n:15},
+  dev:{name:'Funkgeräte', desc:'Erkennen und Leistungsdaten', kinds:['dev','img'], n:12},
+  weak:{name:'Fehler üben', desc:'Nur Fragen, die du zuletzt falsch hattest', kinds:null, n:15},
+  topic:{name:'Thema', desc:'', kinds:null, n:12}
+};
+function poolFor(mode, g){
+  const m = MODES[mode];
+  let p = BANK.filter(q => !m.kinds || m.kinds.includes(q.kind));
+  if (g) p = p.filter(q => q.g === g);
+  if (mode === 'weak') p = p.filter(q => S.q[q.id] && S.q[q.id].last === 0);
+  return p;
+}
+function pick(pool, n){
+  const recent = new Set(S.recent.slice(-40));
+  let cand = pool.filter(q => !recent.has(q.id));
+  if (cand.length < n) cand = pool.slice();
+  const wt = q => { const r = S.q[q.id]; if (!r) return 3; if (r.last === 0) return 5; return 1 / (1 + (r.streak || 0)); };
+  const out = [];
+  let bag = cand.map(q => ({q, w:wt(q) * (0.6 + Math.random() * 0.8)}));
+  while (out.length < n && bag.length){
+    const tot = bag.reduce((s, x) => s + x.w, 0);
+    let r = Math.random() * tot, i = 0;
+    for (; i < bag.length - 1; i++){ r -= bag[i].w; if (r <= 0) break; }
+    const q = bag[i].q; out.push(q);
+    const key = q.kind.startsWith('pw') ? q.ref[0] : q.ref;
+    bag = bag.filter((x, j) => j !== i && (x.q.kind.startsWith('pw') ? x.q.ref[0] : x.q.ref) !== key);
+  }
+  return shuffle(out);
+}
+
+/* ---------- Rechenaufgaben ---------- */
+function calcSpec(c){
+  if (c.t === 'lam'){ const v = 300 / c.f; return {q:`Wie lang ist die Welle bei ${nf(c.f)} MHz?`, unit:'m', v, tol:.05, hint:'λ (m) = 300 / f (MHz)', sol:`λ = 300 / ${nf(c.f)} = ${nf(r2(v), 2)} m`}; }
+  if (c.t === 'dip'){ const v = 143 / c.f; return {q:`Halbwellendipol für ${nf(c.f)} MHz – wie lang ist er insgesamt?`, unit:'m', v, tol:.08, hint:'Dipol gesamt ≈ 143 / f (MHz)', sol:`143 / ${nf(c.f)} ≈ ${nf(r2(v), 2)} m gesamt, also je Schenkel ≈ ${nf(r2(v / 2), 2)} m`}; }
+  if (c.t === 'qw'){ const v = 71 / c.f; return {q:`λ/4-Strahler bzw. Radial für ${nf(c.f)} MHz – wie lang?`, unit:'m', v, tol:.08, hint:'λ/4 ≈ 71 / f (MHz)', sol:`71 / ${nf(c.f)} ≈ ${nf(r2(v), 2)} m${v < 1 ? ' (' + Math.round(v * 100) + ' cm)' : ''}`}; }
+  const v = 1.23 * (Math.sqrt(c.a) + Math.sqrt(c.b));
+  return {q:`Funkhorizont: deine Antenne ${nf(c.a, 0)} ft hoch, die Gegenstelle in ${nf(c.b, 0)} ft. Reichweite in NM?`, unit:'NM', v, tol:.1, hint:'NM ≈ 1,23 × (√h₁ + √h₂), h in ft',
+    sol:`1,23 × (√${nf(c.a, 0)} + √${nf(c.b, 0)}) = 1,23 × (${nf(Math.sqrt(c.a), 1)} + ${nf(Math.sqrt(c.b), 1)}) ≈ ${nf(Math.round(v))} NM`};
+}
+
+/* ---------- Frage erzeugen ---------- */
+function figHtml(k){ return k && FIG[k] ? `<div class="figbox">${FIG[k]()}</div>` : ''; }
+function imgHtml(im){ return `<figure class="qimg"><img src="${esc(im.src)}" alt="Funkgerät" loading="lazy"><figcaption class="credit">${esc(im.cred)}</figcaption></figure>`; }
+function others(list, a, n){ return shuffle(list.filter(x => x !== a)).slice(0, n); }
+function materialize(q){
+  const m = {q, kind:q.kind};
+  const r = q.ref;
+  if (q.kind === 'mc' || q.kind === 'dev'){
+    m.html = `<p class="prompt">${esc(r.q)}</p>${figHtml(r.fig)}`; m.plain = r.q;
+    m.correct = r.a; m.wrong = r.w.slice(); m.ex = r.ex;
+  } else if (q.kind === 'lage'){
+    m.html = `<div class="lage"><div class="lh">Lage</div><p>${esc(r.lage)}</p></div><p class="prompt">${esc(r.q)}</p>`;
+    m.plain = r.lage + ' ' + r.q; m.correct = r.a; m.wrong = r.w.slice(); m.ex = r.ex;
+  } else if (q.kind === 'seq'){
+    m.html = `<p class="prompt">${esc(r.q)}</p>`; m.plain = r.q; m.seq = true;
+    const j = a => a.join(' → ');
+    m.correct = j(r.a); m.wrong = r.w.map(j); m.ex = r.ex;
+  } else if (q.kind === 'pwm'){
+    m.html = `<p class="prompt">Was bedeutet dieses Betriebswort?</p><div class="bigcode">${esc(r[0])}</div>`; m.plain = 'Was bedeutet ' + r[0] + '?';
+    m.correct = r[1]; m.wrong = others(PW.map(p => p[1]), r[1], 3); m.ex = '';
+  } else if (q.kind === 'pwc'){
+    m.html = `<p class="prompt">Welches Betriebswort passt?</p><div class="defbox">${esc(r[1])}</div>`; m.plain = 'Betriebswort: ' + r[1];
+    m.correct = r[0]; m.wrong = others(PW.map(p => p[0]), r[0], 3); m.optCode = true;
+  } else if (q.kind === 'abc'){
+    const L = ABC[r][0];
+    m.html = `<p class="prompt">Buchstabierwort im NATO-Alphabet?</p><div class="bigcode">${L}</div>`; m.plain = 'Buchstabierwort für ' + L;
+    m.typed = 'abc'; m.correct = ABC[r];
+  } else if (q.kind === 'num'){
+    m.html = `<p class="prompt">Wie sprichst du diese Ziffer im Sprechfunk?</p><div class="bigcode">${r}</div>`; m.plain = 'Ziffer ' + r;
+    m.correct = NUMS[r]; m.wrong = NUMW[r].slice(); m.optCode = true;
+  } else if (q.kind === 'calc'){
+    const c = calcSpec(r); m.calc = c;
+    m.html = `<p class="prompt">${esc(c.q)}</p>`; m.plain = c.q; m.typed = 'num'; m.correct = '≈ ' + nf(r2(c.v), 2) + ' ' + c.unit; m.ex = c.sol;
+  } else if (q.kind === 'img'){
+    const d = DEVBY[r.dev];
+    m.html = `<p class="prompt">Welches Funkgerät ist das?</p>${imgHtml(r)}`; m.plain = 'Bild: ' + d.n;
+    m.correct = d.n; m.wrong = others(DEVN, d.n, 3); m.optCode = true; m.dev = d;
+  }
+  if (!m.typed) m.opts = shuffle(uniq([m.correct].concat(m.wrong)).slice(0, 4));
+  return m;
+}
+
+/* ---------- Eingabe prüfen ---------- */
+const normW = s => String(s || '').toUpperCase().replace(/[^A-Z]/g, '');
+function checkTyped(m, raw){
+  if (m.typed === 'abc'){
+    const n = normW(raw);
+    if (!n) return {v:'bad', msg:'Keine Eingabe.'};
+    if (n === normW(m.correct)) return {v:'ok'};
+    const alt = {ALPHA:'ALFA', JULIET:'JULIETT', WHISKY:'WHISKEY'};
+    if (alt[n] && alt[n] === m.correct) return {v:'ok', msg:`Gilt – im NATO-Alphabet geschrieben: ${m.correct}.`};
+    return {v:'bad'};
+  }
+  const t = String(raw || '').trim().replace(/\s/g, '').replace(',', '.').replace(/[^0-9.]/g, '');
+  if (!t) return {v:'bad', msg:'Keine Eingabe.'};
+  let x = parseFloat(t);
+  const c = m.calc;
+  if (!isFinite(x)) return {v:'bad'};
+  const ok = v => Math.abs(v - c.v) / c.v <= c.tol;
+  if (ok(x)) return {v:'ok'};
+  if (c.unit === 'm' && c.v < 1 && ok(x / 100)) return {v:'ok', msg:'Als Zentimeter gewertet.'};
+  if (Math.abs(x - c.v) / c.v <= c.tol * 2.5) return {v:'near', msg:'Knapp daneben – rechne mit der Faustformel nach.'};
+  return {v:'bad'};
+}
+
+/* ---------- Ablauf ---------- */
+let view = 'home', R = null, topic = null, statsConfirm = false;
+function startRound(mode, list, g){
+  const pool = list || poolFor(mode, g);
+  if (!pool.length) return;
+  const qs = list ? shuffle(list).slice(0, 30) : pick(pool, Math.min(MODES[mode].n, pool.length));
+  R = {mode, g, qs, i:0, res:[], cur:materialize(qs[0]), answered:false, verdict:null};
+  view = 'quiz'; render(); window.scrollTo(0, 0);
+}
+function record(q, ok){
+  const r = S.q[q.id] || {n:0, ok:0, streak:0, last:null};
+  r.n++; if (ok){ r.ok++; r.streak = (r.streak || 0) + 1; r.last = 1; } else { r.streak = 0; r.last = 0; }
+  S.q[q.id] = r; S.answered++; if (ok) S.correct++;
+  S.recent.push(q.id); if (S.recent.length > 80) S.recent = S.recent.slice(-80);
+  save();
+}
+function answerMC(idx){
+  if (!R || R.answered) return;
+  const m = R.cur, chosen = m.opts[idx], ok = chosen === m.correct;
+  R.answered = true; R.chosen = chosen; R.verdict = ok ? 'ok' : 'bad';
+  R.res.push({q:m.q, ok, m, given:chosen}); record(m.q, ok); render();
+}
+function answerTyped(raw){
+  if (!R || R.answered) return;
+  const m = R.cur, r = checkTyped(m, raw);
+  R.answered = true; R.typedRaw = raw; R.verdict = r.v; R.vmsg = r.msg;
+  const ok = r.v === 'ok';
+  R.res.push({q:m.q, ok, m, given:raw}); record(m.q, ok); render();
+}
+function next(){
+  if (!R) return;
+  R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; render(); window.scrollTo(0, 0); return; }
+  R.cur = materialize(R.qs[R.i]); R.answered = false; R.verdict = null; R.chosen = null; R.vmsg = null; R.typedRaw = '';
+  render(); window.scrollTo(0, 0);
+}
+function toggleFlag(){
+  const m = R && R.cur; if (!m) return;
+  const id = m.q.id;
+  if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:m.plain.slice(0, 160), ts:Date.now()};
+  save(); render();
+}
+
+/* ---------- Darstellung ---------- */
+function roundName(){ return R.mode === 'topic' ? GROUPS[R.g].l : MODES[R.mode].name; }
+const TITLES = {lehre:'Kurzlehre', tools:'Rechner', dev:'Funkgeräte', stats:'Statistik'};
+function bar(){
+  const bi = $('#barin'), pg = $('#prog');
+  const back = `<button class="iconbtn" data-go="home" aria-label="Zur Übersicht">‹ Übersicht</button>`;
+  if (view === 'home'){
+    bi.innerHTML = `<span class="t">Funk-Trainer</span><button class="iconbtn" data-go="tools">Rechner</button>`; pg.hidden = true;
+  } else if (view === 'quiz' || view === 'end'){
+    const n = R.qs.length, i = Math.min(R.i + (view === 'end' ? 0 : 1), n);
+    bi.innerHTML = `${back}<span class="t">${esc(roundName())}</span><span class="tag">${view === 'end' ? n + '/' + n : i + '/' + n}</span>`;
+    pg.hidden = false; pg.firstChild.style.width = (view === 'end' ? 100 : (R.i / n) * 100) + '%';
+  } else if (view === 'topic'){
+    bi.innerHTML = `<button class="iconbtn" data-go="lehre" aria-label="Zur Kurzlehre">‹ Kurzlehre</button><span class="t">${esc(GROUPS[topic].l)}</span>`; pg.hidden = true;
+  } else {
+    bi.innerHTML = `${back}<span class="t">${esc(TITLES[view] || '')}</span>`; pg.hidden = true;
+  }
+}
+function groupScore(g){
+  const qs = BANK.filter(q => q.g === g);
+  const seen = qs.filter(q => S.q[q.id]).length;
+  const good = qs.filter(q => S.q[q.id] && S.q[q.id].last === 1).length;
+  return {n:qs.length, seen, good, frac: qs.length ? good / qs.length : 0};
+}
+function cellHtml(g){
+  const s = groupScore(g), pct = Math.round(s.frac * 100);
+  const st = !s.seen ? 'none' : s.frac >= .8 ? 'ok' : s.frac >= .4 ? 'mid' : 'bad';
+  return `<button class="cell" data-s="${st}" data-lesson="${g}"><b>${s.seen ? pct + ' %' : '–'}</b><span>${esc(GROUPS[g].l)}</span><i style="width:${pct}%"></i></button>`;
+}
+function renderHome(){
+  const nF = Object.keys(S.flags).length;
+  const modeBtn = k => { const n = poolFor(k).length; return `<button class="mode" data-start="${k}" ${n ? '' : 'disabled'}><span class="mi"><strong>${esc(MODES[k].name)}</strong><small>${esc(MODES[k].desc)}</small></span><span class="n">${n} Fragen</span></button>`; };
+  const goBtn = (v, t, d, n) => `<button class="mode" data-go="${v}"><span class="mi"><strong>${t}</strong><small>${d}</small></span><span class="n">${n || '→'}</span></button>`;
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a><h1>Funk</h1>
+    <p>Funk verstehen statt auswendig lernen: Bänder, Ausbreitung, Antennen und Behelfsantennen, Aufbau und Erdung, Sprechfunk, Störung, SATCOM und die gängigen Funkgeräte.</p>
+    <span class="radioline">STALKER 11, THIS IS HOG 31, LOUD AND CLEAR, OVER</span></section>
+  <section class="board">
+    <h3>Kurzlehre – Thema antippen</h3><div class="cells">${G_ORDER.map(cellHtml).join('')}</div>
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde</strong><small>${MODES.mix.n} Fragen aus allen Themen</small></span><span class="go">→</span></button>
+  <nav class="modes">
+    <h3>Üben</h3>${['mc','lage','calc','sprech','dev'].map(modeBtn).join('')}
+    <h3>Wiederholen</h3>${modeBtn('weak')}
+    <h3>Werkzeuge</h3>
+    ${goBtn('tools', 'Rechner', 'Antennenlänge aus der Frequenz, Funkhorizont aus den Höhen')}
+    ${goBtn('dev', 'Funkgeräte', 'PRC-117G, -152A, -148, -160 und -163 mit Bild und Daten')}
+    ${goBtn('lehre', 'Kurzlehre', 'Alle 13 Themen kompakt mit Skizzen')}
+    ${goBtn('stats', 'Statistik und gemeldete Fragen', 'Trefferquote je Thema, markierte Fragen', nF ? nF + ' gemeldet' : '')}
+  </nav>
+  <div class="foot">
+    <p>Grundlage sind öffentlich freigegebene Unterlagen: US Army ATP 6-02.53 „Techniques for Tactical Radio Operations“, FM 24-18 „Tactical Single-Channel Radio Communications Techniques“, ACP 125 (Sprechfunkverfahren) und die Datenblätter der Hersteller. Nationale Vorschriften und Fernmeldeunterlagen deines Verbands gehen vor.</p>
+    <p>Fortschritt wird nur auf diesem Gerät gespeichert.</p>
+  </div>`;
+}
+function renderLehre(){
+  $('#app').innerHTML = `<h1 class="ph">Kurzlehre</h1><p class="muted">Jedes Thema in wenigen Minuten – danach direkt üben.</p>
+    <div class="tlist">${G_ORDER.map((g, i) => `<button class="mode" data-lesson="${g}"><span class="mi"><strong>${i + 1}. ${esc(GROUPS[g].l)}</strong><small>${esc(GROUPS[g].i)}</small></span><span class="n">${groupScore(g).n} Fragen</span></button>`).join('')}</div>`;
+}
+function renderTopic(){
+  const g = topic, i = G_ORDER.indexOf(g), blocks = LEHRE[g] || [];
+  const blk = b => `<section class="lb"><h2>${esc(b.h)}</h2>${b.fig ? figHtml(b.fig) : ''}${(b.p || []).map(p => `<p>${fmt(p)}</p>`).join('')}${b.li ? `<ul>${b.li.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>` : ''}${b.tip ? `<p class="tip">${fmt(b.tip)}</p>` : ''}</section>`;
+  const extra = g === 'geraete' ? `<button class="btn" data-go="dev" style="margin-top:10px">Funkgeräte mit Bild und Daten</button>`
+    : g === 'sprech' ? `<div class="lb"><h2>Betriebswörter (ACP 125)</h2><dl class="kv">${PW.map(p => `<dt class="code">${esc(p[0])}</dt><dd>${esc(p[1])}</dd>`).join('')}</dl><h2 style="margin-top:18px">NATO-Alphabet</h2><p class="abc">${ABC.map(w => `<span><b>${w[0]}</b> ${w}</span>`).join('')}</p></div>`
+    : (g === 'behelf' || g === 'ausb') ? `<button class="btn" data-go="tools" style="margin-top:10px">Zum Rechner</button>` : '';
+  const n = groupScore(g).n;
+  $('#app').innerHTML = `<article class="lesson"><p class="kick">Thema ${i + 1} von ${G_ORDER.length}</p><h1 class="ph">${esc(GROUPS[g].l)}</h1>${blocks.map(blk).join('')}${extra}
+    <button class="cta" data-topic="${g}" style="margin-top:22px"><span><strong>Thema üben</strong><small>${Math.min(MODES.topic.n, n)} von ${n} Fragen</small></span><span class="go">→</span></button>
+    <div class="row">${i > 0 ? `<button class="btn" data-lesson="${G_ORDER[i - 1]}">‹ ${esc(GROUPS[G_ORDER[i - 1]].l)}</button>` : ''}${i < G_ORDER.length - 1 ? `<button class="btn" data-lesson="${G_ORDER[i + 1]}">${esc(GROUPS[G_ORDER[i + 1]].l)} ›</button>` : ''}</div></article>`;
+}
+function optLabel(m, t){
+  if (m.seq) return `<span class="ot seq">${t.split(' → ').map(x => `<span class="sq">${esc(x)}</span>`).join('<span class="ar">→</span>')}</span>`;
+  return `<span class="ot${m.optCode ? ' code' : ''}">${esc(t)}</span>`;
+}
+function devCard(d, short){
+  const ims = IMGS.filter(x => x.dev === d.id);
+  return `<article class="card devc"><h2>${esc(d.n)}</h2><p class="muted" style="margin:2px 0 8px">${esc(d.typ)} · ${esc(d.h)}</p>
+    ${ims.length && !short ? ims.map(imgHtml).join('') : ''}
+    <dl class="kv"><dt>Frequenz</dt><dd>${esc(d.f)}${d.fx ? `<br><span class="muted">${esc(d.fx)}</span>` : ''}</dd><dt>Leistung</dt><dd>${esc(d.p)}</dd><dt>Gewicht</dt><dd>${esc(d.w)}</dd><dt>Betriebsarten</dt><dd>${esc(d.wf)}</dd><dt>Beim JTAC</dt><dd>${esc(d.jtac)}</dd></dl></article>`;
+}
+function renderQuiz(){
+  const m = R.cur, q = m.q, ans = R.answered;
+  let body = '';
+  if (m.typed){
+    const isN = m.typed === 'num';
+    body = `<form id="tform" autocomplete="off"><label class="muted" for="tin" style="display:block;margin-bottom:5px;font-weight:600">${isN ? 'Ergebnis in ' + m.calc.unit : 'Buchstabierwort'}</label>
+      <input class="inp${isN ? ' num' : ''}" id="tin" name="tin" ${ans ? 'readonly' : ''} value="${esc(R.typedRaw || '')}" ${isN ? 'inputmode="decimal" placeholder="z. B. 2,9"' : 'placeholder="z. B. ALFA" autocapitalize="characters"'} autocorrect="off" spellcheck="false" enterkeyhint="done">
+      ${isN && !ans ? `<p class="fhint">Faustformel: ${esc(m.calc.hint)} – Abweichung bis ${Math.round(m.calc.tol * 100)} % zählt als richtig.</p>` : ''}
+      ${ans ? '' : `<div class="row"><button class="btn main" type="submit">Prüfen</button><button class="btn" type="button" data-act="giveup">Weiß ich nicht</button></div>`}</form>`;
+  } else {
+    body = `<div class="opts">${m.opts.map((o, i) => {
+      let cls = 'opt';
+      if (ans){ if (o === m.correct) cls += ' correct'; else if (o === R.chosen) cls += ' wrong'; else cls += ' dim'; }
+      return `<button class="${cls}" data-ans="${i}" ${ans ? 'disabled' : ''}><span class="k">${i + 1}</span>${optLabel(m, o)}</button>`;
+    }).join('')}</div>`;
+  }
+  let fb = '';
+  if (ans){
+    const v = R.verdict, col = v === 'ok' ? 'var(--ok)' : v === 'near' ? 'var(--unk)' : 'var(--bad)';
+    const head = v === 'ok' ? 'Richtig' : v === 'near' ? 'Fast – zählt als falsch' : 'Falsch';
+    const sol = v === 'ok' && !m.typed ? '' : `<p>Richtig: ${m.optCode || m.typed === 'abc' ? `<span class="code" style="white-space:normal">${esc(m.correct)}</span>` : m.seq ? esc(m.correct) : `<b>${esc(m.correct)}</b>`}</p>`;
+    let more = '';
+    if (q.kind === 'pwm' || q.kind === 'pwc') more = `<div class="entry"><div class="hd"><span class="code">${esc(q.ref[0])}</span></div><p style="margin:6px 0 0">${esc(q.ref[1])}</p></div>`;
+    if (m.dev) more = devCard(m.dev, true);
+    if (q.kind === 'num') more = `<p class="muted">Zahlen 0–9: ${NUMS.join(', ')}.</p>`;
+    fb = `<div class="fb" style="--c:${col}"><div class="v">${head}</div>${sol}${R.vmsg ? `<p>${esc(R.vmsg)}</p>` : ''}${m.ex ? `<p>${esc(m.ex)}</p>` : ''}${more}
+      <p class="muted" style="font-size:.88rem">Thema: <button class="linkbtn" data-lesson="${q.g}">${esc(GROUPS[q.g].l)} nachlesen</button></p></div>
+      <div class="row"><button class="btn main" data-act="next">${R.i + 1 >= R.qs.length ? 'Auswertung' : 'Weiter'}</button>
+      <button class="btn${S.flags[q.id] ? ' flagged' : ''}" data-act="flag">${S.flags[q.id] ? 'Gemeldet' : 'Frage melden'}</button></div>`;
+  }
+  $('#app').innerHTML = `<div class="qmeta"><span class="chip-cat">${esc(KINDS[q.kind].l)}</span><span>${esc(GROUPS[q.g].l)}</span></div>${m.html}${body}${fb}`;
+  if (m.typed && !ans){ const t = $('#tin'); if (t) setTimeout(() => { try { t.focus({preventScroll:true}); } catch(e){} }, 30); }
+}
+function renderEnd(){
+  const ok = R.res.filter(r => r.ok).length, n = R.res.length, miss = R.res.filter(r => !r.ok);
+  $('#app').innerHTML = `<div class="score">${ok}<small> / ${n}</small></div>
+    <p class="muted">${ok === n ? 'Alles richtig.' : miss.length + ' Fehler – unten mit Lösung.'}</p>
+    <div class="row"><button class="btn main" ${R.mode === 'topic' ? `data-topic="${R.g}"` : `data-start="${R.mode}"`}>Neue Runde</button>${miss.length ? `<button class="btn" data-act="retrymiss">Fehler wiederholen</button>` : ''}<button class="btn" data-go="home">Übersicht</button></div>
+    ${miss.length ? `<ul class="misslist">${miss.map(r => `<li><div>${esc(r.m.plain)}</div><div class="muted" style="font-size:.9rem">Deine Antwort: ${esc(r.given || '–')}</div><div>Richtig: <b>${esc(r.m.correct)}</b></div></li>`).join('')}</ul>` : ''}`;
+}
+let TV = {f:'40', h1:'6', h2:'15000', u1:'ft', u2:'ft'};
+function toolsOut(){
+  const f = parseFloat(String(TV.f).replace(',', '.'));
+  let a = '<p class="muted">Frequenz in MHz eingeben.</p>';
+  if (isFinite(f) && f > 0){
+    const lam = 300 / f, dip = 143 / f, qw = 71 / f;
+    const m = x => x >= 1 ? nf(r2(x), 2) + ' m' : Math.round(x * 100) + ' cm';
+    a = `<dl class="kv res"><dt>Wellenlänge λ</dt><dd>${m(lam)}</dd><dt>Halbwellendipol gesamt</dt><dd>${m(dip)}</dd><dt>je Dipolschenkel</dt><dd>${m(dip / 2)}</dd><dt>λ/4-Strahler, Radial</dt><dd>${m(qw)}</dd>${f <= 30 ? `<dt>NVIS-Höhe (0,1–0,25 λ)</dt><dd>${m(lam * .1)} – ${m(lam * .25)}</dd>` : ''}</dl>
+      <p class="muted" style="font-size:.88rem">${f < 3 || f > 3000 ? 'Außerhalb HF/VHF/UHF. ' : ''}Band: ${f < 30 ? 'HF' : f < 300 ? 'VHF' : 'UHF'}${f >= 225 && f <= 400 ? ' (militärischer UHF-Flugfunk)' : ''}. Längen mit Verkürzungsfaktor 0,95 – Draht etwas länger schneiden und abgleichen.</p>`;
+  }
+  const toFt = (v, u) => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) && x >= 0 ? (u === 'm' ? x / 0.3048 : x) : NaN; };
+  const h1 = toFt(TV.h1, TV.u1), h2 = toFt(TV.h2, TV.u2);
+  let b = '<p class="muted">Beide Höhen eingeben.</p>';
+  if (isFinite(h1) && isFinite(h2)){
+    const nm = 1.23 * (Math.sqrt(h1) + Math.sqrt(h2));
+    b = `<dl class="kv res"><dt>Funkhorizont</dt><dd>${nf(Math.round(nm))} NM ≈ ${nf(Math.round(nm * 1.852))} km</dd></dl><p class="muted" style="font-size:.88rem">Gilt nur bei freier Sicht – Gelände, Bewuchs und Gebäude verkürzen die Reichweite.</p>`;
+  }
+  return {a, b};
+}
+function renderTools(){
+  const o = toolsOut();
+  const unit = (k) => `<select class="sel" data-tv="${k}"><option value="ft"${TV[k] === 'ft' ? ' selected' : ''}>ft</option><option value="m"${TV[k] === 'm' ? ' selected' : ''}>m</option></select>`;
+  $('#app').innerHTML = `<h1 class="ph">Rechner</h1>
+    <section class="card"><h2>Antennenlänge</h2><label class="lbl" for="tf">Frequenz (MHz)</label><input class="inp num" id="tf" data-tv="f" inputmode="decimal" value="${esc(TV.f)}"><div id="ta">${o.a}</div>${figHtml('gp')}</section>
+    <section class="card"><h2>Funkhorizont</h2>
+      <div class="inrow"><label class="lbl" for="th1">Deine Antenne</label><input class="inp num" id="th1" data-tv="h1" inputmode="decimal" value="${esc(TV.h1)}">${unit('u1')}</div>
+      <div class="inrow"><label class="lbl" for="th2">Gegenstelle bzw. Lfz</label><input class="inp num" id="th2" data-tv="h2" inputmode="decimal" value="${esc(TV.h2)}">${unit('u2')}</div>
+      <div id="tb">${o.b}</div></section>`;
+}
+function renderDev(){
+  $('#app').innerHTML = `<h1 class="ph">Funkgeräte</h1><p class="muted">Öffentliche Herstellerangaben (L3Harris, Thales). Je nach Ausführung und Software-Stand weichen Daten ab – maßgeblich ist die Dokumentation deines Geräts.</p>${DEV.map(d => devCard(d)).join('')}
+    <button class="cta" data-start="dev" style="margin-top:18px"><span><strong>Funkgeräte üben</strong><small>Erkennen und Leistungsdaten</small></span><span class="go">→</span></button>`;
+}
+function renderStats(){
+  const pct = S.answered ? Math.round(S.correct / S.answered * 100) : 0;
+  const rows = G_ORDER.map(g => {
+    const s = groupScore(g), p = Math.round(s.frac * 100);
+    const col = !s.seen ? 'var(--line)' : s.frac >= .8 ? 'var(--ok)' : s.frac >= .4 ? 'var(--cta)' : 'var(--bad)';
+    return `<div class="srow"><span>${esc(GROUPS[g].l)}</span><span class="sbar"><i style="width:${p}%;background:${col}"></i></span><span class="muted" style="text-align:right">${s.good}/${s.n}</span></div>`;
+  }).join('');
+  const flags = Object.entries(S.flags).sort((a, b) => b[1].ts - a[1].ts);
+  $('#app').innerHTML = `<div class="stat-top"><div><b>${S.answered}</b><span class="muted">Antworten</span></div><div><b>${pct} %</b><span class="muted">richtig</span></div><div><b>${Object.keys(S.q).length}</b><span class="muted">von ${BANK.length} Fragen gesehen</span></div></div>
+    <h2 style="margin-top:18px">Je Thema <span class="muted" style="font-size:.95rem;font-weight:500">zuletzt richtig beantwortet</span></h2>${rows}
+    <h2 style="margin-top:24px">Gemeldete Fragen</h2>
+    ${flags.length ? `<ul class="misslist">${flags.map(([id, f]) => `<li><div>${esc(f.t)}</div><button class="linkbtn" data-unflag="${esc(id)}">Meldung entfernen</button></li>`).join('')}</ul>` : '<p class="muted">Keine. Melde eine Frage nach dem Beantworten mit „Frage melden“.</p>'}
+    <h2 style="margin-top:24px">Fortschritt</h2>
+    ${statsConfirm ? `<div class="confirm"><p style="margin:0 0 8px">Gesamten Fortschritt löschen? Gemeldete Fragen bleiben erhalten.</p><div class="row" style="margin-top:0"><button class="btn" data-act="resetyes" style="border-color:var(--bad);color:var(--bad)">Löschen</button><button class="btn" data-act="resetno">Abbrechen</button></div></div>`
+      : `<button class="btn" data-act="reset" style="margin-top:8px">Fortschritt zurücksetzen</button>`}`;
+}
+function render(){
+  bar();
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'lehre') renderLehre();
+  else if (view === 'topic') renderTopic();
+  else if (view === 'tools') renderTools();
+  else if (view === 'dev') renderDev();
+  else if (view === 'stats') renderStats();
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.go){ view = t.dataset.go; statsConfirm = false; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.lesson){ topic = t.dataset.lesson; view = 'topic'; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.topic){ startRound('topic', null, t.dataset.topic); return; }
+  if (t.dataset.start){ startRound(t.dataset.start); return; }
+  if (t.dataset.ans != null){ answerMC(+t.dataset.ans); return; }
+  if (t.dataset.unflag){ delete S.flags[t.dataset.unflag]; save(); render(); return; }
+  const act = t.dataset.act;
+  if (act === 'next') next();
+  else if (act === 'flag') toggleFlag();
+  else if (act === 'giveup') answerTyped('');
+  else if (act === 'retrymiss'){ const miss = R.res.filter(r => !r.ok).map(r => r.q); R.mode === 'topic' ? startRound('topic', miss, R.g) : startRound(R.mode, miss); }
+  else if (act === 'reset'){ statsConfirm = true; render(); }
+  else if (act === 'resetno'){ statsConfirm = false; render(); }
+  else if (act === 'resetyes'){ const fl = S.flags; S = blank(); S.flags = fl; statsConfirm = false; save(); render(); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id === 'tform'){ e.preventDefault(); const v = $('#tin') ? $('#tin').value : ''; answerTyped(v); }
+});
+function toolsInput(e){
+  const k = e.target.dataset && e.target.dataset.tv; if (!k || view !== 'tools') return;
+  TV[k] = e.target.value; const o = toolsOut(); $('#ta').innerHTML = o.a; $('#tb').innerHTML = o.b;
+}
+document.addEventListener('input', toolsInput);
+document.addEventListener('change', toolsInput);
+document.addEventListener('keydown', e => {
+  if (view !== 'quiz' || !R) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (!R.answered && !R.cur.typed && /^[1-4]$/.test(e.key) && tag !== 'input'){ const i = +e.key - 1; if (i < R.cur.opts.length) answerMC(i); }
+  else if (R.answered && e.key === 'Enter'){ e.preventDefault(); next(); }
+});
+
+window.__ft = {BANK, materialize, checkTyped, MODES, poolFor, pick, FIG};
+render();
+})();
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
