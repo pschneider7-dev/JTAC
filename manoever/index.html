@@ -563,6 +563,7 @@ function renderHome(){
     <button class="mode" data-start="var"><span class="mi"><strong>Versionen unterscheiden</strong><small>T-72B oder B3, T-90A oder M, BTR-80 oder 82A …</small></span><span class="n">${countPool('var')} Bilder</span></button>
     <button class="mode" data-start="conf"><span class="mi"><strong>Verwechslungsgefahr</strong><small>Bilder nur gegen ähnliche Fahrzeuge, z. B. T-72 und T-90</small></span><span class="n">${countPool('conf')} Bilder</span></button>
     <button class="mode" data-act="merk"><span class="mi"><strong>Merkblatt</strong><small>Laser, Wärmebild und Deckung, Bedrohung, Wirkmittel auf einen Blick</small></span><span class="n"></span></button>
+    <a class="mode" href="3d/t72.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell T-72</strong><small>Varianten A, B, B3 und B3M umschalten – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
     <a class="mode" href="3d/t90m.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell T-90M</strong><small>Drehen, zoomen, Merkmale antippen – mit Wärmebild-Ansicht und Abgrenzung zu T-72B3, T-90A und T-80BVM</small></span><span class="n">3D</span></a>
     <button class="mode" data-act="cmpall"><span class="mi"><strong>Direktvergleiche</strong><small>Ähnliche Fahrzeuge nebeneinander – z. B. T-72 oder T-90, BMP-3 oder BMD-4M</small></span><span class="n">${CMP.length} Paare</span></button>
       <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle Fahrzeuge zum Nachlesen, mit Bildern und Versionen</small></span><span class="n">${FAMS.length}</span></button>
@@ -819,8 +820,8 @@ function openCmpAll(){
     ${CMP.map(c => `<div class="sec"><h3>${esc(FAM[c.a.fam].name)} oder ${esc(FAM[c.b.fam].name)}?</h3>${cmpHtml(c, c.a.fam)}</div>`).join('')}
   </div>`);
 }
-const M3D = {'t90:m':'3d/t90m.html', 't90':'3d/t90m.html'};
-const m3dBtn = k => M3D[k] ? `<div class="row" style="margin-top:12px"><a class="btn" href="${M3D[k]}" style="color:inherit;text-decoration:none">3D-Modell T-90M ansehen</a></div>` : '';
+const M3D = {'t90':['3d/t90m.html', 'T-90M'], 't90:m':['3d/t90m.html', 'T-90M'], 't72':['3d/t72.html', 'T-72 (A, B, B3, B3M)'], 't72:ab':['3d/t72.html#B', 'T-72A/B'], 't72:b3':['3d/t72.html#B3', 'T-72B3'], 't72:b3m':['3d/t72.html#B3M', 'T-72B3M']};
+const m3dBtn = k => M3D[k] ? `<div class="row" style="margin-top:12px"><a class="btn" href="${M3D[k][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[k][1])} ansehen</a></div>` : '';
 function drawCard(){
   const id = cardState.id;
   const isUnit = !!UNIT[id];
@@ -860,7 +861,7 @@ function drawCard(){
     <h1 style="font-size:2.6rem;margin-top:16px">${esc(f.name)}</h1>
     <div class="desig">${esc(f.designation)}</div>
     ${armorChip(f)}
-    <div class="row" style="margin-top:12px">${f.vars.map(u => `<button class="btn" data-card="${u.key}">Steckbrief ${esc(u.name)}</button>`).join('')}${M3D[f.id] ? `<a class="btn" href="${M3D[f.id]}" style="color:inherit;text-decoration:none">3D-Modell T-90M</a>` : ''}</div>
+    <div class="row" style="margin-top:12px">${f.vars.map(u => `<button class="btn" data-card="${u.key}">Steckbrief ${esc(u.name)}</button>`).join('')}${M3D[f.id] ? `<a class="btn" href="${M3D[f.id][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[f.id][1])}</a>` : ''}</div>
     ${sec('Nutzer', p(f.users))}${bothSec(f)}
     ${ANNO[f.id] ? sec(`Merkmale aller ${esc(f.name)}`, annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
     ${sec('Versionen unterscheiden', f.vars.map(u => `<div class="vbox">
