@@ -14,7 +14,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 | `drill/` | JTAC-Drill |
 | `brevity/` | Brevity-Trainer |
 | `funk/` | Funk-Trainer (Kurzlehre mit Skizzen, Behelfsantennen, Sprechfunk, Rechner, Funkgeräte) |
-| `symbole/` | Symbol-Generator: Freitext → taktisches Zeichen nach APP-6(D), gezeichnet mit milsymbol (MIT-Lizenz, `symbole/milsymbol.js`) |
+| `symbole/` | Symbole: Trainer (Feindmeldung zeichnen, Fahrzeug zeichnen, Symbol lesen, Baukasten, Fahrzeugliste) und Generator (Freitext → taktisches Zeichen nach APP-6(D)), gezeichnet mit milsymbol (MIT-Lizenz, `symbole/milsymbol.js`) |
 
 ## Aufbau
 
@@ -27,6 +27,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 - `manifest.webmanifest`, `icons/` – App-Name und Icons
 - `tools/build.py` – baut die Website nach `_site/` und trägt die Offline-Liste in `sw.js` ein
 - `tools/gen_ziele.py` – trägt die Bodenbilder der drei Rot-Trainer in `ziele/index.html` ein (läuft mit `build.py` automatisch)
+- `tools/gen_symbole.py` – trägt Namen und Bodenbilder der drei Rot-Trainer in `symbole/index.html` ein (läuft mit `build.py` automatisch); welches Zeichen zu welchem Fahrzeug gehört, steht in `VEH` in `symbole/index.html`
 
 Der Fortschritt liegt im `localStorage` des Geräts, je Trainer unter einem eigenen Schlüssel (`manoevertrainer.v1`, `jtacdrill.v1` usw.).
 

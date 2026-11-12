@@ -29,6 +29,8 @@ def site_files():
 def main():
     import gen_ziele  # Ziel-Trainer aus den Bildern der anderen Trainer füllen
     gen_ziele.main()
+    import gen_symbole  # Symbol-Trainer: Fahrzeugnamen und -bilder aus den Rot-Trainern
+    gen_symbole.main()
     shutil.rmtree(OUT, ignore_errors=True)
     entries = []
     for rel in site_files():
