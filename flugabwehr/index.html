@@ -587,6 +587,7 @@ function renderHome(){
     ${CMP.length ? `<button class="mode" data-act="cmpall"><span class="mi"><strong>Direktvergleiche</strong><small>${esc(DATA.cmpDesc || 'Ähnliche Systeme nebeneinander')}</small></span><span class="n">${CMP.length} Paare</span></button>` : ''}
     <button class="mode" data-act="merk"><span class="mi"><strong>Merkblatt</strong><small>Die wichtigsten Regeln und Richtwerte auf einen Blick</small></span><span class="n"></span></button>
     <a class="mode" href="3d/sa8.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell SA-8 Gecko</strong><small>9K33 Osa in den Versionen SA-8A und SA-8B, Marsch- und Feuerstellung – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
+    <a class="mode" href="3d/sa13.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell SA-13 Gopher</strong><small>9K35 Strela-10 mit und ohne Schwimmkörper, Marsch- und Feuerstellung – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
     <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle Systeme zum Nachlesen, mit Bildern${IS2C ? ', Versionen und Radaren' : ''}</small></span><span class="n">${FAMS.length}</span></button>
     <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je System, markierte Fragen zum Prüfen</small></span><span class="n">${Object.keys(S.flags).length ? Object.keys(S.flags).length + ' gemeldet' : ''}</span></button>
   </nav>
@@ -869,7 +870,7 @@ function verSec(f){
   return `<div class="sec"><h3>Alle Versionen und NATO-Bezeichnungen</h3>${v.rows.map(r => `<div class="vbox"><h4>${esc(r.n)}${r.nato ? ` <span class="nato">${esc(r.nato)}</span>` : ''}</h4>${r.y || r.wez ? `<p class="small muted" style="margin:3px 0 0">${[r.y, r.wez].filter(Boolean).map(esc).join(' · ')}</p>` : ''}${r.m ? `<p style="margin:4px 0 0">${esc(r.m)}</p>` : ''}</div>`).join('')}${v.note ? `<p class="cmpkey"><strong>Unterscheiden:</strong> ${esc(v.note)}</p>` : ''}</div>`;
 }
 /* 3D-Erkennungsmodelle unter 3d/: Schlüssel ist die Familie oder die Version (familie:version) */
-const M3D = {'osa':['3d/sa8.html', 'SA-8 Gecko']};
+const M3D = {'osa':['3d/sa8.html', 'SA-8 Gecko'], 'strela10':['3d/sa13.html', 'SA-13 Gopher']};
 const m3dBtn = k => M3D[k] ? `<div class="row" style="margin-top:12px"><a class="btn" href="${M3D[k][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[k][1])} ansehen</a></div>` : '';
 function drawCard(){
   const id = cardState.id;

@@ -6,7 +6,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 |---|---|
 | `manoever/` | Manöver-Trainer, mit 3D-Erkennungsmodellen T-72 (Varianten A, B, B3, B3M; `manoever/3d/t72.html#B3M` öffnet direkt eine Variante), T-90M und BTR-80/82 (Varianten 80, 80A, 82A, 82AT; `manoever/3d/btr.html#82A`) unter `manoever/3d/` (three.js r128, MIT-Lizenz, lokal in `assets/three.min.js`) |
 | `artillerie/` | Artillerie-Trainer |
-| `flugabwehr/` | Flugabwehr-Trainer, mit 3D-Erkennungsmodell 9K33 Osa / SA-8 Gecko (Versionen SA-8A, SA-8B; `flugabwehr/3d/sa8.html#A` öffnet direkt eine Version) unter `flugabwehr/3d/` |
+| `flugabwehr/` | Flugabwehr-Trainer, mit 3D-Erkennungsmodellen 9K33 Osa / SA-8 Gecko (Versionen SA-8A, SA-8B; `flugabwehr/3d/sa8.html#A` öffnet direkt eine Version) und 9K35 Strela-10 / SA-13 Gopher (Strela-10M, Strela-10M3; `flugabwehr/3d/sa13.html#M`) unter `flugabwehr/3d/` |
 | `blau/` | Blau-Trainer (Fahrzeuge KR Blau, Freund oder Feind) |
 | `ziele/` | Zielpriorisierung (Lagen mit vier Zielen, Bilder aus Manöver-, Artillerie- und Flugabwehr-Trainer) |
 | `waffen/` | Waffen-Trainer |
