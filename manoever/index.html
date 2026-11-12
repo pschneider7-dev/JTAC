@@ -566,6 +566,7 @@ function renderHome(){
     <a class="mode" href="3d/t72.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell T-72</strong><small>Varianten A, B, B3 und B3M umschalten – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
     <a class="mode" href="3d/t90m.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell T-90M</strong><small>Drehen, zoomen, Merkmale antippen – mit Wärmebild-Ansicht und Abgrenzung zu T-72B3, T-90A und T-80BVM</small></span><span class="n">3D</span></a>
     <a class="mode" href="3d/btr.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell BTR-80/82</strong><small>Versionen 80, 80A, 82A und 82AT umschalten – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
+    <a class="mode" href="3d/bmp.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell BMP-1/BMP-2</strong><small>Varianten BMP-1, BMP-1AM, BMP-2 und BMP-2M umschalten – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
     <button class="mode" data-act="cmpall"><span class="mi"><strong>Direktvergleiche</strong><small>Ähnliche Fahrzeuge nebeneinander – z. B. T-72 oder T-90, BMP-3 oder BMD-4M</small></span><span class="n">${CMP.length} Paare</span></button>
       <button class="mode" data-go="cards"><span class="mi"><strong>Steckbriefe</strong><small>Alle Fahrzeuge zum Nachlesen, mit Bildern und Versionen</small></span><span class="n">${FAMS.length}</span></button>
     <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Fahrzeug, markierte Fragen zum Prüfen</small></span><span class="n">${Object.keys(S.flags).length ? Object.keys(S.flags).length + ' gemeldet' : ''}</span></button>
@@ -821,7 +822,7 @@ function openCmpAll(){
     ${CMP.map(c => `<div class="sec"><h3>${esc(FAM[c.a.fam].name)} oder ${esc(FAM[c.b.fam].name)}?</h3>${cmpHtml(c, c.a.fam)}</div>`).join('')}
   </div>`);
 }
-const M3D = {'t90':['3d/t90m.html', 'T-90M'], 't90:m':['3d/t90m.html', 'T-90M'], 't72':['3d/t72.html', 'T-72 (A, B, B3, B3M)'], 't72:ab':['3d/t72.html#B', 'T-72A/B'], 't72:b3':['3d/t72.html#B3', 'T-72B3'], 't72:b3m':['3d/t72.html#B3M', 'T-72B3M'], 'btr':['3d/btr.html', 'BTR (80, 80A, 82A, 82AT)'], 'btr:80':['3d/btr.html#80', 'BTR-80'], 'btr:82':['3d/btr.html#82A', 'BTR-82A']};
+const M3D = {'t90':['3d/t90m.html', 'T-90M'], 't90:m':['3d/t90m.html', 'T-90M'], 't72':['3d/t72.html', 'T-72 (A, B, B3, B3M)'], 't72:ab':['3d/t72.html#B', 'T-72A/B'], 't72:b3':['3d/t72.html#B3', 'T-72B3'], 't72:b3m':['3d/t72.html#B3M', 'T-72B3M'], 'btr':['3d/btr.html', 'BTR (80, 80A, 82A, 82AT)'], 'btr:80':['3d/btr.html#80', 'BTR-80'], 'btr:82':['3d/btr.html#82A', 'BTR-82A'], 'bmp1':['3d/bmp.html#1', 'BMP-1 und BMP-2'], 'bmp1:std':['3d/bmp.html#1', 'BMP-1'], 'bmp1:am':['3d/bmp.html#1AM', 'BMP-1AM'], 'bmp2':['3d/bmp.html#2', 'BMP-1 und BMP-2'], 'bmp2:std':['3d/bmp.html#2', 'BMP-2'], 'bmp2:m':['3d/bmp.html#2M', 'BMP-2M']};
 const m3dBtn = k => M3D[k] ? `<div class="row" style="margin-top:12px"><a class="btn" href="${M3D[k][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[k][1])} ansehen</a></div>` : '';
 function drawCard(){
   const id = cardState.id;
