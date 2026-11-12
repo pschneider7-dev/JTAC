@@ -333,6 +333,10 @@ const SYMS = {
   uav:{s:'01',e:'110300',de:'Drohne (UAV)',en:'Unmanned Aircraft'},
   u_inf:{s:'10',e:'121100',de:'Infanterie',en:'Infantry'},
   u_mech:{s:'10',e:'121102',de:'Mechanisierte Infanterie (Panzergrenadiere, Mot.-Schützen)',en:'Infantry, Armoured/Mechanized'},
+  u_ll:{s:'10',e:'121100',m2:'01',de:'Luftlandeinfanterie (Fallschirmjäger)',en:'Infantry, Airborne'},
+  u_llmech:{s:'10',e:'121102',m2:'01',de:'Luftlande, mechanisiert (auf BMD/BTR-D)',en:'Infantry, Armoured/Mechanized, Airborne'},
+  u_lb:{s:'10',e:'121100',m1:'01',de:'Luftbewegliche Infanterie (Luftsturm)',en:'Infantry, Air Mobile/Air Assault'},
+  u_geb:{s:'10',e:'121100',m2:'27',de:'Gebirgsjäger',en:'Infantry, Mountain'},
   u_mot:{s:'10',e:'121104',de:'Motorisierte Infanterie',en:'Infantry, Motorized'},
   u_pz:{s:'10',e:'120500',de:'Panzertruppe',en:'Armour'},
   u_aufkl:{s:'10',e:'121300',de:'Aufklärung',en:'Reconnaissance'},
@@ -449,7 +453,7 @@ const EQ = [
   ['leopard(?:\\s?[12]\\w{0,3})?|abrams|challenger(?:\\s?\\d)?|leclerc|merkava', 'kpz', '00', W],
   ['bmp\\s?[123]\\w{0,3}|bmd\\s?[1-4]\\w{0,2}|brm\\s?1k|bmpt|bmp', 'spz', '33', M],
   ['marder|puma|bradley|cv\\s?90|warrior', 'spz', '33', W],
-  ['btr\\s?(?:50|d)|mt\\s?lb\\w{0,2}|m113', 'tpz', '33', M],
+  ['btr\\s?mdm|btr\\s?(?:50|d)|mt\\s?lb\\w{0,2}|m113', 'tpz', '33', M],
   ['btr\\s?(?:60|70|80|82|90)\\w{0,3}|btr', 'tpz', '32', M],
   ['boxer|fuchs|stryker|patria', 'tpz', '32', W],
   ['brdm\\s?[12]\\w{0,3}|brdm', 'lgf', '32', M],
@@ -530,7 +534,10 @@ const UNIT = [
   ['panzerartillerie\\w*', 'u_artsf'],
   ['raketenartillerie\\w*|raketenwerfer\\w*', 'u_rak'],
   ['panzer\\w*|kampfpanzer\\w*|kpz', 'u_pz'],
-  ['infanterie\\w*|jaeger\\w*|schuetzen|fallschirmjaeger\\w*|grenadier\\w*|luftlande\\w*', 'u_inf'],
+  ['fallschirmjaeger\\w*|fallschirm\\w*|luftlande\\w*|vdv', 'u_ll'],
+  ['luftsturm\\w*|luftbeweglich\\w*', 'u_lb'],
+  ['gebirgsjaeger\\w*|gebirgs\\w*', 'u_geb'],
+  ['infanterie\\w*|jaeger\\w*|schuetzen|grenadier\\w*', 'u_inf'],
   ['aufklaerung\\w*|aufklaerer\\w*|spaeh\\w*|erkunder\\w*|aufkl', 'u_aufkl'],
   ['artillerie\\w*|art', 'u_art'],
   ['moerser\\w*', 'u_mrs'],
@@ -667,6 +674,7 @@ function parse(input){
     const k = unitIn(w);
     if (k && (isUnit || !eq)){ if (!F.key || F.key === 'u_none') F.key = k; continue; }
     if (k === 'u_aufkl' && eq){ if (!acts.includes('Aufklärung')) acts.push('Aufklärung'); continue; }
+    if (k === 'u_ll' && eq){ notes.push('Den Luftlande-Zusatz (Schwingen unten im Rahmen) gibt es nach APP-6(D), 3.4.7, nur für Einheiten – Gerät hat keine Zusätze unten im Rahmen. Für einen Luftlandeverband z. B. „Luftlandezug feindlich auf BMD-4M“ schreiben.'); continue; }
     keep2.push(w);
   }
   // Anzahl
@@ -696,6 +704,7 @@ function parse(input){
   } else if (isUnit){
     if (eq && (!F.key || F.key === 'u_none') && EQ2UNIT[eq.k]){ F.key = EQ2UNIT[eq.k]; notes.push(`„${SYMS[eq.k].de}“ als Hinweis auf die Truppengattung gewertet: ${SYMS[F.key].de}.`); }
     F.key = F.key || 'u_none';
+    if (F.key === 'u_ll' && eq && (eq.k === 'spz' || eq.k === 'tpz')) F.key = 'u_llmech';
     if (eq && eqLabel) acts.unshift('mit ' + eqLabel);
     if (qty) acts.unshift(qty + '×');
     F.hq = String((tf ? 4 : 0) + (hq ? 2 : 0) + (dummy ? 1 : 0));
@@ -749,7 +758,7 @@ let store = {hist:[]};
 try { const r = localStorage.getItem(KEY); if (r) store = Object.assign(store, JSON.parse(r)); } catch(e){}
 const saveStore = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} };
 let F = null, lastText = '', P = null;
-const EXAMPLES = ['3 BTR feindlich', 'BRDM 2 feindlich klärt auf Richtung West', 'Panzerkompanie feindlich greift an Richtung Süd', '2 Ka-52 feindlich kreisen',
+const EXAMPLES = ['3 BTR feindlich', 'Luftlandezug feindlich auf BMD-4M', 'BRDM 2 feindlich klärt auf Richtung West', 'Panzerkompanie feindlich greift an Richtung Süd', '2 Ka-52 feindlich kreisen',
   'Gefechtsstand Bataillon feindlich', 'BM-21 feindlich in Stellung zerstört', 'Aufklärungszug feindlich mit BRDM-2 Richtung Nordwest', 'Zug Infanterie eigen verteidigt',
   'Orlan-10 feindlich Kurs 270', 'SA-15 feindlich vermutet', 'T-72B3 feindlich fährt mit 30 km/h nach Westen um 08:15', 'BTG feindlich',
   'Truppführer feindlich', 'Zugführer Oberleutnant eigen', 'Scharfschütze feindlich Richtung Süd', 'JTAC eigen', 'Hauptgefechtsstand Brigade feindlich', 'Beobachtungsposten feindlich'];
@@ -776,6 +785,8 @@ function rows(F){
     if (S.s === '27' && F.rank && F.rank !== '00') r.push(['Dienstgrad (unten im Rahmen)', esc(RANKS[F.rank])]);
     if (S.s === '10' && F.sphq) r.push(['Art des Gefechtsstands – Feld AA (im Rahmen)', esc(SPHQ[F.sphq])]);
     if (S.s === '15' && F.mob !== '00') r.push(['Mobilität', esc(MOB[F.mob])]);
+    if (S.s === '10' && S.m1) r.push(['Zusatz oben im Rahmen (Sektor 1)', esc({'01':'Luftbeweglich / Luftsturm', '41':'Mehrfachraketenwerfer'}[S.m1] || S.m1)]);
+    if (S.s === '10' && S.m2) r.push(['Zusatz unten im Rahmen (Sektor 2)', esc({'01':'Luftlande', '27':'Gebirge'}[S.m2] || S.m2)]);
     if (S.s === '10' && F.ech !== '00') r.push(['Größe (über dem Rahmen)', esc(ECH[F.ech])]);
     if (F.hq !== '0') r.push(['Stab / Kampfgruppe / Attrappe', esc(HQS[F.hq] || '')]);
   }
@@ -1040,6 +1051,10 @@ const echDe = c => (ECHS.find(m => m[0] === c) || ['', '–'])[1];
 const DIRS = [['0','N','Norden'], ['45','NO','Nordosten'], ['90','O','Osten'], ['135','SO','Südosten'], ['180','S','Süden'], ['225','SW','Südwesten'], ['270','W','Westen'], ['315','NW','Nordwesten']];
 const dirOf = d => DIRS.find(x => x[0] === String(d));
 const RR = {'':'', '+':'verstärkt', '-':'vermindert', '±':'verstärkt und vermindert'};
+/* Zusätze im Rahmen nur für Einheiten (Table 3-4/3-5); Gerät hat laut 3.4.7 keine Zusätze unten im Rahmen */
+const M1 = [['00','keiner'], ['01','Luftbeweglich / Luftsturm'], ['41','Mehrfachraketenwerfer'], ['50','Radar']];
+const M2 = [['00','keiner'], ['01','Luftlande'], ['27','Gebirge'], ['51','Rad'], ['47','gezogen'], ['42','Ski']];
+const m1De = c => (M1.find(m => m[0] === c) || ['', c])[1], m2De = c => (M2.find(m => m[0] === c) || ['', c])[1];
 const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 function eqCode(k, sz, rad){
@@ -1054,6 +1069,7 @@ const eqLabel = (k, sz, rad) => { const q = eqOf(k); if (!q) return '–'; retur
    ek: richtige Icons (erstes = Musterlösung) · sz/rad: zulässige Größe bzw. Radar (null = freigestellt) · mob: zulässige Mobilität · tok: Typ (Feld V) */
 const K_W = 'Für Kampfpanzer legt Table 3-19 keine Gewichtsklassen fest – das Grundzeichen reicht, Striche sind freigestellt. Kette darf ergänzt werden.';
 const SPZ_W = 'Schützenpanzer sind im APP-6 „gepanzerte Kampffahrzeuge“ (Armoured Fighting Vehicle) – auf Kette.';
+const LL_W = ' Den Luftlande-Zusatz (Schwingen unten im Rahmen) gibt es nur für Einheiten, z. B. Luftlandezug auf BMD – für einzelnes Gerät nennt APP-6(D), 3.4.7, keine Zusätze unten im Rahmen.';
 const BTR_W = 'BTR heißt Bronetransporter: Transportpanzer (APC), Rad geländegängig.';
 const LGF_W = 'Das Icon „leichtes gepanzertes Radfahrzeug“ zeigt die Räder schon – ein Mobilitätszeichen ist freigestellt.';
 const LKW_W = 'Das Lkw-Icon zeigt die Räder schon – ein Mobilitätszeichen ist freigestellt.';
@@ -1072,16 +1088,16 @@ const VEH = [
   {f:'bmp1', s:'m', v:['BMP-1','BMP-1AM'], tok:['BMP1'], ek:['spz'], mob:['33'], w:SPZ_W},
   {f:'bmp2', s:'m', v:['BMP-2','BMP-2M'], tok:['BMP2'], ek:['spz'], mob:['33'], w:SPZ_W},
   {f:'bmp3', s:'m', v:['BMP-3'], tok:['BMP3'], ek:['spz'], mob:['33'], w:SPZ_W},
-  {f:'bmd2', s:'m', v:['BMD-2'], tok:['BMD2'], ek:['spz'], mob:['33'], w:SPZ_W},
-  {f:'bmd3', s:'m', v:['BMD-3'], tok:['BMD3'], ek:['spz'], mob:['33'], w:SPZ_W},
-  {f:'bmd4', s:'m', v:['BMD-4M'], tok:['BMD4'], ek:['spz'], mob:['33'], w:SPZ_W},
+  {f:'bmd2', s:'m', v:['BMD-2'], tok:['BMD2'], ek:['spz'], mob:['33'], w:SPZ_W + LL_W},
+  {f:'bmd3', s:'m', v:['BMD-3'], tok:['BMD3'], ek:['spz'], mob:['33'], w:SPZ_W + LL_W},
+  {f:'bmd4', s:'m', v:['BMD-4M'], tok:['BMD4'], ek:['spz'], mob:['33'], w:SPZ_W + LL_W},
   {f:'btr60', s:'m', v:['BTR-60PB'], tok:['BTR60'], ek:['tpz'], mob:['32','31'], w:BTR_W},
   {f:'btr70', s:'m', v:['BTR-70'], tok:['BTR70'], ek:['tpz'], mob:['32','31'], w:BTR_W},
   {f:'btr', s:'m', v:['BTR-82A','BTR-80'], tok:['BTR80','BTR82'], ek:['tpz','spz'], mob:['32','31'], w:BTR_W + ' Wegen der 30-mm-Kanone des BTR-82A wird auch „gepanzertes Kampffahrzeug“ gewertet.'},
   {f:'btr90', s:'m', v:['BTR-90'], tok:['BTR90'], ek:['tpz','spz'], mob:['32','31'], w:BTR_W},
   {f:'mtlb', s:'m', v:['MT-LB'], tok:['MTLB'], ek:['tpz'], mob:['33'], w:'Gepanzertes Mehrzweck-Kettenfahrzeug zum Transport: Transportpanzer auf Kette.'},
-  {f:'btrd', s:'m', v:['BTR-D'], tok:['BTRD'], ek:['tpz'], mob:['33'], w:'Luftlande-Transportpanzer: Transportpanzer auf Kette.'},
-  {f:'btrmdm', s:'m', v:['BTR-MDM'], tok:['BTRMDM','MDM'], ek:['tpz'], mob:['33'], w:'Luftlande-Transportpanzer: Transportpanzer auf Kette.'},
+  {f:'btrd', s:'m', v:['BTR-D'], tok:['BTRD'], ek:['tpz'], mob:['33'], w:'Luftlande-Transportpanzer: Transportpanzer auf Kette.' + LL_W},
+  {f:'btrmdm', s:'m', v:['BTR-MDM'], tok:['BTRMDM','MDM'], ek:['tpz'], mob:['33'], w:'Luftlande-Transportpanzer: Transportpanzer auf Kette.' + LL_W},
   {f:'brdm2', s:'m', v:['BRDM-2'], tok:['BRDM'], ek:['lgf'], mob:['00','32','31','52'], w:LGF_W},
   {f:'tigr', s:'m', v:['Tigr-M','Tigr'], tok:['TIGR','TIGER'], ek:['lgf'], mob:['00','32','31'], w:LGF_W},
   {f:'typhoon', s:'m', v:['Typhoon-K'], tok:['TYPHOON','TAIFUN','TAYFUN'], ek:['mrap','tpz'], mob:['32','31'], w:'Minengeschütztes Radfahrzeug (MRAP): „geschütztes Fahrzeug“, Rad geländegängig. Transportpanzer wird auch gewertet.'},
@@ -1158,14 +1174,14 @@ const vName = v => (VIMG[v.f] && VIMG[v.f].n) || v.v[0];
 const byEk = (x, k) => x == null ? null : Array.isArray(x) ? x : (x[k] === undefined ? null : x[k]);
 
 /* ---------- Zeichen ---------- */
-const blank = () => ({kind:'', id:'', st:'0', ue:'', ek:'', sz:0, rad:0, mob:'00', ech:'00', hq:false, rr:'', dummy:false, C:'', V:'', T:'', M:'', H:'', W:'', dir:''});
+const blank = () => ({kind:'', id:'', st:'0', ue:'', m1:'00', m2:'00', ek:'', sz:0, rad:0, mob:'00', ech:'00', hq:false, rr:'', dummy:false, C:'', V:'', T:'', M:'', H:'', W:'', dir:''});
 function sidc(s){
   const u = s.kind !== 'e';
   const st = unsure(s.id) ? '0' : (s.st || '0');
   const hq = u ? String((s.hq ? 2 : 0) + (s.dummy ? 1 : 0)) : (s.dummy ? '1' : '0');
   const amp = u ? (s.ech || '00') : (s.mob || '00');
   const ent = u ? (s.ue || '000000') : (s.ek ? eqCode(s.ek, s.sz, s.rad) : '000000');
-  return '100' + (s.id || '1') + (u ? '10' : '15') + st + hq + amp + ent + '0000';
+  return '100' + (s.id || '1') + (u ? '10' : '15') + st + hq + amp + ent + (u ? (s.m1 || '00') + (s.m2 || '00') : '0000');
 }
 const cache = new Map();
 function svgOf(s, size, plain){
@@ -1190,6 +1206,8 @@ function desc(s, noType){
   const p = [idOf(s.id).de];
   if (s.kind === 'u'){
     p.push(uOf(s.ue).de);
+    if (s.m1 && s.m1 !== '00') p.push(m1De(s.m1));
+    if (s.m2 && s.m2 !== '00') p.push(m2De(s.m2));
     if (s.ech !== '00') p.push(echDe(s.ech));
     if (s.hq) p.push('Gefechtsstand');
     if (s.rr) p.push(RR[s.rr]);
@@ -1215,13 +1233,18 @@ function rec(mode, ok){ S.answered++; if (ok) S.correct++; const m = S.m[mode] |
 const ECHW = {'11':'Team', '12':'Trupp', '13':'Gruppe', '14':'Zug', '15':'Kompanie'};
 const UT = [
   {ue:'121100', ech:['12','13','14','15'], n:['Infanterie, abgesessen','Infanterie zu Fuß','Sturminfanterie'], fr:'Jäger', w:3},
-  {ue:'121102', ech:['13','14','15'], n:['Mot.-Schützen auf BMP-2','Mot.-Schützen auf BTR-82A','Mot.-Schützen auf BMP-3','Luftlandetruppen auf BMD-4M','Mot.-Schützen auf MT-LB'], fr:'Panzergrenadiere', w:4},
+  {ue:'121102', ech:['13','14','15'], n:['Mot.-Schützen auf BMP-2','Mot.-Schützen auf BTR-82A','Mot.-Schützen auf BMP-3','Mot.-Schützen auf MT-LB'], fr:'Panzergrenadiere', w:4},
+  {ue:'121102', m2:'01', ech:['13','14','15'], n:['Luftlandetruppen auf BMD-4M','Luftlandetruppen auf BMD-2','Luftlandetruppen auf BTR-MDM'], w:2},
+  {ue:'121100', m2:'01', ech:['13','14','15'], n:['Luftlandeinfanterie, abgesessen'], fr:'Fallschirmjäger', w:2},
+  {ue:'121100', m1:'01', ech:['14','15'], n:['Luftsturminfanterie, per Hubschrauber abgesetzt'], w:1},
   {ue:'121104', ech:['13','14','15'], n:['Infanterie auf Ural-Lkw','Infanterie auf Tigr','Infanterie auf UAZ-Geländewagen'], fr:'Infanterie auf Lkw', w:2},
   {ue:'120500', ech:['14','15'], n:['Panzer (T-72B3)','Panzer (T-90M)','Panzer (T-80BVM)','Panzer (T-62M)'], fr:'Panzer (Leopard 2)', w:3},
   {ue:'121300', ech:['12','13','14'], n:['Aufklärer auf BRDM-2','Aufklärer auf BRM-3K','Aufklärer zu Fuß','Aufklärer auf Tigr'], fr:'Aufklärer', w:3},
   {ue:'120400', ech:['12','13','14'], n:['Panzerabwehr mit Kornet','Panzerabwehr mit Shturm-S','Panzerabwehr mit Konkurs'], fr:'Panzerabwehr', w:2},
   {ue:'130100', ech:['12','13','14'], n:['Flugabwehr mit Igla','Flugabwehr mit Verba','Flugabwehr mit Tor-M2','Flugabwehr mit Pantsir'], fr:'Flugabwehr', w:2},
-  {ue:'130300', ech:['14','15'], n:['Artillerie mit 2S19 Msta-S','Artillerie mit D-30','Artillerie mit 2S1','Raketenartillerie mit BM-21'], fr:'Artillerie', w:2, bat:true},
+  {ue:'130300', ech:['14','15'], n:['Artillerie mit 2S19 Msta-S','Artillerie mit 2S1','Artillerie mit 2S3'], fr:'Artillerie', w:2, bat:true},
+  {ue:'130300', m2acc:['00','47'], ech:['14','15'], n:['Artillerie mit D-30','Artillerie mit 2A65'], w:1, bat:true},
+  {ue:'130300', m1:'41', ech:['14','15'], n:['Raketenartillerie mit BM-21','Raketenartillerie mit TOS-1A','Raketenartillerie mit BM-27'], fr:'Raketenartillerie', w:2, bat:true},
   {ue:'130800', ech:['13','14'], n:['Mörser 120 mm','Mörser 82 mm'], fr:'Mörser', w:2},
   {ue:'140700', ech:['13','14'], n:['Pioniere','Pioniere mit IMR-2','Pioniere beim Minenlegen'], fr:'Pioniere', w:1},
   {ue:'121500', ech:['11','12'], n:['Scharfschützen'], fr:'Scharfschützen', w:1},
@@ -1254,11 +1277,11 @@ function genTask(lvl, forceKind){
     if (lvl >= 2 && chance(.1)){ A.dummy = sol.dummy = true; txt += plural ? ', Attrappen' : ', Attrappe'; }
     why = v.w; A.veh = v;
   } else {
-    const t = wpick(UT), e = pick(t.ech);
     const friendly = idc === '3' || idc === '2';
+    const t = wpick(friendly ? UT.filter(x => x.fr) : UT), e = pick(t.ech);
     let name = friendly ? t.fr : pick(t.n);
     const echw = t.bat && e === '15' ? 'Batterie' : ECHW[e];
-    Object.assign(A, {ue:[t.ue], ech:e}); Object.assign(sol, {ue:t.ue, ech:e});
+    Object.assign(A, {ue:[t.ue], ech:e, m1:t.m1acc || [t.m1 || '00'], m2:t.m2acc || [t.m2 || '00']}); Object.assign(sol, {ue:t.ue, ech:e, m1:t.m1 || '00', m2:t.m2 || '00'});
     let head = `${echw} ${name}`;
     if (lvl >= 2 && (e === '14' || e === '15') && chance(.14)){ A.hq = sol.hq = true; head = `Gefechtsstand ${echw} ${name}`; }
     if (lvl >= 2 && friendly){
@@ -1270,7 +1293,7 @@ function genTask(lvl, forceKind){
     }
     txt += head;
     if (lvl >= 2 && chance(.12)){ const r = pick(['+', '-']); A.rr = sol.rr = r; txt += r === '+' ? ', verstärkt' : ', geschwächt'; }
-    why = 'Einheit: Icon ' + uOf(t.ue).de + ', Echelon ' + echDe(e) + ' über dem Rahmen.';
+    why = 'Einheit: Icon ' + uOf(t.ue).de + (t.m1 ? ', Zusatz oben im Rahmen ' + m1De(t.m1) : '') + (t.m2 ? ', Zusatz unten im Rahmen ' + m2De(t.m2) : '') + ', Echelon ' + echDe(e) + ' über dem Rahmen.' + (t.m2acc ? ' Zusatz „gezogen“ unten im Rahmen ist freigestellt.' : '');
   }
   certain = !unsure(A.id);
   if (lvl >= 2 && certain && chance(.14)){ A.st = sol.st = '1'; txt += ', Standort vermutet (nicht bestätigt)'; }
@@ -1313,6 +1336,9 @@ function checks(s, A){
   add('Rahmen', s.id === A.id);
   if (A.kind === 'u'){
     add('Icon', s.kind === 'u' && A.ue.includes(s.ue));
+    const am1 = A.m1 || ['00'], am2 = A.m2 || ['00'];
+    if (am1.join() !== '00' || (s.m1 || '00') !== '00') add('Zusatz oben im Rahmen', am1.includes(s.m1 || '00'));
+    if (am2.join() !== '00' || (s.m2 || '00') !== '00') add('Zusatz unten im Rahmen', am2.includes(s.m2 || '00'));
     add('Echelon', s.kind === 'u' && s.ech === A.ech);
     if (A.hq || s.hq) add('Gefechtsstand', s.hq === A.hq);
     if (A.rr || s.rr) add('Verstärkt / vermindert', s.rr === A.rr);
@@ -1363,15 +1389,17 @@ function builderHtml(){
   h += sec('Rahmen', IDS.map(i => gb(`data-b="id:${i.c}"`, s.id === i.c, svgOf(Object.assign(blank(), {kind:s.kind, id:i.c}), 26, true), i.de)).join(''), 'g6');
   if (u){
     h += sec('Icon', UNITS.map(x => gb(`data-b="ue:${x.e}"`, s.ue === x.e, svgOf(B({ue:x.e}), 24, true), x.de)).join(''));
-    h += sec('Echelon (über dem Rahmen)', ECHS.map(([c, l]) => gb(`data-b="ech:${c}"`, s.ech === c, svgOf(B({ue:s.ue, ech:c}), 24, true), l)).join(''), 'gech');
+    h += sec('Zusatz oben im Rahmen (Sektor 1)', M1.map(([c, l]) => gb(`data-b="m1:${c}"`, s.m1 === c, svgOf(B({ue:s.ue, m1:c, m2:s.m2}), 24, true), l)).join(''));
+    h += sec('Zusatz unten im Rahmen (Sektor 2)', M2.map(([c, l]) => gb(`data-b="m2:${c}"`, s.m2 === c, svgOf(B({ue:s.ue, m1:s.m1, m2:c}), 24, true), l)).join(''));
+    h += sec('Echelon (über dem Rahmen)', ECHS.map(([c, l]) => gb(`data-b="ech:${c}"`, s.ech === c, svgOf(B({ue:s.ue, m1:s.m1, m2:s.m2, ech:c}), 24, true), l)).join(''), 'gech');
   } else {
     h += sec('Icon', EQI.map(x => gb(`data-b="ek:${x.k}"`, s.ek === x.k, svgOf(B({ek:x.k}), 24, true), x.de)).join(''));
     const q = eqOf(s.ek);
     if (q && q.sz) h += sec(q.ada ? 'Reichweite (Striche)' : 'Größe (Striche)', [0, 1, 2, 3].map(z => gb(`data-b="sz:${z}"`, s.sz === z, svgOf(B({ek:s.ek, sz:z, rad:z ? s.rad : 0}), 24, true), (q.ada ? SZR : SZ)[z])).join(''), 'g4');
     if (q && q.ada) h += sec('Radar am Startgerät', [0, 1, 2].map(r => gb(`data-b="rad:${r}"`, s.rad === r, svgOf(B({ek:s.ek, sz:s.sz || 1, rad:r}), 24, true), RAD[r], !s.sz)).join(''), 'g3') + (s.sz ? '' : '<p class="fhint">Zuerst die Reichweite wählen.</p>');
-    h += sec('Mobilität (unter dem Rahmen)', MOBS.map(([c, l]) => gb(`data-b="mob:${c}"`, s.mob === c, svgOf(B({ek:s.ek, sz:s.sz, rad:s.rad, mob:c}), 24, true), l)).join(''));
+    h += sec('Mobilität (unter dem Rahmen)', MOBS.map(([c, l]) => gb(`data-b="mob:${c}"`, s.mob === c, svgOf(B({ek:s.ek, sz:s.sz, rad:s.rad, mob:c}), 24, true), l)).join('')) + '<p class="fhint">Zusätze im Rahmen wie „Luftlande“ gibt es nur für Einheiten – Gerät hat nach APP-6(D), 3.4.7, keine Zusätze unten im Rahmen.</p>';
   }
-  const cur = B({ue:s.ue, ek:s.ek, sz:s.sz, rad:s.rad, mob:s.mob, ech:s.ech, hq:s.hq, dummy:s.dummy});
+  const cur = B({ue:s.ue, m1:s.m1, m2:s.m2, ek:s.ek, sz:s.sz, rad:s.rad, mob:s.mob, ech:s.ech, hq:s.hq, dummy:s.dummy});
   let z = [0, 1].map(v => gb(`data-b="st:${v}"`, s.st === String(v) && !unsure(s.id), svgOf(Object.assign({}, cur, {st:String(v), id:s.id && !unsure(s.id) ? s.id : (s.id ? '6' : '')}), 24, true), v ? 'vermutet / geplant' : 'vorhanden', unsure(s.id))).join('');
   if (u) z += gb('data-b="hq:1"', s.hq, svgOf(Object.assign({}, cur, {hq:true, dummy:false}), 24, true), 'Gefechtsstand (Stab)');
   z += gb('data-b="dummy:1"', s.dummy, svgOf(Object.assign({}, cur, {dummy:true, hq:false}), 24, true), 'Attrappe');
@@ -1474,7 +1502,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !W || $('#v-work').hidden) return;
   if (b.dataset.b != null){
     const i = b.dataset.b.indexOf(':'), k = b.dataset.b.slice(0, i), v = b.dataset.b.slice(i + 1), s = W.s;
-    if (k === 'kind'){ if (s.kind !== v){ Object.assign(s, {kind:v, ue:'', ek:'', sz:0, rad:0, mob:'00', ech:'00', hq:false, rr:'', C:v === 'e' ? s.C : ''}); } }
+    if (k === 'kind'){ if (s.kind !== v){ Object.assign(s, {kind:v, ue:'', m1:'00', m2:'00', ek:'', sz:0, rad:0, mob:'00', ech:'00', hq:false, rr:'', C:v === 'e' ? s.C : ''}); } }
     else if (k === 'id'){ s.id = v; if (unsure(v)) s.st = '0'; }
     else if (k === 'ek'){ if (s.ek !== v){ s.ek = v; s.sz = 0; s.rad = 0; } }
     else if (k === 'sz'){ s.sz = +v; if (!s.sz) s.rad = 0; }
@@ -1512,7 +1540,7 @@ let R = null;
 function mutate(s){
   const m = Object.assign({}, s);
   const keys = ['id', 'icon', 'dir', 'dummy'];
-  if (s.kind === 'u') keys.push('ech', 'ech', 'hq'); else { keys.push('mob', 'mob'); if (eqOf(s.ek).sz) keys.push('sz', 'sz'); }
+  if (s.kind === 'u') keys.push('ech', 'ech', 'hq', 'm2'); else { keys.push('mob', 'mob'); if (eqOf(s.ek).sz) keys.push('sz', 'sz'); }
   if (!unsure(s.id)) keys.push('st');
   for (const k of shuffle(keys).slice(0, rnd(1, 2))){
     if (k === 'id') m.id = pick(IDS.filter(i => i.c !== s.id)).c;
@@ -1521,6 +1549,7 @@ function mutate(s){
     if (k === 'dummy') m.dummy = !s.dummy;
     if (k === 'ech') m.ech = pick(['11','12','13','14','15'].filter(x => x !== s.ech));
     if (k === 'hq') m.hq = !s.hq;
+    if (k === 'm2') m.m2 = pick(M2.filter(x => x[0] !== (s.m2 || '00')).slice(0, 3))[0];
     if (k === 'mob') m.mob = pick(MOBS.filter(x => x[0] !== s.mob))[0];
     if (k === 'sz'){ m.sz = pick([0, 1, 2, 3].filter(x => x !== s.sz)); if (!m.sz) m.rad = 0; }
     if (k === 'st') m.st = s.st === '1' ? '0' : '1';
