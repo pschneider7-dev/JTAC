@@ -742,7 +742,7 @@ CALC.forEach(c => BANK.push({id:'calc:' + c.id, kind:'calc', g:c.g, ref:c}));
 IMGS.forEach(im => BANK.push({id:'img:' + im.src, kind:'img', g:'geraete', ref:im}));
 
 const MODES = {
-  mix:{name:'Gemischte Runde', desc:'Alle Fragetypen aus allen Themen', kinds:null, n:20},
+  mix:{name:'Gemischte Runde', desc:'Alle Fragetypen aus allen Themen', kinds:null, n:30},
   mc:{name:'Verständnis', desc:'Grundlagen, Antennen, Aufbau, Netze, SATCOM, Reihenfolgen', kinds:['mc','seq'], n:15},
   lage:{name:'Fehlersuche-Lagen', desc:'Keine Verbindung – was prüfst du?', kinds:['lage'], n:10},
   calc:{name:'Rechnen', desc:'Wellenlänge, Antennenlänge, Funkhorizont', kinds:['calc'], n:10},

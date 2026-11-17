@@ -234,6 +234,7 @@ const PFAMS = FAMS.filter(f => f.g === 'p');
 const TYPES = DATA.types;
 const GUIDES = DATA.guides;
 const ROUND_LEN = 12;
+const MIX_LEN = 30; /* gemischte Runde */
 const WEIGHTS = ['250 lb', '500 lb', '1000 lb', '2000 lb'];
 const MODES = {
   mix:  {name:'Gemischte Runde', kinds:['img','pimg','cap','type','guide','wt','mv','fz','plat','sens','arm','cur','brev','brevr']},
@@ -340,7 +341,7 @@ function pickRound(mode){
   if (M.tag) pool = pool.filter(q => q.kind !== 'cur' || q.id.startsWith(M.tag));
   if (M.confusion) pool = pool.filter(q => FAM[q.fam] && FAM[q.fam].confuse.length);
   const out = []; let prevFam = null;
-  const n = Math.min(ROUND_LEN, pool.length);
+  const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
   while (out.length < n && pool.length){
     const ws = pool.map(q => weight(q, prevFam) * ((q.kind === 'img' || q.kind === 'pimg') && usedImgFam[q.fam] ? 0.2 : 1));
@@ -473,7 +474,7 @@ function renderHome(){
     <h3>Plattformen</h3>${cellsHtml(PFAMS)}
     <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
   </section>
-  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Systeme kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${MIX_LEN} Fragen aus allen Bereichen – schwache Systeme kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="img"><span class="mi"><strong>Waffen erkennen</strong><small>Bomben, Lenkflugkörper, Raketen und Kanonen am Bild – mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
     <button class="mode" data-start="use"><span class="mi"><strong>Lenkung und Einsatz</strong><small>Lenkung, Gewichtsklasse, Bewegtziele, Zünder, Plattform, Wirkung</small></span><span class="n">${nUse} Fragen</span></button>

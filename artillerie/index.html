@@ -268,6 +268,7 @@ const FAMS = DATA.families;
 const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
 const CATS = DATA.cats;
 const ROUND_LEN = 12;
+const MIX_LEN = 30; /* gemischte Runde */
 const GROUPS = DATA.groups;
 const IS2C = APP === '2C';
 const MODES = IS2C ? {
@@ -396,7 +397,7 @@ function poolFor(mode){
 function pickRound(mode){
   const pool = poolFor(mode);
   const out = []; let prevFam = null;
-  const n = Math.min(ROUND_LEN, pool.length);
+  const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
   const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'air' || q.kind === 'elem';
   while (out.length < n && pool.length){
@@ -587,7 +588,7 @@ function renderHome(){
     ${GROUPS.map(([t, ids]) => `<h3>${esc(t)}</h3>${cellsHtml(ids)}`).join('')}
     <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
   </section>
-  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Systeme kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${MIX_LEN} Fragen aus allen Bereichen – schwache Systeme kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
   <nav class="modes" aria-label="Trainingsarten">
     ${Object.entries(MODES).filter(([k]) => k !== 'mix').map(([k, M]) => `<button class="mode" data-start="${k}"><span class="mi"><strong>${esc(M.name)}</strong><small>${esc(M.desc)}</small></span><span class="n">${k === 'img' ? nImg + ' Bilder' : k === 'air' ? nAir + ' Luftbilder' : countPool(k) + ' Fragen'}</span></button>`).join('')}
     ${CMP.length ? `<button class="mode" data-act="cmpall"><span class="mi"><strong>Direktvergleiche</strong><small>${esc(DATA.cmpDesc || 'Ähnliche Systeme nebeneinander')}</small></span><span class="n">${CMP.length} Paare</span></button>` : ''}

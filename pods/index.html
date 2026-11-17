@@ -200,6 +200,7 @@ const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
 const TYPES = DATA.types;
 const TYPE_ORDER = ['tgp','internal','recce','heli','uas','gimbal'];
 const ROUND_LEN = 12;
+const MIX_LEN = 30; /* gemischte Runde */
 const MODES = {
   mix:   {name:'Gemischte Runde', kinds:['img','cap','type','plat','laser','cur','brev','brevr']},
   img:   {name:'Bilderkennung', kinds:['img']},
@@ -293,7 +294,7 @@ function pickRound(mode){
   if (M.onlyGen) pool = pool.filter(q => q.fam === 'gen');
   if (M.confusion) pool = pool.filter(q => FAM[q.fam] && FAM[q.fam].confuse.length);
   const out = []; let prevFam = null;
-  const n = Math.min(ROUND_LEN, pool.length);
+  const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
   while (out.length < n && pool.length){
     const ws = pool.map(q => weight(q, prevFam) * (q.kind === 'img' && usedImgFam[q.fam] ? 0.2 : 1));
@@ -389,7 +390,7 @@ function renderHome(){
     <div class="cells">${FAMS.map(f => `<button class="cell" data-s="${famState(f.id)}" data-card="${f.id}" title="${esc(f.name)}: ${pct(f.id)}"><b>${esc(f.short)}</b><span>${esc(f.name)}</span><i style="width:${famAcc(f.id) === null ? 0 : Math.max(8, famAcc(f.id) * 100)}%"></i></button>`).join('')}</div>
     <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
   </section>
-  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${ROUND_LEN} Fragen aus allen Bereichen – schwache Familien kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${MIX_LEN} Fragen aus allen Bereichen – schwache Familien kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="img"><span class="mi"><strong>Bilderkennung</strong><small>Pod oder Sensor am Bild erkennen – mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
     <button class="mode" data-start="use"><span class="mi"><strong>Fähigkeiten und Einsatz</strong><small>Plattform, Laser, Wirkung, Aufklärung, Check-in-Wissen</small></span><span class="n">${nUse} Fragen</span></button>

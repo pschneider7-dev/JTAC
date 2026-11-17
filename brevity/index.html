@@ -1591,7 +1591,7 @@ AB.forEach(a => {
 const QBYID = {}; BANK.forEach(q => QBYID[q.id] = q);
 
 const MODES = {
-  mix:{name:'Gemischte Runde', desc:'Alle Fragetypen – Brevity und Abkürzungen', kinds:['bm','bc','bo','lg','sq','am','ad','bi','ai'], n:20},
+  mix:{name:'Gemischte Runde', desc:'Alle Fragetypen – Brevity und Abkürzungen', kinds:['bm','bc','bo','lg','sq','am','ad','bi','ai'], n:30},
   bm:{name:'Was bedeutet das Wort?', desc:'Brevity-Wort hören – Bedeutung wählen', kinds:['bm'], n:15},
   bc:{name:'Welches Wort passt?', desc:'Bedeutung lesen – Brevity-Wort wählen', kinds:['bc'], n:15},
   lg:{name:'Lagen und Abläufe', desc:'Was funkst du, was hörst du – und in welcher Reihenfolge?', kinds:['lg','sq','bo'], n:15},
@@ -1840,7 +1840,7 @@ function renderHome(){
     <h3>Abkürzungen</h3><div class="cells">${G_ORDER_A.filter(g => groupScore(g).n).map(cellHtml).join('')}</div>
     ${filt}
   </section>
-  <button class="cta" data-start="mix"><span><strong>Gemischte Runde</strong><small>${Math.min(20, poolFor('mix').length)} Fragen aus allen Fragetypen</small></span><span class="go">→</span></button>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde</strong><small>${Math.min(30, poolFor('mix').length)} Fragen aus allen Fragetypen</small></span><span class="go">→</span></button>
   <nav class="modes">
     <h3>Brevity</h3>${['bm','bc','lg','bi'].map(modeBtn).join('')}
     <h3>Abkürzungen</h3>${['abk','ai'].map(modeBtn).join('')}
