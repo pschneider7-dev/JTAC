@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BRDM-2 – 3D-Erkennungsmodell</title>
+<meta name="theme-color" content="#E3E5DF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101411" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../../assets/app.css">
+<style>
+/* Layout: one-screen recognition bench. A framed 3D stage on top (left on wide screens),
+   the numbered key sheet under/beside it. Colour is reserved for the four feature classes;
+   the frame around the model stays neutral. */
+:root{
+  --bg:#E3E5DF; --surface:#F3F4F0; --raised:#FBFBF9; --ink:#1A201C; --muted:#56605A; --line:#C5CAC1;
+  --stage-a:#EEF0EA; --stage-b:#CBD0C6; --grid:#7F887E;
+  --c-w:#E2502F; --c-s:#E5A50A; --c-o:#1E9BC2; --c-f:#A77BE0; --on-c:#111512;
+  --wbg-a:#2C2D2C; --wbg-b:#0D0E0D; --wbg-ink:#E6E8E4;
+  --shadow:rgba(0,0,0,.34);
+  --f-display:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif;
+  --f-body:'Barlow','Segoe UI',system-ui,-apple-system,sans-serif;
+  --f-data:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101411; --surface:#181D19; --raised:#202721; --ink:#E4E8E1; --muted:#99A39B; --line:#2E362F;
+    --stage-a:#262D27; --stage-b:#121613; --grid:#6A746B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101411; --surface:#181D19; --raised:#202721; --ink:#E4E8E1; --muted:#99A39B; --line:#2E362F;
+  --stage-a:#262D27; --stage-b:#121613; --grid:#6A746B;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:10px 12px;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.app{
+  height:100%;min-height:540px;display:grid;gap:10px;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto minmax(210px,1.15fr) minmax(0,1fr);
+}
+
+/* ---------- header ---------- */
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:1px 12px}
+.bar h1{
+  margin:0;font-family:var(--f-display);font-weight:700;font-size:1.9rem;line-height:1;
+  letter-spacing:.015em;text-transform:uppercase;
+}
+.bar h1 span{font-weight:500;color:var(--muted);text-transform:none;letter-spacing:.02em}
+.kind{margin:0;font-size:.8rem;color:var(--muted);text-align:right}
+.dims{
+  grid-column:1/-1;margin:0;font-family:var(--f-data);font-size:.72rem;color:var(--muted);
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;
+}
+.dims b{font-weight:500;color:var(--ink)}
+
+/* ---------- stage ---------- */
+.stage{
+  position:relative;min-height:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  background:radial-gradient(120% 95% at 50% 30%,var(--stage-a),var(--stage-b));
+}
+.stage.is-wbg{background:radial-gradient(120% 95% at 50% 40%,var(--wbg-a),var(--wbg-b))}
+.stage.is-wbg::after{
+  content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;opacity:.5;
+  background:
+    linear-gradient(var(--wbg-ink),var(--wbg-ink)) center/1px 100% no-repeat,
+    linear-gradient(var(--wbg-ink),var(--wbg-ink)) center/100% 1px no-repeat;
+}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+.markers{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.mk{
+  position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;padding:0;
+  display:grid;place-items:center;border-radius:50%;border:2px solid var(--raised);
+  background:var(--c);color:var(--on-c);
+  font-family:var(--f-display);font-weight:700;font-size:.9rem;line-height:1;font-variant-numeric:tabular-nums;
+  pointer-events:auto;cursor:pointer;box-shadow:0 1px 4px var(--shadow);
+  transition:opacity .15s;will-change:transform;
+}
+.mk::before{content:"";position:absolute;inset:-7px}
+.mk.occ{opacity:0;pointer-events:none}
+.mk.sel{width:32px;height:32px;margin:-16px 0 0 -16px;font-size:1.15rem;outline:2px solid var(--ink);outline-offset:1px;z-index:2}
+
+.modes{
+  position:absolute;top:10px;left:10px;z-index:1;display:flex;overflow:hidden;
+  border:1px solid var(--line);border-radius:3px;background:var(--surface);
+}
+.modes button{
+  border:0;background:transparent;padding:7px 11px;cursor:pointer;
+  font-family:var(--f-display);font-weight:600;font-size:.9rem;letter-spacing:.07em;text-transform:uppercase;
+}
+.modes button + button{border-left:1px solid var(--line)}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+.cap{
+  position:absolute;top:12px;right:12px;z-index:1;margin:0;text-align:right;white-space:pre-line;pointer-events:none;
+  font-family:var(--f-data);font-size:.68rem;line-height:1.35;color:var(--muted);
+}
+.is-wbg .cap{color:var(--wbg-ink)}
+.hint{
+  position:absolute;left:0;right:0;bottom:50px;margin:0;text-align:center;pointer-events:none;
+  font-size:.78rem;color:var(--muted);transition:opacity .4s;
+}
+.hint.gone{opacity:0}
+.is-wbg .hint{color:var(--wbg-ink)}
+
+.views{position:absolute;left:10px;right:10px;bottom:10px;z-index:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.views::-webkit-scrollbar{display:none}
+.views button{
+  flex:none;border:1px solid var(--line);background:var(--surface);border-radius:3px;
+  padding:6px 8px;font-size:.82rem;font-weight:500;white-space:nowrap;cursor:pointer;
+}
+.fail{position:absolute;inset:0;margin:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
+.no-gl .modes,.no-gl .views,.no-gl .cap,.no-gl .hint{display:none}
+
+/* ---------- sheet ---------- */
+.sheet{
+  min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--surface);border:1px solid var(--line);border-radius:4px;
+}
+.ctl{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.ctl label{font-family:var(--f-display);font-weight:600;font-size:.88rem;letter-spacing:.07em;text-transform:uppercase}
+.ctl output{min-width:3.4em;font-family:var(--f-data);font-size:.74rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.ctl input[type=range]{flex:1;min-width:64px;accent-color:var(--ink)}
+.tog{
+  border:1px solid var(--line);background:var(--raised);border-radius:3px;
+  padding:5px 9px;font-size:.8rem;font-weight:500;white-space:nowrap;cursor:pointer;
+}
+.tog[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{
+  flex:1;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent;
+  padding:9px 10px 7px;cursor:pointer;color:var(--muted);
+  font-family:var(--f-display);font-weight:600;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;
+}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs .count{font-family:var(--f-data);font-size:.72rem;font-weight:400;letter-spacing:0;margin-left:3px}
+
+.panel{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.legend{display:flex;flex-wrap:wrap;gap:3px 14px;list-style:none;margin:0;padding:9px 12px 8px;font-size:.76rem;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:5px}
+
+.feats{list-style:none;margin:0;padding:0}
+.feat{border-top:1px solid var(--line)}
+.feat.open{background:var(--raised)}
+.feat-h{
+  width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 14px;align-items:center;gap:11px;
+  padding:8px 12px;border:0;background:transparent;text-align:left;cursor:pointer;
+}
+.num{
+  width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:var(--c);color:var(--on-c);
+  font-family:var(--f-display);font-weight:700;font-size:.9rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.feat-n{display:block;font-weight:600;font-size:.94rem;line-height:1.25}
+.feat-s{display:block;font-size:.8rem;line-height:1.3;color:var(--muted)}
+.chev{
+  width:8px;height:8px;justify-self:center;rotate:45deg;transition:rotate .15s;
+  border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+}
+.feat-h[aria-expanded="true"] .chev{rotate:225deg}
+.feat-d{padding:2px 14px 6px 47px;font-size:.9rem}
+.feat-d p{margin:0 0 9px;max-width:62ch}
+.k{
+  display:block;margin-bottom:1px;color:var(--muted);
+  font-family:var(--f-display);font-weight:600;font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;
+}
+
+.cmp{padding:11px 14px 12px;border-top:1px solid var(--line)}
+.cmp:first-child{border-top:0}
+.cmp h3{
+  margin:0 0 3px;font-family:var(--f-display);font-weight:700;font-size:1.05rem;letter-spacing:.04em;
+  text-transform:uppercase;text-wrap:balance;
+}
+.cmp p{margin:0;font-size:.9rem;max-width:62ch}
+.fine{margin:0;padding:11px 14px 14px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted);max-width:66ch}
+
+@media (min-width:820px){
+  body{padding-block:14px 16px}
+  .app{
+    gap:12px 14px;
+    grid-template-columns:minmax(0,1fr) clamp(330px,34vw,420px);
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  .bar{grid-column:1/-1}
+  .bar h1{font-size:2.2rem}
+  .dims{font-size:.78rem}
+}
+@media (prefers-reduced-motion: reduce){
+  .mk,.chev,.hint{transition:none}
+}
+
+.bar{align-items:center}
+.bar h1 span{font-weight:700;color:var(--ink);letter-spacing:.015em}
+.vars{display:flex;overflow:hidden;border:1px solid var(--line);border-radius:3px;background:var(--surface)}
+.vars button{
+  display:grid;justify-items:center;gap:0;min-width:46px;border:0;background:transparent;padding:4px 10px 3px;cursor:pointer;
+  font-family:var(--f-display);line-height:1.1;
+}
+.vars b{font-weight:600;font-size:1rem;letter-spacing:.05em}
+.vars small{font-family:var(--f-data);font-size:.62rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.vars button + button{border-left:1px solid var(--line)}
+.vars button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.vars button[aria-pressed="true"] small{color:var(--surface);opacity:.75}
+
+.tag{
+  position:absolute;left:0;top:0;z-index:0;margin:0;padding:2px 7px 3px;max-width:60%;pointer-events:none;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;border-radius:2px;background:var(--ink);color:var(--surface);
+  font-family:var(--f-display);font-weight:600;font-size:.86rem;letter-spacing:.04em;will-change:transform;
+}
+.neu{margin:0;padding:9px 12px 9px;border-bottom:1px solid var(--line);font-size:.84rem;color:var(--ink);max-width:66ch}
+.neu b{
+  display:block;font-family:var(--f-display);font-weight:600;font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);
+}
+.only{
+  display:inline-block;margin-left:6px;padding:0 5px;border:1px solid var(--line);border-radius:2px;vertical-align:1px;
+  font-family:var(--f-data);font-size:.62rem;font-weight:400;color:var(--muted);white-space:nowrap;
+}
+.tblwrap{overflow-x:auto;margin:6px -2px 0}
+.tbl{border-collapse:collapse;width:100%;min-width:440px;font-size:.8rem;line-height:1.3}
+.tbl th,.tbl td{padding:5px 7px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+.tbl thead th{border-top:0;font-family:var(--f-display);font-weight:600;font-size:.9rem;letter-spacing:.06em}
+.tbl tbody th{font-weight:600;white-space:nowrap;color:var(--muted)}
+.tbl [data-c].on{background:var(--raised);color:var(--ink);box-shadow:inset 2px 0 0 var(--ink)}
+.ctl{flex-wrap:wrap;row-gap:6px}
+.ctl input[type=range]{min-width:96px}
+.togs{display:flex;gap:8px;margin-left:auto}
+.tbl{min-width:0}
+
+/* Einbindung in die JTAC-App */
+.back{grid-column:1/-1;justify-self:start;display:inline-flex;align-items:center;min-height:34px;margin:-4px 0 2px;color:var(--muted);
+  font-family:var(--f-display);font-weight:600;font-size:1rem;letter-spacing:.02em;text-decoration:none}
+.back:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <a class="back" href="../">‹ Manöver-Trainer</a>
+    <h1><span id="vname">BRDM-2</span></h1>
+    <div class="vars" role="group" aria-label="Version">
+      <button type="button" data-va="BRDM" aria-pressed="true"><b>BRDM-2</b><small>1962</small></button>
+      <button type="button" data-va="SA9" aria-pressed="false"><b>SA-9</b><small>1968</small></button>
+    </div>
+    <p class="dims" id="dims"></p>
+  </header>
+
+  <section class="stage" id="stage" aria-label="3D-Modell BRDM-2 und SA-9 Gaskin">
+    <canvas id="gl"></canvas>
+    <div class="markers" id="markers"></div>
+    <p class="tag" id="tag" hidden></p>
+    <div class="modes" role="group" aria-label="Darstellung">
+      <button type="button" data-mode="feat" aria-pressed="true">Merkmale</button>
+      <button type="button" data-mode="orig" aria-pressed="false">Original</button>
+      <button type="button" data-mode="wbg" aria-pressed="false">WBG</button>
+    </div>
+    <p class="cap" id="cap">Raster 1 m</p>
+    <p class="hint" id="hint">Ziehen dreht · zoomen mit zwei Fingern oder Mausrad</p>
+    <div class="views" role="group" aria-label="Ansicht">
+      <button type="button" data-view="q">Schräg</button>
+      <button type="button" data-view="front">Front</button>
+      <button type="button" data-view="side">Links</button>
+      <button type="button" data-view="rear">Heck</button>
+      <button type="button" data-view="top">Oben</button>
+      <button type="button" data-view="air">Luft</button>
+    </div>
+    <p class="fail" id="fail" hidden>Die 3D-Ansicht konnte nicht starten, weil dieser Browser kein WebGL bereitstellt. Die Merkmalsliste funktioniert weiter.</p>
+  </section>
+
+  <section class="sheet" aria-label="Merkmale und Abgrenzung">
+    <div class="ctl">
+      <label for="turm">Turm</label>
+      <input type="range" id="turm" min="-180" max="180" step="5" value="0">
+      <output id="turmOut" for="turm">0°</output>
+      <span class="togs">
+        <button type="button" class="tog" id="autoBtn" aria-pressed="false">Drehen</button>
+        <button type="button" class="tog" id="elevBtn" aria-pressed="false">Anheben</button>
+      </span>
+    </div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-m" aria-controls="pan-m" aria-selected="true">Merkmale <span class="count" id="count"></span></button>
+      <button type="button" role="tab" id="tab-a" aria-controls="pan-a" aria-selected="false">Abgrenzung</button>
+    </div>
+    <div class="panel" id="pan-m" role="tabpanel" aria-labelledby="tab-m">
+      <p class="neu" id="neu"></p>
+      <ul class="legend">
+        <li><i style="--c:var(--c-w)"></i>Bewaffnung</li>
+        <li><i style="--c:var(--c-o)"></i>Optik &amp; Besatzung</li>
+        <li><i style="--c:var(--c-f)"></i>Wanne &amp; Laufwerk</li>
+      </ul>
+      <ol class="feats" id="feats"></ol>
+    </div>
+    <div class="panel" id="pan-a" role="tabpanel" aria-labelledby="tab-a" hidden>
+      <div class="cmp">
+        <h3>Versionen im Vergleich</h3>
+        <div class="tblwrap">
+          <table class="tbl" id="tbl">
+            <thead><tr><th></th><th data-c="BRDM">BRDM-2</th><th data-c="SA9">9K31 Strela-1 / SA-9</th></tr></thead>
+            <tbody>
+              <tr><th>Aufgabe</th><td data-c="BRDM">Spähwagen</td><td data-c="SA9">Fla-Raketen auf kurze Entfernung</td></tr>
+              <tr><th>Bewaffnung</th><td data-c="BRDM">14,5-mm- und 7,62-mm-MG im Kegelturm</td><td data-c="SA9">4 × 9M31 mit Infrarotsuchkopf</td></tr>
+              <tr><th>Auf dem Dach</th><td data-c="BRDM">kleiner Kegelturm</td><td data-c="SA9">Kabine mit Fenster, vier Behälter</td></tr>
+              <tr><th>Besatzung</th><td data-c="BRDM">4</td><td data-c="SA9">3</td></tr>
+              <tr><th>Zusatzräder</th><td data-c="BRDM">ja</td><td data-c="SA9">ausgebaut</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:8px">Beide haben dieselbe Wanne. Entscheidend ist, was auf dem Dach sitzt.</p>
+      </div>
+      <div class="cmp">
+        <h3>Freund oder Feind</h3>
+        <p>Russland, die Ukraine und sehr viele weitere Staaten setzen den BRDM-2 ein, oft modernisiert als BRDM-2M. Die Sichtung allein sagt nichts über die Seite.</p>
+      </div>
+      <div class="cmp">
+        <h3>Gegen Panzerjäger 9P148 Konkurs</h3>
+        <p>Dieselbe Wanne ohne Turm. Zum Schuss fährt ein Starter mit fünf Lenkflugkörpern 9M113 Konkurs / AT-5 Spandrel aus dem Dach. Eingefahren wirkt das Fahrzeug wie ein BRDM-2 ohne Turm.</p>
+      </div>
+      <div class="cmp">
+        <h3>Gegen BTR-70 und BTR-80</h3>
+        <p>Derselbe Kegelturm, aber acht Räder und rund 7,5 m Länge. Der BRDM-2 ist deutlich kürzer und hat nur vier Räder.</p>
+      </div>
+      <div class="cmp">
+        <h3>Gegen Tigr</h3>
+        <p>Kastiger Geländewagen mit senkrechten Seiten, Seitentüren und Fenstern, kein Turm. Der BRDM-2 hat einen spitzen Bootsbug und schräge Seitenwände.</p>
+      </div>
+      <p class="fine">Vereinfachtes Modell nach öffentlich bekannten Maßen und Fotos: Proportionen stimmen ungefähr, Details sind schematisch. Das gilt besonders für den Starter des SA-9 und die Dachdetails. Die Zusatzräder sind hochgeklappt dargestellt. Die WBG-Ansicht zeigt eine angenommene Wärmeverteilung bei laufendem Motor und keine gemessene Signatur.</p>
+    </div>
+  </section>
+</div>
+
+<script src="../../assets/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+var D2R = Math.PI/180;
+var stage = document.getElementById('stage');
+var canvas = document.getElementById('gl');
+var mkLayer = document.getElementById('markers');
+var tagEl = document.getElementById('tag');
+var hint = document.getElementById('hint');
+var cap = document.getElementById('cap');
+var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+var VARS = {
+  BRDM: {h:'BRDM-2', dims:'<b>BRDM-2</b> · <b>5,75 × 2,35 × 2,31 m</b> · <b>7 t</b> · <b>4</b> Mann',
+         neu:'Amphibischer Spähwagen 4×4, gebaut ab 1962 und bis heute in vielen Armeen. Kegelturm mit 14,5-mm-MG wie beim BTR-80, zwischen den Achsen vier kleine Zusatzräder.'},
+  SA9:  {h:'9K31 Strela-1', dims:'<b>9P31 · SA-9 Gaskin</b> · Wanne des BRDM-2 · <b>5,75 × 2,35 m</b> · <b>3</b> Mann',
+         neu:'Fla-Raketenfahrzeug auf dem BRDM-2, eingeführt 1968: Statt des MG-Turms trägt es eine drehbare Kabine mit vier Startbehältern. Die Zusatzräder sind ausgebaut. Nachfolger ist die 9K35 Strela-10 / SA-13 Gopher.'}
+};
+/* text, anchor and view fields may be keyed by version: {SA9:…, def:…}. g names the group the anchor rides on. */
+var FEATS = [
+ {id:'waffe',cat:'W',vs:'BRDM',n:'14,5-mm-MG KPWT',s:'Langes Rohr im Kegelturm',
+  a:'Schweres MG 14,5 mm, daneben ein 7,62-mm-MG PKT. Für das schwere MG sind 500 Schuss an Bord.',
+  k:'Bedrohung',b:'Rohrerhöhung nur etwa 30°: für Luftfahrzeuge wenig gefährlich, außer für Hubschrauber im Tief- und Schwebeflug in der Nähe. Der Schalter „Anheben“ zeigt die größte Erhöhung.',
+  g:'turret',p:[1.35,2.17,-0.07],v:[32,12,.55]},
+ {id:'turm',cat:'W',vs:'BRDM',n:'Kegelturm',s:'Klein, in der Fahrzeugmitte',
+  a:'Kleiner, kegelförmiger Turm BPU-1 in der Fahrzeugmitte. Es ist derselbe Turm wie beim BTR-70 und BTR-80, hier ohne Nebelwurfbecher.',
+  k:'Abgrenzung',b:'Gleicher Turm wie beim BTR-80, aber nur vier Räder und eine kurze Wanne. Ohne Turm ist es ein Panzerjäger oder ein Führungsfahrzeug.',
+  g:'turret',p:[-0.20,2.12,0.50],v:[75,22,.5]},
+ {id:'lfk',cat:'W',vs:'SA9',n:'Vier Startbehälter 9M31',s:'Je zwei nebeneinander, links und rechts',
+  a:'Vier kastenförmige Startbehälter mit Lenkflugkörpern 9M31, je zwei nebeneinander links und rechts eines Mastes. Zum Marsch liegen sie tief und waagerecht, zum Schuss hebt der Mast sie an und richtet sie auf. Der Schalter „Anheben“ zeigt beide Lagen.',
+  k:'Bedrohung',b:'Infrarotsuchkopf: kein Alarm im Radarwarner, nur ein Raketenwarner erkennt den Start. Bekämpfungsbereich bis etwa 4 km Entfernung und 3,5 km Höhe.',
+  g:'pack',p:[1.0,0.18,0.74],v:[60,24,.55]},
+ {id:'start',cat:'O',vs:'SA9',n:'Drehbare Kabine mit Fenster',s:'Ersetzt den MG-Turm',
+  a:'Statt des MG-Turms sitzt in der Mitte eine drehbare Kabine mit großem Fenster. Der Bediener sucht das Ziel mit dem Auge und richtet den Starter mit einem optischen Visier.',
+  k:'Bedeutung',b:'Kein eigenes Radar: Das Fahrzeug sucht optisch und bekommt Ziele über Funk zugewiesen. Das Fahrzeug des Zugführers trägt teils ein passives Peilgerät für Radarsignale (Flat Box).',
+  g:'turret',p:[0.52,2.28,0],v:[22,16,.45]},
+ {id:'optik',cat:'O',vs:'BRDM',n:'Tagvisier im Turm',s:'Kleiner Kasten auf dem Turmdach',
+  a:'Der Richtschütze zielt mit einem einfachen Tagvisier. Der Fahrer hat eine einfache Nachtsicht, sonst gibt es keine Nachtsicht an Bord.',
+  k:'Bedeutung',b:'Nachts und bei schlechter Sicht kaum kampffähig: kein Wärmebild, kein Laserwarner. Modernisierte BRDM-2M haben teils bessere Visiere.',
+  g:'turret',p:[0.20,2.53,-0.27],v:[-30,22,.45]},
+ {id:'kabine',cat:'O',n:'Fahrer und Kommandant vorn',s:'Zwei große Sichtfenster mit Panzerklappen',
+  a:'Fahrer links und Kommandant rechts sitzen ganz vorn hinter zwei großen Sichtfenstern. Im Gefecht schließen Panzerklappen die Fenster, sonst stehen sie hochgeklappt. Darüber liegt je ein Dachluk. Seitentüren hat das Fahrzeug nicht.',
+  k:'Aus der Luft',b:'Hochgeklappte Panzerklappen vorn sind von oben und von vorn gut zu sehen und zeigen die Fahrtrichtung.',
+  g:'hull',p:[2.22,1.70,0.40],v:[18,20,.45]},
+ {id:'bug',cat:'F',n:'Spitzer Bootsbug',s:'Scharfe Kante, darüber eine flache Schräge',
+  a:'Der Bug läuft in einer scharfen Kante aus. Darüber steigt eine flache Schräge zu den Sichtfenstern an, darunter läuft die Wanne keilförmig zurück. Auf der Schräge sitzen die Scheinwerfer.',
+  k:'Aus der Luft',b:'Typische Form der sowjetischen Schwimmfahrzeuge. Mit rund 5,8 m ist der BRDM-2 deutlich kürzer als ein BTR.',
+  g:'hull',p:[2.92,1.08,0.0],v:[12,16,.5]},
+ {id:'wanne',cat:'F',n:'Schräge Seitenwände',s:'Dünne Stahlwanne, oben stark eingezogen',
+  a:'Die oberen Seitenwände sind stark nach innen geneigt, die unteren stehen senkrecht. Die Panzerung ist nur 7 bis 10 mm stark.',
+  k:'Schwachstelle',b:'Hält nur Gewehrmunition und Splittern stand. Die Reifen sind verwundbar, der Benzinmotor brennt leicht.',
+  g:'hull',p:[-0.30,1.50,1.0],v:[95,10,.6]},
+ {id:'rad',cat:'F',n:'Vier große Räder',s:'Allradantrieb, kurzer Radstand',
+  a:'Zwei Achsen mit großen, breiten Geländereifen, Radstand 3,1 m. Eine Reifendruckregelanlage passt den Luftdruck während der Fahrt an.',
+  k:'Abgrenzung',b:'BTR-70 und BTR-80 haben acht Räder. Der Tigr hat ebenfalls vier Räder, aber eine hohe, kastige Karosserie mit Fenstern.',
+  g:'hull',p:[1.55,0.53,1.10],v:[90,3,.75]},
+ {id:'zusatz',cat:'F',vs:'BRDM',n:'Vier Zusatzräder',s:'Kleine Räder zwischen den Achsen',
+  a:'Zwischen den Achsen sitzen auf jeder Seite zwei kleine Räder. Der Fahrer senkt sie ab, um Gräben zu überqueren und im Gelände nicht aufzusetzen. Beim Strela-1 sind sie ausgebaut.',
+  k:'Abgrenzung',b:'Abgesenkt sind sie ein sicheres Merkmal des BRDM. Auf der Straße sind sie hochgeklappt und kaum zu sehen.',
+  g:'hull',p:[0.0,0.48,0.82],v:[90,4,.6]},
+ {id:'motor',cat:'F',n:'Motor im Heck',s:'Lüftergitter auf dem Heckdeck',
+  a:'Benzinmotor GAZ-41 mit 140 PS im Heck. Auf dem schräg abfallenden Heckdeck liegen die Lüftergitter.',
+  k:'Im WBG',b:'Das Heck ist der warme Fleck, vorn sitzt die Besatzung.',
+  g:'hull',p:[-1.55,1.79,0.0],v:[160,40,.5]},
+ {id:'jet',cat:'F',n:'Wasserstrahlantrieb',s:'Ein Auslass unten im Heck',
+  a:'Voll schwimmfähig. Ein Wasserstrahlantrieb hat seinen Auslass unten in der Mitte des Hecks, im Wasser fährt das Fahrzeug etwa 10 km/h.',
+  k:'Bedeutung',b:'Gewässer sind kein Hindernis. Auf der Straße fährt der BRDM-2 bis 100 km/h.',
+  g:'hull',p:[-2.48,0.80,0.0],v:[172,6,.45]}
+];
+var CATVAR = {W:'--c-w',S:'--c-s',O:'--c-o',F:'--c-f'};
+var CATNAME = {W:'Bewaffnung',S:'Schutz',O:'Optik und Sensorik',F:'Wanne und Laufwerk'};
+var byId = {}; FEATS.forEach(function(f){ byId[f.id] = f; });
+var state = {va:'BRDM', mode:'feat', sel:null, turm:0, auto:false, elev:false};
+var ACTIVE = [];
+var view3d = null;
+
+function tx(x){ return (x && typeof x === 'object' && !Array.isArray(x)) ? (x[state.va] != null ? x[state.va] : x.def) : x; }
+function has(vs){ return !vs || (' ' + vs + ' ').indexOf(' ' + state.va + ' ') >= 0; }
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+function each(sel, fn){ Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
+
+function onlyLabel(vs){
+  var all = ['BRDM','SA9'], v = vs.split(' '), i0 = all.indexOf(v[0]);
+  if(v.length > 1 && i0 > 0 && i0 + v.length === all.length) return 'ab ' + v[0];
+  if(v.length > 1 && i0 === 0) return 'nur ' + v.join(', ');
+  return 'nur ' + v.map(function(k){ return k === 'SA9' ? 'SA-9' : (VARS[k].h || k); }).join(', ');
+}
+
+/* ------------------------------------------------------------------ list */
+var featsEl = document.getElementById('feats');
+function buildList(){
+  featsEl.textContent = ''; mkLayer.textContent = '';
+  ACTIVE = FEATS.filter(function(f){ return has(f.vs); });
+  document.getElementById('count').textContent = String(ACTIVE.length);
+  ACTIVE.forEach(function(f, i){
+    f.num = i + 1;
+    var li = el('li','feat');
+    var h = el('button','feat-h'); h.type = 'button'; h.id = 'h-'+f.id;
+    h.setAttribute('aria-expanded','false'); h.setAttribute('aria-controls','d-'+f.id);
+    var num = el('span','num',String(f.num)); num.style.setProperty('--c','var('+CATVAR[f.cat]+')'); num.title = CATNAME[f.cat];
+    var t = el('span','feat-t'), nm = el('span','feat-n',tx(f.n));
+    if(f.vs) nm.appendChild(el('span','only',onlyLabel(f.vs)));
+    t.appendChild(nm); t.appendChild(el('span','feat-s',tx(f.s)));
+    var chev = el('span','chev'); chev.setAttribute('aria-hidden','true');
+    h.appendChild(num); h.appendChild(t); h.appendChild(chev);
+    var d = el('div','feat-d'); d.id = 'd-'+f.id; d.hidden = true;
+    var p1 = el('p'); p1.appendChild(el('span','k','Erkennen')); p1.appendChild(document.createTextNode(tx(f.a)));
+    var p2 = el('p'); p2.appendChild(el('span','k',tx(f.k))); p2.appendChild(document.createTextNode(tx(f.b)));
+    d.appendChild(p1); d.appendChild(p2);
+    li.appendChild(h); li.appendChild(d); featsEl.appendChild(li);
+    f.li = li; f.head = h; f.detail = d;
+    h.addEventListener('click', function(){ select(state.sel === f.id ? null : f.id, true); });
+    var m = el('button','mk',String(f.num)); m.type = 'button'; m.hidden = true;
+    m.style.setProperty('--c','var('+CATVAR[f.cat]+')');
+    m.setAttribute('aria-label', f.num+' '+tx(f.n));
+    m.addEventListener('click', function(){ select(f.id, true); });
+    mkLayer.appendChild(m); f.mk = m;
+  });
+}
+
+function hideHint(){ hint.classList.add('gone'); }
+setTimeout(hideHint, 6000);
+
+function select(id, fly){
+  state.sel = id; hideHint();
+  ACTIVE.forEach(function(f){
+    var on = f.id === id;
+    f.li.classList.toggle('open', on);
+    f.head.setAttribute('aria-expanded', on ? 'true' : 'false');
+    f.detail.hidden = !on;
+    f.mk.classList.toggle('sel', on);
+  });
+  tagEl.hidden = true;
+  if(id){
+    showTab('m');
+    if(state.mode !== 'feat') setMode('feat');
+    var f = byId[id];
+    tagEl.textContent = tx(f.n);
+    f.li.scrollIntoView({block:'nearest', behavior: reduce ? 'auto' : 'smooth'});
+    if(view3d && fly) view3d.focus(f);
+  }
+  if(view3d) view3d.recolor(true);
+}
+
+/* ------------------------------------------------------------------ controls */
+function setVariant(va){
+  state.va = va; state.sel = null; tagEl.hidden = true;
+  each('.vars button', function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-va') === va ? 'true' : 'false'); });
+  each('#tbl [data-c]', function(c){ c.classList.toggle('on', c.getAttribute('data-c') === va); });
+  document.getElementById('vname').textContent = VARS[va].h || va;
+  document.getElementById('dims').innerHTML = VARS[va].dims;
+  var neu = document.getElementById('neu'); neu.textContent = '';
+  neu.appendChild(el('b', null, 'Was diese Version ausmacht')); neu.appendChild(document.createTextNode(VARS[va].neu));
+  buildList();
+  document.getElementById('pan-m').scrollTop = 0;
+  if(view3d) view3d.variant();
+}
+each('.vars button', function(b){ b.addEventListener('click', function(){ hideHint(); setVariant(b.getAttribute('data-va')); }); });
+
+function setMode(mode){
+  state.mode = mode;
+  each('.modes button', function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-mode') === mode ? 'true' : 'false'); });
+  stage.classList.toggle('is-wbg', mode === 'wbg');
+  cap.textContent = mode === 'wbg' ? 'white hot\nschematisch' : 'Raster 1 m';
+  if(mode !== 'feat') tagEl.hidden = true;
+  if(view3d) view3d.modeChanged();
+}
+each('.modes button', function(b){ b.addEventListener('click', function(){ hideHint(); setMode(b.getAttribute('data-mode')); }); });
+each('.views button', function(b){ b.addEventListener('click', function(){ hideHint(); if(view3d) view3d.view(b.getAttribute('data-view')); }); });
+
+var turm = document.getElementById('turm'), turmOut = document.getElementById('turmOut');
+turm.addEventListener('input', function(){
+  var d = Number(turm.value); state.turm = d;
+  turmOut.textContent = d === 0 ? '0°' : Math.abs(d)+'° '+(d > 0 ? 'R' : 'L');
+  if(view3d) view3d.turret(d);
+});
+var autoBtn = document.getElementById('autoBtn'), elevBtn = document.getElementById('elevBtn');
+function setAuto(on){ state.auto = on; autoBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); if(view3d) view3d.kick(); }
+autoBtn.addEventListener('click', function(){ setAuto(!state.auto); });
+elevBtn.addEventListener('click', function(){
+  state.elev = !state.elev; elevBtn.setAttribute('aria-pressed', state.elev ? 'true' : 'false');
+  if(view3d) view3d.stow(state.elev);
+});
+function showTab(which){
+  ['m','a'].forEach(function(k){
+    var on = k === which;
+    document.getElementById('tab-'+k).setAttribute('aria-selected', on ? 'true' : 'false');
+    document.getElementById('pan-'+k).hidden = !on;
+  });
+}
+document.getElementById('tab-m').addEventListener('click', function(){ showTab('m'); });
+document.getElementById('tab-a').addEventListener('click', function(){ showTab('a'); });
+
+/* Variante aus dem Link übernehmen, z. B. bmp.html#2M */
+(function(){ var h = (location.hash || '').slice(1).toUpperCase(); if(VARS[h]) state.va = h;
+  /* aus dem Flugabwehr-Trainer geöffnet: Rücksprung dorthin */
+  if(/\/flugabwehr\//.test(document.referrer || '')){ var bk = document.querySelector('a.back'); if(bk){ bk.href = '../../flugabwehr/'; bk.textContent = '‹ Flugabwehr-Trainer'; } }
+})();
+setVariant(state.va);
+
+/* ------------------------------------------------------------------ 3D */
+try{
+  if(!window.THREE) throw new Error('three.js nicht geladen');
+  view3d = init3D();
+}catch(err){
+  document.getElementById('fail').hidden = false;
+  stage.classList.add('no-gl');
+  if(window.console) console.warn(err);
+}
+function init3D(){
+  var T = window.THREE, V3 = T.Vector3, M4 = T.Matrix4, PI = Math.PI;
+  function token(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function lin(c){ return new T.Color(c).convertSRGBToLinear(); }
+  function clamp(v,a,b){ return v < a ? a : v > b ? b : v; }
+  function sstep(a,b,x){ var t = clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); }
+  function v2(p){ return new T.Vector2(p[0], p[1]); }
+  function range(n){ var r = [], i; for(i = 0; i < n; i++) r.push(i); return r; }
+
+  var renderer = new T.WebGLRenderer({canvas:canvas, antialias:true, alpha:true, powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = T.sRGBEncoding;
+  renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+  renderer.setClearColor(0x000000, 0);
+
+  var scene = new T.Scene();
+  var camera = new T.PerspectiveCamera(30, 1, 0.5, 160);
+
+  /* image-based ambient light from a small generated sky, so metal and glass have something to reflect */
+  (function(){
+    var es = new T.Scene(), g = new T.SphereGeometry(40, 32, 16), p = g.attributes.position, col = [], i, y, c;
+    for(i = 0; i < p.count; i++){
+      y = p.getY(i)/40;
+      if(y > 0){ c = 0.50 + 0.85*Math.pow(1 - y, 3) + 0.30*y; col.push(c*0.95, c*0.98, c*1.05); }
+      else { c = 0.26*(1 + y) + 0.06; col.push(c*1.03, c, c*0.9); }
+    }
+    g.setAttribute('color', new T.Float32BufferAttribute(col, 3));
+    es.add(new T.Mesh(g, new T.MeshBasicMaterial({vertexColors:true, side:T.BackSide})));
+    var pn = new T.Mesh(new T.PlaneGeometry(26, 16), new T.MeshBasicMaterial({color:new T.Color(3.0, 2.9, 2.7)}));
+    pn.position.set(18, 26, 15); pn.lookAt(0, 0, 0); es.add(pn);
+    var pm = new T.PMREMGenerator(renderer); scene.environment = pm.fromScene(es, 0.02).texture; pm.dispose();
+  })();
+
+  var hemi = new T.HemisphereLight(0xffffff, 0x777a70, 0.16);
+  var sun = new T.DirectionalLight(0xfff6e8, 1.55);
+  sun.position.set(7.5, 13, 8.5); sun.target.position.set(0, 0, 0);
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -7.5; sun.shadow.camera.right = 7.5; sun.shadow.camera.top = 7.5; sun.shadow.camera.bottom = -7.5;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 45; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; sun.shadow.radius = 3;
+  var fill = new T.DirectionalLight(0xdfe8ff, 0.26); fill.position.set(-8, 5, -7);
+  scene.add(hemi, sun, sun.target, fill);
+
+  var floor = new T.Mesh(new T.PlaneGeometry(70, 70), new T.ShadowMaterial({opacity:0.30}));
+  floor.rotation.x = -PI/2; floor.receiveShadow = true; scene.add(floor);
+  /* soft contact shadow under the hull */
+  var blob = (function(){
+    var c = document.createElement('canvas'); c.width = 256; c.height = 128;
+    var x = c.getContext('2d'), gr = x.createRadialGradient(128, 64, 8, 128, 64, 128);
+    gr.addColorStop(0, 'rgba(0,0,0,0.62)'); gr.addColorStop(0.55, 'rgba(0,0,0,0.34)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    x.setTransform(1, 0, 0, 0.5, 0, 0); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+    var m = new T.Mesh(new T.PlaneGeometry(7.2, 3.9), new T.MeshBasicMaterial({map:new T.CanvasTexture(c), transparent:true, depthWrite:false, toneMapped:false}));
+    m.rotation.x = -PI/2; m.position.set(0.24, 0.003, 0); scene.add(m); return m;
+  })();
+
+  /* 1 m grid that fades out with distance */
+  var gridMat = new T.ShaderMaterial({transparent:true, depthWrite:false,
+    uniforms:{uC:{value:new T.Color()}, uO:{value:0.5}},
+    vertexShader:'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader:'uniform vec3 uC; uniform float uO; varying vec3 vP; void main(){ float d = length(vec2(vP.x, vP.z*1.2)); gl_FragColor = vec4(uC, uO*(1.0 - smoothstep(4.0, 11.0, d))); }'});
+  var grid = (function(){
+    var pts = [], i;
+    for(i = -12; i <= 14; i++) pts.push(i, 0, -10, i, 0, 10);
+    for(i = -10; i <= 10; i++) pts.push(-12, 0, i, 14, 0, i);
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pts, 3));
+    var l = new T.LineSegments(g, gridMat); l.position.y = 0.005; scene.add(l); return l;
+  })();
+  function themeGrid(){ gridMat.uniforms.uC.value.set(token('--grid') || '#7F887E'); }
+
+  /* ---------------- materials ---------------- */
+  /* c: real colour, r/me: roughness and metalness in "Original"; clay: neutral colour in "Merkmale"; tint: takes the feature colour */
+  var BASE = {
+    paint: {c:'#414c2f', r:0.72, me:0.10, clay:'#868b81', tint:1},
+    paint2:{c:'#3b462b', r:0.78, me:0.06, clay:'#7b8077', tint:1},
+    metal: {c:'#353a2e', r:0.55, me:0.45, clay:'#70756d', tint:1},
+    steel: {c:'#4a4742', r:0.48, me:0.80, clay:'#4f5250'},
+    rubber:{c:'#191a18', r:0.95, me:0.00, clay:'#3f4240'},
+    skirt: {c:'#272924', r:0.92, me:0.00, clay:'#5f635d', tint:1},
+    canvas:{c:'#575641', r:1.00, me:0.00, clay:'#7c8076', tint:1},
+    wood:  {c:'#614a2e', r:0.92, me:0.00, clay:'#7b786d', tint:1},
+    dark:  {c:'#0c0d0b', r:0.90, me:0.00, clay:'#262826'},
+    glass: {c:'#12323a', r:0.10, me:0.92, clay:'#2c444c'},
+    net:   {c:'#33372e', r:0.90, me:0.20, clay:'#5c6159', tint:1}
+  };
+  Object.keys(BASE).forEach(function(k){ BASE[k].cl = lin(BASE[k].c); BASE[k].cy = lin(BASE[k].clay); });
+  var catCol = {};
+  function readCats(){ Object.keys(CATVAR).forEach(function(k){ catCol[k] = lin(token(CATVAR[k]) || '#cccccc'); }); }
+  readCats();
+
+  /* paint variation and dust towards the ground, only in "Original" */
+  var wU = {value:0};
+  function weather(m){
+    m.onBeforeCompile = function(sh){
+      sh.uniforms.uW = wU;
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying float vWY;\nvarying vec3 vOP;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;\n#ifdef USE_INSTANCING\nvWY = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).y;\n#else\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;\n#endif');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying float vWY;\nvarying vec3 vOP;\nuniform float uW;\n' +
+          'float tkH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7)))*43758.5453); }\n' +
+          'float tkN(vec3 p){ vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.0 - 2.0*f);\n' +
+          ' return mix(mix(mix(tkH(i), tkH(i + vec3(1,0,0)), f.x), mix(tkH(i + vec3(0,1,0)), tkH(i + vec3(1,1,0)), f.x), f.y),\n' +
+          '            mix(mix(tkH(i + vec3(0,0,1)), tkH(i + vec3(1,0,1)), f.x), mix(tkH(i + vec3(0,1,1)), tkH(i + vec3(1,1,1)), f.x), f.y), f.z); }')
+        .replace('#include <color_fragment>', '#include <color_fragment>\nfloat tkV = 0.5;\nif(uW > 0.0){ tkV = tkN(vOP*7.0)*0.55 + tkN(vOP*26.0)*0.45;\n diffuseColor.rgb *= 0.84 + 0.32*tkV;\n float tkD = (1.0 - smoothstep(0.08, 1.30, vWY))*(0.30 + 0.50*tkV)*uW;\n diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.20, 0.175, 0.13), tkD); }')
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = clamp(roughnessFactor + (tkV - 0.5)*0.22*uW, 0.04, 1.0);');
+    };
+  }
+  var MATS = [], mcache = {};
+  function mat(base, feat, heat, kind){
+    heat = heat == null ? 0.25 : heat;
+    var key = base + '|' + (feat || '') + '|' + heat + '|' + (kind || '');
+    if(mcache[key]) return mcache[key];
+    var m = new T.MeshStandardMaterial();
+    if(kind) { m.side = T.DoubleSide; }
+    if(kind && kind !== 'dbl'){ m.map = kind; m.transparent = true; m.depthWrite = false; }
+    weather(m);
+    MATS.push({m:m, base:base, feat:feat || null, heat:heat});
+    return (mcache[key] = m);
+  }
+
+  /* ---------------- builders ---------------- */
+  var parts = [];
+  var tank = new T.Group(); scene.add(tank);
+  var hull = new T.Group(); tank.add(hull);
+  var turret = new T.Group(); turret.position.set(0.20, 0, 0); tank.add(turret);
+  var gun = new T.Group(); gun.position.set(1.02, 1.74, 0); gun.rotation.z = 0.025; turret.add(gun);
+  var cageG = new T.Group(); cageG.visible = false; turret.add(cageG);
+  var GROUPS = {hull:hull, turret:turret, gun:gun};
+
+  var stack = [{parent:hull, feat:null, vs:null, heat:0.25}];
+  function cur(){ return stack[stack.length - 1]; }
+  function scope(o, fn){ var c = cur(), n = {}, k; for(k in c) n[k] = c[k]; for(k in o) n[k] = o[k]; stack.push(n); try{ fn(); } finally { stack.pop(); } }
+  function only(vs, fn){
+    var c = cur().vs, v = vs;
+    if(c){ v = vs.split(' ').filter(function(x){ return (' ' + c + ' ').indexOf(' ' + x + ' ') >= 0; }).join(' '); if(!v) return; }
+    scope({vs:v}, fn);
+  }
+  function put(geo, base, x, y, z, o){
+    o = o || {}; var c = cur();
+    var m = new T.Mesh(geo, mat(base, o.feat === undefined ? c.feat : o.feat, o.heat == null ? c.heat : o.heat, o.kind));
+    m.position.set(x, y, z);
+    if(o.rot){ m.rotation.order = o.order || 'XYZ'; m.rotation.set(o.rot[0], o.rot[1], o.rot[2]); }
+    if(o.q) m.quaternion.copy(o.q);
+    m.castShadow = o.shadow !== false; m.receiveShadow = true;
+    m.userData.vs = c.vs; m.userData.noRay = !!o.noRay;
+    c.parent.add(m); parts.push(m); return m;
+  }
+  function inst(geo, base, mats, o){
+    if(!mats.length) return null; o = o || {}; var c = cur(), i;
+    var im = new T.InstancedMesh(geo, mat(base, o.feat === undefined ? c.feat : o.feat, o.heat == null ? c.heat : o.heat), mats.length);
+    for(i = 0; i < mats.length; i++) im.setMatrixAt(i, mats[i]);
+    im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; im.castShadow = o.shadow !== false; im.receiveShadow = true;
+    im.userData.vs = c.vs; im.userData.noRay = true; c.parent.add(im); parts.push(im); return im;
+  }
+  var gcache = {};
+  function G(key, make){ return gcache[key] || (gcache[key] = make()); }
+  function gBox(w, h, d){ return G('b' + [w,h,d].join(), function(){ return new T.BoxGeometry(w, h, d); }); }
+  function gRB(w, h, d, r){ return G('r' + [w,h,d,r].join(), function(){
+    r = Math.min(r, w/2 - 0.002, h/2 - 0.002, d/2 - 0.002);
+    var a = w/2 - r, b = h/2 - r, k = Math.min(r*0.7, a*0.9, b*0.9), s = new T.Shape();
+    s.moveTo(-a + k, -b); s.lineTo(a - k, -b); s.quadraticCurveTo(a, -b, a, -b + k); s.lineTo(a, b - k); s.quadraticCurveTo(a, b, a - k, b);
+    s.lineTo(-a + k, b); s.quadraticCurveTo(-a, b, -a, b - k); s.lineTo(-a, -b + k); s.quadraticCurveTo(-a, -b, -a + k, -b);
+    var g = new T.ExtrudeGeometry(s, {depth:d - 2*r, bevelEnabled:true, bevelThickness:r, bevelSize:r, bevelSegments:2, curveSegments:3});
+    g.translate(0, 0, -(d - 2*r)/2); return g; }); }
+  function gCyl(r, r2, len, seg, axis){ return G('c' + [r,r2,len,seg,axis].join(), function(){
+    var g = new T.CylinderGeometry(r2, r, len, seg); if(axis === 'x') g.rotateZ(-PI/2); else if(axis === 'z') g.rotateX(PI/2); return g; }); }
+  function orient(g){   /* make faces point outwards */
+    var p = g.attributes.position, ix = g.index.array, v = 0, i, a, b, c;
+    for(i = 0; i < ix.length; i += 3){ a = ix[i]; b = ix[i+1]; c = ix[i+2];
+      v += p.getX(a)*(p.getY(b)*p.getZ(c) - p.getZ(b)*p.getY(c)) - p.getY(a)*(p.getX(b)*p.getZ(c) - p.getZ(b)*p.getX(c)) + p.getZ(a)*(p.getX(b)*p.getY(c) - p.getY(b)*p.getX(c)); }
+    if(v < 0){ for(i = 0; i < ix.length; i += 3){ a = ix[i]; ix[i] = ix[i+2]; ix[i+2] = a; } g.index.needsUpdate = true; g.computeVertexNormals(); return true; }
+    return false;
+  }
+  /* lathe from [radius, axial] pairs; crisp = keep sharp steps between profile segments */
+  function gLathe(prof, axis, seg, crisp){
+    var pts = [], i, n, j, nr, a, b;
+    for(i = 0; i < prof.length; i++){
+      pts.push(new T.Vector2(Math.max(prof[i][0], 0.0005), prof[i][1]));
+      if(crisp !== false && i > 0 && i < prof.length - 1) pts.push(new T.Vector2(Math.max(prof[i][0], 0.0005), prof[i][1]));
+    }
+    seg = seg || 28;
+    var g = new T.LatheGeometry(pts, seg);
+    if(orient(g)){ n = pts.length; nr = g.attributes.normal;
+      for(j = 0; j < n; j++){ a = j; b = seg*n + j;
+        var x = nr.getX(a) + nr.getX(b), y = nr.getY(a) + nr.getY(b), z = nr.getZ(a) + nr.getZ(b), l = Math.sqrt(x*x + y*y + z*z) || 1;
+        nr.setXYZ(a, x/l, y/l, z/l); nr.setXYZ(b, x/l, y/l, z/l); } }
+    if(axis === 'x') g.rotateZ(-PI/2); else if(axis === 'z') g.rotateX(PI/2);
+    return g;
+  }
+  function gTube(pts, r){
+    var c = new T.CatmullRomCurve3(pts.map(function(p){ return new V3(p[0], p[1], p[2]); }), false, 'catmullrom', 0.35);
+    return new T.TubeGeometry(c, Math.max(10, pts.length*7), r, 6, false);
+  }
+  function gProfile(pts, depth){
+    var g = new T.ExtrudeGeometry(new T.Shape(pts.map(v2)), {depth:depth, bevelEnabled:false}); g.translate(0, 0, -depth/2); return g;
+  }
+  var _e = new T.Euler(), _q = new T.Quaternion(), _one = new V3(1, 1, 1);
+  function MX(x, y, z, rx, ry, rz, order){ _e.set(rx || 0, ry || 0, rz || 0, order || 'XYZ'); _q.setFromEuler(_e); return new M4().compose(new V3(x, y, z), _q, _one); }
+  function MB(pos, X, Y, Z){ var m = new M4().makeBasis(X, Y, Z); m.setPosition(pos); return m; }
+  function B(base, w, h, d, x, y, z, o){ return put(gBox(w, h, d), base, x, y, z, o); }
+  function RB(base, w, h, d, r, x, y, z, o){ return put(gRB(w, h, d, r), base, x, y, z, o); }
+  function C(base, r, len, x, y, z, axis, o){ o = o || {}; return put(gCyl(r, o.r2 == null ? r : o.r2, len, o.seg || 20, axis), base, x, y, z, o); }
+  function slat(cx, cy, cz, len, hgt, yaw, n){
+    var g = new T.Group(), i; g.position.set(cx, cy, cz); g.rotation.y = yaw; cur().parent.add(g);
+    scope({parent:g}, function(){
+      var Mb = [], Mp = [], posts = Math.max(2, Math.round(len/0.7) + 1);
+      for(i = 0; i < n; i++) Mb.push(MX(0, -hgt/2 + hgt*(i + 0.5)/n, 0));
+      for(i = 0; i < posts; i++) Mp.push(MX(-len/2 + len*i/(posts - 1), 0, -0.02));
+      inst(gBox(len, 0.03, 0.045), 'metal', Mb); inst(gBox(0.04, hgt + 0.05, 0.05), 'metal', Mp);
+    });
+  }
+  var netTex = (function(){
+    var c = document.createElement('canvas'); c.width = c.height = 128;
+    var x = c.getContext('2d'), i; x.strokeStyle = '#fff'; x.lineWidth = 5; x.lineCap = 'square';
+    for(i = -128; i <= 256; i += 32){
+      x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 128, 128); x.stroke();
+      x.beginPath(); x.moveTo(i, 0); x.lineTo(i - 128, 128); x.stroke();
+    }
+    var t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return t;
+  })();
+
+  /* =====================================================================  BRDM-2 / SA-9  */
+  BASE.under = {c:'#23271c', r:0.92, me:0.0, clay:'#555951'};            /* underside and wheel wells */
+  BASE.under.cl = lin(BASE.under.c); BASE.under.cy = lin(BASE.under.clay);
+  var AX = [1.55, -1.55], YW = 0.53, WZ = 0.92;
+  var ZL = 0.70, ZW = 1.175, ZR = 0.80, BELLY = 0.43, SILL = 0.62, BELT = 1.20, ROOF = 1.88, NOSE = 3.10, TAIL = -2.62;
+  var GM = new T.Group(); GM.scale.z = -1; hull.add(GM);                 /* mirrored copy for the left side */
+  function both(fn){ scope({parent:hull}, function(){ fn(1); }); scope({parent:GM}, function(){ fn(-1); }); }
+  function sub(parent, x, y, z, rz){ var g = new T.Group(); g.position.set(x, y, z); if(rz) g.rotation.z = rz; parent.add(g); return g; }
+  function lerp(a, b, t){ return a + (b - a)*t; }
+  /* side profile */
+  function topY(x){                                                       /* deck: glacis, windscreen plate, roof, sloping engine deck */
+    if(x >= 2.42) return lerp(0.955, 1.42, (NOSE - x)/0.68);
+    if(x >= 2.0)  return lerp(1.42, ROOF, (2.42 - x)/0.42);
+    if(x >= -0.70) return ROOF;
+    return ROOF - (-0.70 - x)/1.85*0.26;
+  }
+  function beltY(x){ return x <= 2.15 ? BELT : lerp(BELT, 0.952, (x - 2.15)/0.95); }
+  function zw(x){ return x <= 2.15 ? ZW : lerp(ZW, 0.80, (x - 2.15)/0.95); }
+  function archY(x){                                                      /* lower edge of the side plate: round wheel arches */
+    var y = SILL, i, d;
+    for(i = 0; i < 2; i++){ d = x - AX[i]; if(Math.abs(d) < 0.593) y = Math.max(y, Math.min(1.14, YW + Math.sqrt(0.36 - d*d))); }
+    if(x > 2.50) y = lerp(SILL, 0.945, (x - 2.50)/0.60);
+    if(x < -2.25) y = lerp(SILL, 1.10, (-2.25 - x)/0.37);
+    return y;
+  }
+  function bellyY(x){ if(x > 2.50) return lerp(BELLY, 0.94, (x - 2.50)/0.60); if(x < -2.25) return lerp(BELLY, 1.10, (-2.25 - x)/0.37); return BELLY; }
+  function sideZ(y){ return ZW - (y - BELT)*(ZW - ZR)/(ROOF - BELT); }   /* half width of the sloped upper side plate at height y */
+
+  /* hull as a loft through cross-sections with five points a side:
+     A belly edge, B top of the lower hull, C lower edge of the side plate, D belt, E deck edge */
+  var XS = [NOSE, 2.50, 2.42, 2.143, 2.05, 2.00, 1.90, 1.73, 1.55, 1.37, 1.20, 1.05, 0.957, -0.70, -0.957, -1.05, -1.20, -1.37, -1.55, -1.73, -1.90, -2.05, -2.143, -2.25, -2.55, TAIL];
+  var ST = XS.map(function(x){
+    var yb = archY(x), w = zw(x);
+    if(x === NOSE) return [x, 0.62,0.94, 0.62,0.945, 0.80,0.945, 0.80,0.952, 0.80,0.955];
+    if(x === TAIL) return [x, ZL,1.10, ZL,1.10, ZW,1.10, ZW,BELT, ZR,1.60];
+    return [x, ZL,bellyY(x), ZL,yb, w,yb, w,beltY(x), ZR,topY(x)];
+  });
+  function stIdx(x){ return XS.indexOf(x); }
+  function loft(i0, i1, capF, capR, part){
+    var K = (ST[i0].length - 1)/2, R = 2*K, pos = [], idx = [], i, j, s, n = i1 - i0 + 1, a, b, c, d;
+    for(i = i0; i <= i1; i++){ s = ST[i];
+      for(j = 0; j < K; j++) pos.push(s[0], s[2 + j*2], s[1 + j*2]);
+      for(j = K - 1; j >= 0; j--) pos.push(s[0], s[2 + j*2], -s[1 + j*2]);
+    }
+    for(i = 0; i < n - 1; i++) for(j = 0; j < R; j++){ if(part && (part === 'top') !== (j >= 2 && j <= R - 4)) continue; a = i*R + j; b = i*R + (j + 1) % R; c = (i + 1)*R + (j + 1) % R; d = (i + 1)*R + j; idx.push(a, b, c, a, c, d); }
+    function endCap(ring, rev){ var k = pos.length/3, cy = 0, q, p0, p1;
+      for(q = 0; q < R; q++) cy += pos[(ring*R + q)*3 + 1]/R;
+      pos.push(pos[ring*R*3], cy, 0);
+      for(q = 0; q < R; q++){ p0 = ring*R + q; p1 = ring*R + (q + 1) % R; if(rev) idx.push(k, p0, p1); else idx.push(k, p1, p0); } }
+    if(capF && part !== 'under') endCap(0, false);
+    if(capR && part !== 'under') endCap(n - 1, true);
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); return g;
+  }
+  var hullFlip = orient(loft(0, ST.length - 1, true, true));
+  function hullPart(i0, i1, cf, cr, part){
+    var g = loft(i0, i1, cf, cr, part), ix = g.index.array, i, t;
+    if(hullFlip) for(i = 0; i < ix.length; i += 3){ t = ix[i]; ix[i] = ix[i + 2]; ix[i + 2] = t; }
+    g = g.toNonIndexed(); g.computeVertexNormals(); return g;
+  }
+  /* point on a four-cornered face, which may be slightly twisted */
+  function bil(Q, u, v){ return new V3().addScaledVector(Q[0], (1 - u)*(1 - v)).addScaledVector(Q[1], u*(1 - v)).addScaledVector(Q[2], u*v).addScaledVector(Q[3], (1 - u)*v); }
+  /* solid between two plan outlines ([x,z] lists of equal length); side faces are finely divided so panes can follow them exactly */
+  function prism(bot, top, y0, y1){
+    var n = bot.length, N = 4, pos = [], idx = [], i, j, a, b, Q, base, p, k;
+    function P3(q, y){ return new V3(q[0], y, q[1]); }
+    for(i = 0; i < n; i++){ j = (i + 1) % n; Q = [P3(bot[i], y0), P3(bot[j], y0), P3(top[j], y1), P3(top[i], y1)]; base = pos.length/3;
+      for(b = 0; b <= N; b++) for(a = 0; a <= N; a++){ p = bil(Q, a/N, b/N); pos.push(p.x, p.y, p.z); }
+      for(b = 0; b < N; b++) for(a = 0; a < N; a++){ k = base + b*(N + 1) + a; idx.push(k, k + 1, k + N + 2, k, k + N + 2, k + N + 1); } }
+    base = pos.length/3;
+    for(i = 0; i < n; i++) pos.push(bot[i][0], y0, bot[i][1]);
+    for(i = 0; i < n; i++) pos.push(top[i][0], y1, top[i][1]);
+    for(i = 1; i < n - 1; i++){ idx.push(base + n, base + n + i, base + n + i + 1); idx.push(base, base + i + 1, base + i); }
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); orient(g);
+    g = g.toNonIndexed(); g.computeVertexNormals(); return g;
+  }
+  /* part of such a face, lifted off it by "off" (window panes) */
+  function patch(Q, u0, u1, v0, v1, off, out){
+    var N = 4, pos = [], idx = [], i, j, u, v, p, n, k;
+    for(j = 0; j <= N; j++) for(i = 0; i <= N; i++){ u = u0 + (u1 - u0)*i/N; v = v0 + (v1 - v0)*j/N; p = bil(Q, u, v);
+      n = bil(Q, u + 0.01, v).sub(bil(Q, u - 0.01, v)).cross(bil(Q, u, v + 0.01).sub(bil(Q, u, v - 0.01))).normalize(); if(n.dot(out) < 0) n.negate();
+      p.addScaledVector(n, off); pos.push(p.x, p.y, p.z); }
+    for(j = 0; j < N; j++) for(i = 0; i < N; i++){ k = j*(N + 1) + i; idx.push(k, k + 1, k + N + 2, k, k + N + 2, k + N + 1); }
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+  }
+  var lampG = gLathe([[0.04,-0.075],[0.075,-0.04],[0.083,0.03],[0.076,0.04]], 'x', 20);
+  var antB = gLathe([[0.05,0],[0.045,0.05],[0.02,0.09],[0.02,0.15]], 'y', 12);
+  var tyreG = gLathe([[0.24,-0.165],[0.43,-0.165],[0.50,-0.15],[0.525,-0.11],[0.53,-0.06],[0.53,0.06],[0.525,0.11],[0.50,0.15],[0.43,0.165],[0.24,0.165]], 'z', 44, false);
+  var rimG = gLathe([[0,0.13],[0.06,0.13],[0.08,0.12],[0.08,0.09],[0.13,0.085],[0.15,0.06],[0.20,0.03],[0.235,0.02],[0.25,0.06],[0.25,-0.16]], 'z', 36);
+  var GA = Math.atan(0.465/0.68), DK = Math.atan(0.26/1.85), SA = Math.atan((ZW - ZR)/(ROOF - BELT));
+
+  /* ---------------- both sides ---------------- */
+  both(function(){
+    scope({feat:'wanne', heat:0.3}, function(){
+      B('paint', 4.50, 0.03, 0.03, -0.20, BELT, ZW + 0.008);                                   /* belt edge */
+      /* vision port in the front of the sloped upper side */
+      B('dark', 0.34, 0.18, 0.02, 1.70, 1.52, sideZ(1.52) + 0.006, {rot:[-SA, 0, 0], feat:null});
+      B('glass', 0.30, 0.14, 0.02, 1.70, 1.52, sideZ(1.52) + 0.014, {rot:[-SA, 0, 0], feat:null});
+      B('paint', 0.40, 0.03, 0.06, 1.70, 1.64, sideZ(1.64) + 0.02, {rot:[-SA, 0, 0]});
+      /* stowage boxes on the rear side plates */
+      RB('paint2', 0.80, 0.24, 0.10, 0.02, -1.95, 1.42, sideZ(1.42) + 0.03, {rot:[-SA, 0, 0]});
+      inst(gBox(0.03, 0.20, 0.02), 'metal', [-2.25, -1.65].map(function(x){ return MX(x, 1.42, sideZ(1.42) + 0.085, -SA, 0, 0); }));
+      C('glass', 0.035, 0.03, TAIL - 0.005, 1.30, 0.95, 'x', {seg:12, feat:null});
+    });
+    scope({feat:'bug', heat:0.3}, function(){
+      /* headlight on the glacis behind a guard, tow hook at the nose */
+      var hx = 2.82, hy = topY(hx);
+      B('paint', 0.10, 0.08, 0.10, hx, hy + 0.03, 0.60, {rot:[0, 0, -GA]});
+      put(lampG, 'paint', hx + 0.03, hy + 0.11, 0.60); C('glass', 0.07, 0.012, hx + 0.073, hy + 0.11, 0.60, 'x', {seg:18, feat:null});
+      put(gTube([[hx-0.05,hy+0.02,0.48],[hx+0.12,hy+0.04,0.48],[hx+0.15,hy+0.12,0.48],[hx+0.10,hy+0.22,0.48],[hx-0.06,hy+0.18,0.48]], 0.007), 'metal', 0, 0, 0, {noRay:true});
+      put(gTube([[hx-0.05,hy+0.02,0.72],[hx+0.12,hy+0.04,0.72],[hx+0.15,hy+0.12,0.72],[hx+0.10,hy+0.22,0.72],[hx-0.06,hy+0.18,0.72]], 0.007), 'metal', 0, 0, 0, {noRay:true});
+      RB('metal', 0.12, 0.07, 0.05, 0.012, NOSE - 0.03, 0.90, 0.40, {rot:[0, 0, 0.70]});
+    });
+    /* running gear: four big wheels with central tyre inflation */
+    scope({feat:'rad', heat:0.45}, function(){
+      var Mw = [], Ml = [], Mn = [], k, sgn;
+      AX.forEach(function(x, i){
+        var W = MX(x, YW, WZ); Mw.push(W);
+        for(k = 0; k < 22; k++){ sgn = k % 2 ? 1 : -1; Ml.push(W.clone().multiply(MX(0, 0, 0, 0, 0, k/22*PI*2 + i)).multiply(MX(0, 0.526, sgn*0.075, 0, sgn*0.36, 0))); }
+        for(k = 0; k < 8; k++) Mn.push(W.clone().multiply(MX(0.11*Math.cos(k*PI/4), 0.11*Math.sin(k*PI/4), 0.125)));
+      });
+      inst(tyreG, 'rubber', Mw); inst(gBox(0.09, 0.03, 0.15), 'rubber', Ml); inst(rimG, 'paint', Mw);
+      inst(gCyl(0.015, 0.015, 0.03, 6, 'z'), 'metal', Mn);
+      inst(gCyl(0.035, 0.035, 0.06, 10, 'z'), 'metal', AX.map(function(x){ return MX(x, YW, WZ + 0.16); }));
+      inst(gCyl(0.07, 0.07, 0.22, 12, 'z'), 'steel', AX.map(function(x){ return MX(x, YW, WZ - 0.24); }), {feat:null});
+    });
+    /* belly wheels, folded up between the axles (removed on the SA-9) */
+    only('BRDM', function(){ scope({feat:'zusatz', heat:0.4}, function(){
+      var Mb = [-0.30, 0.30].map(function(x){ return MX(x, 0.58, 0.82); });
+      inst(gLathe([[0.10,-0.07],[0.19,-0.07],[0.22,-0.05],[0.22,0.05],[0.19,0.07],[0.10,0.07]], 'z', 28), 'rubber', Mb);
+      inst(gCyl(0.11, 0.11, 0.15, 20, 'z'), 'paint', Mb);
+      B('metal', 0.80, 0.06, 0.05, 0, 0.66, 0.72);
+    }); });
+  });
+
+  /* ---------------- hull ---------------- */
+  scope({parent:hull}, function(){
+    var iA = stIdx(2.50), iM = stIdx(-0.957), iR = stIdx(-2.25), iE = ST.length - 1;
+    scope({feat:'bug'}, function(){ put(hullPart(0, iA, true, false), 'paint', 0, 0, 0, {heat:0.3}); });
+    scope({feat:'wanne'}, function(){
+      put(hullPart(iA, iM, false, false, 'top'), 'paint', 0, 0, 0, {heat:0.28});
+      put(hullPart(iM, iE, false, true, 'top'), 'paint', 0, 0, 0, {heat:0.6});
+      put(hullPart(iA, iR, false, false, 'under'), 'under', 0, 0, 0, {heat:0.35, feat:null});
+      put(hullPart(iR, iE, false, false), 'paint', 0, 0, 0, {heat:0.6});
+    });
+    /* windscreen: two large vision ports with armoured shutters folded up */
+    scope({feat:'kabine', heat:0.3}, function(){
+      var Q = [new V3(2.42,1.42,-ZR), new V3(2.42,1.42,ZR), new V3(2.0,ROOF,ZR), new V3(2.0,ROOF,-ZR)], fw = new V3(1, 0.9, 0);
+      [[0.07,0.47],[0.53,0.93]].forEach(function(u){
+        put(patch(Q, u[0], u[1], 0.12, 0.86, 0.006, fw), 'dark', 0, 0, 0, {kind:'dbl', feat:null});
+        put(patch(Q, u[0] + 0.015, u[1] - 0.015, 0.17, 0.81, 0.012, fw), 'glass', 0, 0, 0, {kind:'dbl', feat:null});
+      });
+      B('paint', 0.06, 0.62, 0.05, 2.21, 1.65, 0, {rot:[0, 0, -0.83]});
+      [0.37, -0.37].forEach(function(z){
+        B('paint', 0.40, 0.025, 0.62, 2.20, ROOF + 0.06, z, {rot:[0, 0, 0.30]});
+        inst(gBox(0.36, 0.02, 0.025), 'paint2', [-0.22, 0, 0.22].map(function(o){ return MX(2.20, ROOF + 0.075, z + o, 0, 0, 0.30); }));
+        C('metal', 0.025, 0.56, 2.015, ROOF + 0.005, z, 'z', {seg:10});
+        /* crew hatch above each seat, periscope in front of it */
+        C('paint', 0.27, 0.045, 1.42, ROOF + 0.022, z, 'y', {seg:28});
+        C('paint2', 0.06, 0.03, 1.42, ROOF + 0.055, z, 'y', {seg:14});
+        RB('paint', 0.07, 0.06, 0.16, 0.012, 1.74, ROOF + 0.03, z); B('glass', 0.012, 0.035, 0.13, 1.778, ROOF + 0.035, z, {feat:null});
+        put(gTube([[1.13,ROOF+0.035,z-0.08],[1.13,ROOF+0.075,z-0.06],[1.13,ROOF+0.075,z+0.06],[1.13,ROOF+0.035,z+0.08]], 0.008), 'metal', 0, 0, 0, {noRay:true});
+      });
+    });
+    scope({feat:'bug', heat:0.3}, function(){
+      inst(gBox(0.05, 0.025, 1.40), 'paint', [0.18, 0.36].map(function(s){ return MX(NOSE - s*Math.cos(GA), 0.955 + s*Math.sin(GA) + 0.012, 0, 0, 0, -GA); }));
+    });
+    put(antB, 'metal', -1.05, topY(-1.05) - 0.01, 0.62); C('dark', 0.006, 2.4, -1.05, topY(-1.05) + 1.34, 0.62, 'y', {seg:6, shadow:false, noRay:true});
+    /* engine deck with louvres, sloping to the rear */
+    scope({feat:'motor', heat:0.85}, function(){
+      var xc = -1.62, yc = topY(xc);
+      RB('paint', 1.45, 0.022, 1.45, 0.01, xc, yc + 0.011, 0, {rot:[0, 0, DK], heat:0.7});
+      [0.36, -0.36].forEach(function(z){
+        B('dark', 0.95, 0.02, 0.56, xc, yc + 0.03, z, {rot:[0, 0, DK], heat:1, feat:null});
+        inst(gBox(0.92, 0.012, 0.05), 'metal', range(7).map(function(i){ return MX(xc, yc + 0.05, z - 0.24 + i*0.08, 0.6, 0, DK); }), {heat:0.95});
+      });
+      RB('paint', 0.42, 0.05, 0.60, 0.012, -0.95, topY(-0.95) + 0.02, 0, {rot:[0, 0, DK], heat:0.6});
+      C('metal', 0.07, 0.30, -2.40, topY(-2.40) + 0.07, -0.62, 'x', {seg:14, heat:1});
+    });
+    /* stern: water jet outlet with flap in the raked lower plate, lights and tow hooks */
+    var jp = sub(hull, -2.435, 0.765, 0, 2.075);
+    scope({parent:jp, feat:'jet', heat:0.5}, function(){
+      C('paint', 0.21, 0.06, 0, 0.03, 0, 'y', {seg:28}); C('dark', 0.16, 0.02, 0, 0.065, 0, 'y', {seg:24, feat:null});
+      B('paint2', 0.46, 0.025, 0.50, 0.05, 0.09, 0, {rot:[0, 0, 0.35]});
+    });
+    scope({feat:'wanne', heat:0.55}, function(){
+      RB('paint2', 0.025, 0.36, 0.90, 0.01, TAIL - 0.01, 1.36, 0);
+      [0.55, -0.55].forEach(function(z){ RB('metal', 0.08, 0.08, 0.05, 0.012, TAIL - 0.02, 1.16, z); });
+      put(gTube([[TAIL-0.01,1.58,-0.55],[TAIL-0.03,1.55,-0.25],[TAIL-0.035,1.54,0],[TAIL-0.03,1.55,0.25],[TAIL-0.01,1.58,0.55]], 0.014), 'steel', 0, 0, 0, {noRay:true});
+    });
+    scope({feat:'wanne', heat:0.3}, function(){ C('paint', 0.70, 0.03, 0.20, ROOF + 0.006, 0, 'y', {seg:40, noRay:true}); });
+  });
+
+  /* =====================================================================  ON THE ROOF  */
+  /* BRDM-2: small conical turret with the 14.5 mm KPVT and coaxial PKT, as on the BTR-80 */
+  var gunG = new T.Group(); gunG.position.set(0.50, ROOF + 0.25, -0.07); turret.add(gunG);
+  only('BRDM', function(){
+    scope({parent:turret, heat:0.3}, function(){
+      C('metal', 0.67, 0.03, 0, ROOF + 0.015, 0, 'y', {seg:40, noRay:true, feat:'turm'});
+      scope({feat:'turm'}, function(){
+        put(gLathe([[0.645,0],[0.645,0.035],[0.475,0.40],[0.44,0.445],[0.30,0.47],[0,0.48]], 'y', 44), 'paint', 0, ROOF + 0.03, 0);
+        RB('paint', 0.22, 0.34, 0.50, 0.02, 0.50, ROOF + 0.23, 0);
+        C('paint', 0.06, 0.04, -0.15, ROOF + 0.525, 0.14, 'y', {seg:12});
+        inst(gBox(0.06, 0.05, 0.10), 'paint', [[-0.30,0.30],[-0.30,-0.30],[0.05,0.38]].map(function(p){ return MX(p[0], ROOF + 0.42, p[1]); }));
+      });
+      scope({feat:'optik'}, function(){
+        RB('paint', 0.14, 0.15, 0.13, 0.012, 0.20, ROOF + 0.585, -0.27); B('glass', 0.012, 0.07, 0.09, 0.272, ROOF + 0.60, -0.27, {feat:null});
+      });
+    });
+    scope({parent:gunG, feat:'waffe', heat:0.42}, function(){
+      put(gLathe([[0.062,0],[0.062,0.11],[0.05,0.11],[0.05,0.60],[0.034,0.62],[0.026,0.64],[0.024,1.18],[0.03,1.20],[0.055,1.33],[0.055,1.345],[0.02,1.345],[0.02,1.20]], 'x', 24), 'paint', 0, 0, 0);
+      inst(gCyl(0.053, 0.053, 0.014, 16, 'x'), 'metal', range(5).map(function(i){ return MX(0.18 + i*0.09, 0, 0); }));
+      C('paint', 0.03, 0.16, 0.19, -0.03, 0.20, 'x', {seg:10}); C('metal', 0.014, 0.42, 0.44, -0.03, 0.20, 'x', {seg:8});
+    });
+  });
+
+  /* SA-9: turning base with the operator's glazed cabin; a mast lifts four missile containers */
+  var liftG = new T.Group(); liftG.position.set(-0.10, ROOF + 0.52, 0); turret.add(liftG);
+  var packG = new T.Group(); liftG.add(packG); GROUPS.pack = packG;
+  only('SA9', function(){
+    scope({parent:turret, feat:'start', heat:0.35}, function(){
+      C('paint2', 0.64, 0.03, 0, ROOF + 0.015, 0, 'y', {seg:40, noRay:true});
+      C('paint', 0.60, 0.10, 0, ROOF + 0.06, 0, 'y', {seg:40});
+      RB('paint', 0.62, 0.42, 0.50, 0.06, 0.24, ROOF + 0.32, 0);
+      RB('paint', 0.36, 0.20, 0.50, 0.04, 0.42, ROOF + 0.42, 0, {rot:[0, 0, -0.45]});
+      B('dark', 0.02, 0.24, 0.42, 0.55, ROOF + 0.44, 0, {rot:[0, 0, -0.45], feat:null});
+      B('glass', 0.02, 0.20, 0.38, 0.557, ROOF + 0.445, 0, {rot:[0, 0, -0.45], feat:null});
+      [0.255, -0.255].forEach(function(z){ B('glass', 0.18, 0.12, 0.012, 0.34, ROOF + 0.40, z, {feat:null}); });
+      RB('paint', 0.36, 0.30, 0.44, 0.04, -0.12, ROOF + 0.25, 0);
+    });
+    scope({parent:liftG, feat:'start', heat:0.3}, function(){
+      B('metal', 0.18, 0.80, 0.20, 0, -0.40, 0);
+      C('metal', 0.06, 0.62, 0, 0, 0, 'z', {seg:14});
+    });
+    scope({parent:packG, feat:'lfk', heat:0.15}, function(){
+      var Mc = [], Mf = [], Mh = [];
+      [0.425, 0.74, -0.425, -0.74].forEach(function(z){
+        Mc.push(MX(0.25, 0, z));
+        [-0.68, 0.25, 1.18].forEach(function(x){ Mf.push(MX(x, 0, z)); });
+        [-0.705, 1.205].forEach(function(x){ Mh.push(MX(x, 0, z)); });
+      });
+      inst(gRB(1.90, 0.30, 0.30, 0.015), 'paint2', Mc);
+      inst(gBox(0.05, 0.33, 0.33), 'paint', Mf);
+      inst(gCyl(0.085, 0.085, 0.012, 18, 'x'), 'dark', Mh, {feat:null});
+      [1, -1].forEach(function(sg){
+        B('metal', 1.70, 0.05, 0.05, 0.25, -0.17, sg*0.58);
+        B('metal', 0.10, 0.20, 0.06, 0, -0.06, sg*0.29);
+      });
+      B('paint', 1.30, 0.025, 0.50, 0.25, 0.165, 0);
+      inst(gBox(0.04, 0.04, 1.60), 'metal', [-0.40, 0.90].map(function(x){ return MX(x, 0.17, 0); }));
+    });
+  });
+
+  /* "Anheben": the gun goes to its largest elevation, the SA-9 mast lifts and points the containers up */
+  var veh = (function(){
+    var up = false, k = 0, last = 0;
+    function apply(){ var e = k*k*(3 - 2*k); gunG.rotation.z = 0.05 + e*(30*D2R - 0.05); liftG.position.y = ROOF + 0.52 + e*0.42; packG.rotation.z = e*35*D2R; }
+    apply();
+    return {
+      set:function(on){ up = on; if(reduce){ k = on ? 1 : 0; apply(); } },
+      tick:function(){
+        var now = performance.now(), dt = last ? Math.min(0.25, (now - last)/1000) : 0.016, goal = up ? 1 : 0;
+        if(k === goal){ last = 0; return false; }
+        last = now; k = clamp(k + (goal > k ? 1 : -1)*dt/1.4, 0, 1); apply(); return true;
+      }
+    };
+  })();
+
+  FEATS.forEach(function(f){ f.anchor = new T.Object3D(); GROUPS[f.g].add(f.anchor); f.world = new V3(); });
+  var rayList = [];
+  function variant(){
+    parts.forEach(function(m){ m.visible = has(m.userData.vs); });
+    rayList = parts.filter(function(m){ return m.visible && !m.userData.noRay; });
+    ACTIVE.forEach(function(f){ var p = tx(f.p); f.anchor.position.set(p[0], p[1], p[2]); });
+    recolor(false);
+  }
+
+  /* ---------------- colouring ---------------- */
+  var blink = 0, blinkT0 = -1;
+  function recolor(startBlink){
+    if(startBlink && state.sel && !reduce){ blinkT0 = performance.now(); }
+    var mode = state.mode, sel = state.sel, i, r, m, b, g, cc;
+    wU.value = mode === 'orig' ? 1 : 0;
+    for(i = 0; i < MATS.length; i++){
+      r = MATS[i]; m = r.m; b = BASE[r.base];
+      if(mode === 'wbg'){
+        g = Math.pow(0.10 + 0.90*r.heat, 2.2);
+        m.color.setRGB(g*0.3, g*0.3, g*0.3); m.emissive.setRGB(g*0.8, g*0.8, g*0.8); m.roughness = 1; m.metalness = 0; m.envMapIntensity = 0;
+        continue;
+      }
+      m.emissive.setRGB(0, 0, 0);
+      if(mode === 'orig'){ m.color.copy(b.cl); m.roughness = b.r; m.metalness = b.me; m.envMapIntensity = 0.85; continue; }
+      m.roughness = r.base === 'glass' ? 0.25 : 0.82; m.metalness = r.base === 'glass' ? 0.6 : (r.base === 'steel' ? 0.35 : 0); m.envMapIntensity = 0.55;
+      if(!r.feat || !b.tint){ m.color.copy(b.cy); continue; }
+      cc = catCol[byId[r.feat].cat];
+      if(!sel){ m.color.copy(cc); m.emissive.copy(cc).multiplyScalar(0.05); }
+      else if(sel === r.feat){ m.color.copy(cc); m.emissive.copy(cc).multiplyScalar(0.20 + blink); }
+      else { m.color.copy(b.cy).lerp(cc, 0.24); }
+    }
+    invalidate();
+  }
+  function modeChanged(){
+    var w = state.mode === 'wbg';
+    hemi.intensity = w ? 0.35 : 0.16; sun.intensity = w ? 0.25 : 1.55; fill.intensity = w ? 0.05 : 0.26;
+    floor.visible = !w; blob.visible = !w; grid.visible = !w;
+    recolor(false);
+  }
+
+  /* ---------------- camera ---------------- */
+  var CENTER = new V3(0.24, 1.1, 0), RMIN = 3.0, RMAX = 48;
+  var cam = {az:38*D2R, el:20*D2R, r:20, t:CENTER.clone()}, tween = null;
+  function fitFor(az, el){
+    var hv = camera.fov*D2R/2, hh = Math.atan(Math.tan(hv)*camera.aspect);
+    var s = Math.abs(Math.sin(az)), c = Math.abs(Math.cos(az));
+    var a = 2.95*s + 1.25*c, depth = 2.95*c + 1.25*s, b = 1.3*Math.cos(el) + depth*Math.sin(el);
+    return Math.max(a/Math.tan(hh), b/Math.tan(hv))*1.04 + depth*Math.cos(el)*0.32;
+  }
+  function placeCamera(){
+    var ce = Math.cos(cam.el);
+    camera.position.set(cam.t.x + cam.r*ce*Math.cos(cam.az), cam.t.y + cam.r*Math.sin(cam.el), cam.t.z + cam.r*ce*Math.sin(cam.az));
+    camera.lookAt(cam.t);
+  }
+  function flyTo(az, el, r, t, ms){
+    r = clamp(r, RMIN, RMAX);
+    if(reduce || !ms){ cam.az = az; cam.el = el; cam.r = r; cam.t.copy(t); tween = null; invalidate(); return; }
+    var d = (az - cam.az) % (PI*2); if(d > PI) d -= PI*2; if(d < -PI) d += PI*2;
+    tween = {t0:performance.now(), ms:ms, az:cam.az, daz:d, el:cam.el, del:el - cam.el, r:cam.r, dr:r - cam.r, t:cam.t.clone(), tt:t.clone()};
+    invalidate();
+  }
+  var VIEWS = {q:[38,20], front:[0,7], side:[-90,5], rear:[180,10], air:[140,50]};
+  function view(name){
+    var az, el;
+    if(name === 'top'){ el = 88; az = camera.aspect > 1.25 ? 90 : 180; } else { az = VIEWS[name][0]; el = VIEWS[name][1]; }
+    az *= D2R; el *= D2R;
+    if(state.auto) setAuto(false);
+    flyTo(az, el, fitFor(az, el), CENTER, 750);
+  }
+  var tmp = new V3();
+  function focus(f){
+    var v = tx(f.v), yaw = f.g === 'hull' ? 0 : state.turm*D2R, az = v[0]*D2R + yaw, el2 = v[1]*D2R;
+    tank.updateMatrixWorld(true); f.anchor.getWorldPosition(tmp);
+    if(state.auto) setAuto(false);
+    flyTo(az, el2, Math.max(4.2, fitFor(az, el2)*v[2]), CENTER.clone().lerp(tmp, 0.8), 800);
+  }
+
+  /* ---------------- markers ---------------- */
+  var v3 = new V3(), ray = new T.Raycaster(), lastOcc = 0, occTimer = 0;
+  function updateMarkers(){
+    var w = stage.clientWidth, h = stage.clientHeight, show = state.mode === 'feat', i, f, x, y, tagOn = false;
+    for(i = 0; i < ACTIVE.length; i++){
+      f = ACTIVE[i];
+      if(!show){ f.mk.hidden = true; continue; }
+      f.anchor.getWorldPosition(f.world); v3.copy(f.world).project(camera);
+      if(v3.z > 1 || v3.z < -1){ f.mk.hidden = true; continue; }
+      x = (v3.x*0.5 + 0.5)*w; y = (-v3.y*0.5 + 0.5)*h;
+      f.mk.hidden = false; f.mk.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
+      if(f.id === state.sel){ tagOn = true; tagEl.hidden = false; var tw = tagEl.offsetWidth, txx, tyy = y - 12; if(x + 22 + tw <= w - 8) txx = x + 22; else if(x - 22 - tw >= 8) txx = x - 22 - tw; else { txx = Math.max(8, Math.min(x - tw/2, w - tw - 8)); tyy = y > 110 ? y - 46 : y + 24; } tagEl.style.transform = 'translate(' + txx.toFixed(1) + 'px,' + tyy.toFixed(1) + 'px)'; }
+    }
+    tagEl.hidden = !tagOn;
+  }
+  function occlusion(){
+    lastOcc = performance.now();
+    if(state.mode !== 'feat') return;
+    var cp = camera.position, i, f, dist;
+    for(i = 0; i < ACTIVE.length; i++){
+      f = ACTIVE[i]; v3.copy(f.world).sub(cp); dist = v3.length(); v3.multiplyScalar(1/dist);
+      ray.set(cp, v3); ray.near = 0; ray.far = Math.max(0.1, dist - 0.14);
+      f.mk.classList.toggle('occ', f.id !== state.sel && ray.intersectObjects(rayList, false).length > 0);
+    }
+  }
+
+  /* ---------------- loop: renders only when something changes ---------------- */
+  var raf = 0, lastT = 0;
+  function invalidate(){ if(!raf) raf = requestAnimationFrame(frame); }
+  function ease(k){ return k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3)/2; }
+  function frame(now){
+    raf = 0;
+    var dt = lastT ? Math.min(0.05, (now - lastT)/1000) : 0.016, again = false, k, e, i, r;
+    lastT = now;
+    if(tween){
+      k = clamp((now - tween.t0)/tween.ms, 0, 1); e = ease(k);
+      cam.az = tween.az + tween.daz*e; cam.el = tween.el + tween.del*e; cam.r = tween.r + tween.dr*e; cam.t.copy(tween.t).lerp(tween.tt, e);
+      if(k >= 1) tween = null; else again = true;
+    }
+    if(state.auto && !tween){ cam.az += dt*0.32; again = true; }
+    if(veh.tick(dt)) again = true;
+    if(blinkT0 >= 0){
+      k = (now - blinkT0)/900;
+      if(k >= 1){ blink = 0; blinkT0 = -1; } else { blink = 0.5*Math.pow(Math.sin(k*PI*3), 2)*(1 - k); again = true; }
+      if(state.mode === 'feat' && state.sel) for(i = 0; i < MATS.length; i++){ r = MATS[i];
+        if(r.feat === state.sel && BASE[r.base].tint) r.m.emissive.copy(catCol[byId[state.sel].cat]).multiplyScalar(0.20 + blink); }
+    }
+    placeCamera(); renderer.render(scene, camera); updateMarkers();
+    if(again){ if(now - lastOcc > 140) occlusion(); invalidate(); }
+    else { lastT = 0; clearTimeout(occTimer); occTimer = setTimeout(occlusion, 50); }
+  }
+
+  /* ---------------- input ---------------- */
+  var P = new Map(), pinch = 0, mid = null;
+  function two(){ var a = Array.from(P.values()); return {d:Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), x:(a[0].x + a[1].x)/2, y:(a[0].y + a[1].y)/2}; }
+  function pan(dx, dy){
+    var s = 2*cam.r*Math.tan(camera.fov*D2R/2)/Math.max(1, stage.clientHeight);
+    camera.updateMatrixWorld(); var e = camera.matrixWorld.elements;
+    cam.t.x = clamp(cam.t.x - (e[0]*dx - e[4]*dy)*s, -3.6, 3.6);
+    cam.t.y = clamp(cam.t.y - (e[1]*dx - e[5]*dy)*s, 0, 3.4);
+    cam.t.z = clamp(cam.t.z - (e[2]*dx - e[6]*dy)*s, -2.8, 2.8);
+  }
+  canvas.addEventListener('pointerdown', function(ev){
+    try{ canvas.setPointerCapture(ev.pointerId); }catch(_){}
+    P.set(ev.pointerId, {x:ev.clientX, y:ev.clientY}); tween = null; if(state.auto) setAuto(false); hideHint();
+    if(P.size === 2){ var t = two(); pinch = t.d; mid = t; }
+  });
+  canvas.addEventListener('pointermove', function(ev){
+    var p = P.get(ev.pointerId); if(!p) return;
+    var dx = ev.clientX - p.x, dy = ev.clientY - p.y; p.x = ev.clientX; p.y = ev.clientY;
+    if(P.size === 1){ if(ev.buttons === 2 || ev.shiftKey) pan(dx, dy); else { cam.az += dx*0.0075; cam.el = clamp(cam.el + dy*0.006, 2*D2R, 89*D2R); } }
+    else if(P.size === 2){ var t = two(); if(pinch > 0 && t.d > 0) cam.r = clamp(cam.r*pinch/t.d, RMIN, RMAX); if(mid) pan(t.x - mid.x, t.y - mid.y); pinch = t.d; mid = t; }
+    invalidate();
+  });
+  function lift(ev){ P.delete(ev.pointerId); pinch = 0; mid = null; }
+  canvas.addEventListener('pointerup', lift); canvas.addEventListener('pointercancel', lift);
+  canvas.addEventListener('wheel', function(ev){ ev.preventDefault(); tween = null; hideHint(); cam.r = clamp(cam.r*Math.exp(ev.deltaY*0.0012), RMIN, RMAX); invalidate(); }, {passive:false});
+  canvas.addEventListener('contextmenu', function(ev){ ev.preventDefault(); });
+
+  /* ---------------- sizing, theme, start ---------------- */
+  var started = false;
+  function resize(){
+    var w = stage.clientWidth, h = stage.clientHeight; if(!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
+    if(!started){
+      started = true;
+      var az = 38*D2R, el2 = 20*D2R, r = fitFor(az, el2);
+      if(reduce){ cam.az = az; cam.el = el2; cam.r = r; } else { cam.az = az + 0.75; cam.el = 11*D2R; cam.r = r*1.14; flyTo(az, el2, r, CENTER, 1500); }
+    }
+    invalidate();
+  }
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  function retheme(){ readCats(); themeGrid(); recolor(false); }
+  new MutationObserver(retheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  if(window.matchMedia){ var mq = matchMedia('(prefers-color-scheme: dark)'); if(mq.addEventListener) mq.addEventListener('change', retheme); else if(mq.addListener) mq.addListener(retheme); }
+  themeGrid(); variant(); resize();
+
+  return {
+    focus:focus, view:view, recolor:recolor, modeChanged:modeChanged, kick:invalidate, variant:variant,
+    turret:function(deg){ turret.rotation.y = -deg*D2R; invalidate(); },
+    stow:function(on){ veh.set(on); invalidate(); },
+    cage:function(on){ cageG.visible = on; invalidate(); }
+  };
+}
+})();
+</script>
+<script src="../../assets/app.js" defer></script>
+</body>
+</html>
