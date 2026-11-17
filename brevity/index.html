@@ -151,6 +151,11 @@ h2{font-size:1.35rem;font-weight:600}
 .gl .it .code{font-size:1rem}
 .gl .it p{margin:3px 0 0}
 .gl .it .en{font-size:.86rem;color:var(--muted);font-style:italic}
+.terms{margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;font-size:.92rem}
+.terms .th{font-family:var(--font-d);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.terms p{margin:5px 0 0}
+.gl details.gt{margin-top:6px}
+.gl details.gt summary{cursor:pointer;color:var(--muted);font-size:.88rem;font-weight:600}
 .gl .empty{color:var(--muted);margin-top:16px}
 
 /* Statistik */
@@ -284,7 +289,7 @@ B("CEASE FIRE","feuer","Feuer einstellen bzw. nicht eröffnen – Flugkörper im
   {conf:["HOLD FIRE","CHECK FIRE","ABORT"], note:"Unterschied zu HOLD FIRE: Flugkörper im Flug werden nicht zerstört."});
 B("HOLD FIRE","feuer","Notfall-Feuerbefehl: Feuer auf das bezeichnete Ziel einstellen und Flugkörper im Flug zerstören.","An emergency fire control order to stop firing on a designated target and destroy missiles in flight.",
   {conf:["CEASE FIRE","CHECK FIRE","ABORT"], note:"Der härteste Feuerbefehl – auch Flugkörper im Flug werden zerstört."});
-B("SKIP IT","feuer","Eine bestimmte Plattform soll die angegebene Spur bzw. das Ziel nicht bekämpfen.","Directive call for a specific platform to not engage the indicated track.",
+B("SKIP IT","feuer","Eine bestimmte Plattform soll den angegebenen Track (Spur im Luftlagebild) bzw. das Ziel nicht bekämpfen.","Directive call for a specific platform to not engage the indicated track.",
   {conf:["CONTINUE DRY","ABORT","HOLD FIRE"], note:"Richtet sich an eine bestimmte Plattform und ein bestimmtes Ziel."});
 B("KNOCK IT OFF","feuer","Alle Manöver, Angriffe und Tätigkeiten der Übung sofort beenden (nur Ausbildung).","Cease all air combat maneuvers, attacks, activities, or exercises (training use only).",
   {conf:["TERMINATE","ABORT","CEASE FIRE"], note:"Sicherheitsruf in der Ausbildung – jeder darf ihn rufen."});
@@ -356,7 +361,7 @@ B("FRIENDLY","bedr","Eindeutig als eigen identifiziert (Lfz, Schiff, Raumfahrzeu
   {conf:["VISUAL","BUDDY SPIKE","NO FACTOR"], note:"VISUAL heißt: ich sehe Eigene. FRIENDLY heißt: das ist eigen."});
 B("NO FACTOR","bedr","Das genannte Objekt ist keine Bedrohung.","Stated [object] is not a threat.",
   {conf:["NAKED","BOGEY","FRIENDLY"], note:"Sagt nichts über die Identität, nur über die Bedrohung."});
-B("DECLARE","bedr","Anfrage nach der Identität einer Spur, eines Ziels oder einer Gruppe.","Inquiry as to the ID of specified track(s), target(s), or correlated GROUP.",
+B("DECLARE","bedr","Anfrage nach der Identität eines Tracks (Spur im Luftlagebild), eines Ziels oder einer Gruppe.","Inquiry as to the ID of specified track(s), target(s), or correlated GROUP.",
   {conf:["STATUS","ALPHA CHECK","BOGEY"], note:"Antwort z. B. BANDIT, HOSTILE, FRIENDLY oder BOGEY."});
 B("GADGET","bedr","Radar- oder Strahlergerät.","Radar or emitter equipment.",
   {conf:["BUZZER","MUD","SPIKE"], note:"Z. B. „GADGET BENT“: Radar ausgefallen."});
@@ -544,7 +549,7 @@ B("CRATER","boden","Erwarteter Einschlagpunkt einer feindlichen ballistischen Ra
   {x:1, note:"Funkform: CRATER [location]. Bereich: Boden-Luft, Boden-Boden. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
 B("CREEP","eloka","Signal charakterisieren.","Characterize signal.",
   {x:1, note:"Bereich: EloKa, Weltraum. Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
-B("CRISS CROSS","eloka","Position bzw. Spur aus Kreuzpeilung (Funkpeilung).","A position or track derived from the plotting of direction finding bearings.",
+B("CRISS CROSS","eloka","Position bzw. Track (Spur im Luftlagebild) aus Kreuzpeilung (Funkpeilung).","A position or track derived from the plotting of direction finding bearings.",
   {x:1, note:"Bereich: EloKa."});
 B("CROW","koord","Gefangene bzw. Festgehaltene.","Detainees or prisoners.",
   {x:1, acc:[/^(CROWS)$/], note:"Funkform: CROW(S). Kein NATO-Brevity-Wort (nur US-Gebrauch)."});
@@ -668,7 +673,7 @@ B("GOPHER","luft","Unbekanntes Lfz hält sich nicht an Safe-Passage-Verfahren.",
   {x:1, note:"Bereich: Luft-Luft, Boden-Luft. Bedeutung weicht von NATO (APP-7) ab."});
 B("GORILLA","luft","Großer Verband unbekannter Größe aus unbekannten bzw. feindlichen Lfz.","Large force of indeterminate numbers and formation of unknown or non-friendly aircraft.",
   {x:1, note:"Bereich: Luft-Luft, Luft-See, Boden-Luft."});
-B("GRANDSLAM","waffen","Alle feindlichen Kontakte des Auftrags bzw. der Spur sind vernichtet.","All HOSTILE CONTACT(S) of a designated track (or against which a mission was tasked) are destroyed.",
+B("GRANDSLAM","waffen","Alle feindlichen Kontakte des Auftrags bzw. des Tracks (Spur im Luftlagebild) sind vernichtet.","All HOSTILE CONTACT(S) of a designated track (or against which a mission was tasked) are destroyed.",
   {x:1});
 B("GREEN","koord","1. Richtung ohne bekannte Feindbedrohung. 2. Waffen- bzw. Kraftstoffstand erlaubt die Fortsetzung des Auftrags.","1. Direction of no known enemy threats; requires [direction] modifier. 2. Aircraft is at a weapon and/or fuel state that allows continued execution of the mission. NOTE A specific loadout or fuel state should be determined during mission planning.",
   {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See."});
@@ -814,7 +819,7 @@ B("PARROT","funk","IFF-Transponder (SIF).","IFF selective ID feature transponder
   {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
 B("PEDRO","heli","CSAR-Hubschrauber.","Combat search and rescue helicopter.",
   {x:1, note:"Bedeutung weicht von NATO (APP-7) ab."});
-B("PHANTOM","eloka","Positionsspur aus der Kreuzpeilung von SPIKES feindlicher Störsender.","A position track derived from the triangulation of SPIKES originating from HOSTILE jamming.",
+B("PHANTOM","eloka","Track (Spur im Luftlagebild) aus der Kreuzpeilung von SPIKES feindlicher Störsender.","A position track derived from the triangulation of SPIKES originating from HOSTILE jamming.",
   {x:1, note:"Bereich: EloKa."});
 B("PICTURE","luft","Anforderung des einsatzrelevanten Lagebilds, im Format digitaler BULLSEYE, sofern nicht anders gebrieft.","A request to provide information pertinent to the mission in a digital bullseye format unless briefed otherwise.",
   {x:1, note:"Bereich: Luft-Luft, Luft-Boden, Luft-See. Bedeutung weicht von NATO (APP-7) ab."});
@@ -1428,6 +1433,93 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ co
 const uniq = a => [...new Set(a)];
 const BW = {}; BR.forEach(b => BW[b.w] = b);
 const AA = {}; AB.forEach(a => AA[a.a] = a);
+/* ---------- Hintergrund: Fachbegriffe, die in den Erklärungen vorkommen ---------- */
+/* [Begriff, Suchmuster über Bedeutung, Hinweis und ATP-Text, Erklärung] – erscheint nach jeder Antwort und im Nachschlageteil */
+const TERMS = [
+  ['Track (Spur)', /\btracks?\b|\bspur\b/i, 'Ein Track ist der Eintrag eines Objekts im Luft- bzw. Lagebild – keine Spur, die in der Luft zurückbleibt. Das Radar liefert bei jeder Umdrehung nur einen Echopunkt (Plot). Der Rechner ordnet die Punkte demselben Objekt zu und bildet daraus den Track mit Position, Kurs, Geschwindigkeit, Höhe und Identität. Auf Deutsch heißt das in der Luftwaffe „Spur“ (Luftlagespur). Ein Track kann ein Lfz, mehrere Lfz, ein Schiff oder ein Bodenfahrzeug sein.', 'de'],
+  ['Tracknummer', /tracknummer|track number/i, 'Kennnummer eines Tracks im Datenlink, z. B. bei Link 16. Alle Teilnehmer meinen mit derselben Nummer dasselbe Objekt – so kann man über Funk eindeutig darauf verweisen.'],
+  ['Luftlagebild (PICTURE)', /lagebild|\bpicture\b/i, 'Gesamtbild aller Tracks in einem Raum, zusammengesetzt aus Radar, Datenlink und Meldungen. Führungsstellen wie AWACS oder CRC erstellen und verteilen es; die Lfz sehen es auf ihren Displays.'],
+  ['Gruppe (GROUP)', /\bgruppen?\b|\bgroups?\b/i, 'Im Luftlagebild: ein oder mehrere Lfz, die nahe beieinander fliegen (etwa innerhalb von 3 NM) und deshalb als eine Einheit gemeldet werden. Hat nichts mit der Infanteriegruppe zu tun. Wie viele Lfz in einer Gruppe stecken, sagt erst STRENGTH bzw. die Formation.'],
+  ['Kontakt (Radarkontakt)', /\bkontakte?\b|\bcontacts?\b/i, 'Im Luftlage-Sinn: ein einzelnes Objekt, das ein Sensor erfasst hat, z. B. ein Radarecho. Mehrere Kontakte nahe beieinander bilden eine Gruppe. Achtung: Als Brevity-Wort im Talk-on heißt CONTACT dagegen „Bezugspunkt erkannt“.'],
+  ['Radar', /radar/i, 'Ein Sender strahlt Funkwellen ab und misst das Echo: Richtung, Entfernung und mit Doppler auch die Geschwindigkeit. Für dich wichtig: Ein Radar, das strahlt, kann vom Gegner geortet werden – deshalb schalten Flugabwehr und Lfz ihre Radare oft nur kurz ein.'],
+  ['Datenlink (Link 16)', /datenlink|data ?link|link[- ]?1[16]|link alpha/i, 'Digitale Funkverbindung, über die Lfz, Schiffe und Führungsstellen automatisch Tracks, Positionen und Aufträge austauschen. Link 16 ist der NATO-Standard: Jeder Teilnehmer sieht dasselbe Lagebild auf seinem Display, ohne dass dafür gesprochen werden muss.'],
+  ['J-Nachrichten (J12.6, SID)', /j12\.\d|\bsid\b/i, 'Link 16 überträgt genormte Nachrichten („J-Series“). J12.6 meldet z. B. Zielpunkte und Sensordaten; SID ist ein Unterfeld, das die Art des Punkts angibt. Für dich reicht: Das ist ein digital gesendeter Punkt, der beim Lfz auf dem Display erscheint.'],
+  ['IFF (Freund-Feind-Kennung)', /\biff\b|\bsif\b|mode\s?[1-5]\b|transponder|squawk/i, 'Ein Abfragegerät sendet, der Transponder im Lfz antwortet mit einem Code. Mode 1 bis 3 sind einfache Codes (Mode 3 auch zivil), Mode 4 und Mode 5 sind verschlüsselt und militärisch. Keine oder falsche Antwort heißt nicht automatisch Feind – es fehlt aber der Nachweis, dass es ein Freund ist.'],
+  ['NCTR', /\bnctr\b|nichtkooperative zielerkennung|non-cooperative/i, 'Nichtkooperative Zielerkennung: Das Radar erkennt den Flugzeugtyp an Merkmalen des Echos (z. B. an den Triebwerksschaufeln), ohne dass das Lfz antworten muss.'],
+  ['Identität im Luftlagebild', /\bbogey\b|\bbandit\b|\bhostile\b|\bsuspect\b|\bneutral\b|identität|\bdeclare\b/i, 'Stufen der Einstufung eines Tracks: BOGEY = unbekannt; FRIENDLY = eigen; NEUTRAL = weder Freund noch Feind; SUSPECT = möglicherweise feindlich; BANDIT = als Gegner erkannt, aber noch ohne Freigabe zur Bekämpfung; HOSTILE = Gegner, der nach den ROE bekämpft werden darf.'],
+  ['ID-Kriterien', /identifizierungskriterien|id criteria|identifizier/i, 'Vorgaben im Einsatzraum, ab wann ein Track als FRIENDLY, HOSTILE usw. gilt – z. B. Flugweg, IFF-Antwort, Sichtidentifizierung oder Verhalten. Sie stehen in den SPINS bzw. Einsatzbefehlen.'],
+  ['C2, AWACS, CRC', /awacs|\bcrc\b|\bc2\b|führungsstelle|controller/i, 'C2 (Command and Control) sind die Führungsstellen im Luftraum: AWACS ist ein fliegendes Radar mit Leitstelle (z. B. E-3, E-7), das CRC eine Radarleitstelle am Boden; für CAS kommen Stellen wie ASOC bzw. DASC dazu. Sie führen die Lfz, teilen Aufträge zu und verteilen das Lagebild.'],
+  ['Package', /package/i, 'Mehrere Verbände, die zusammen einen Auftrag fliegen, z. B. Jäger zum Schutz, SEAD gegen die Flugabwehr, Bomber und Tanker. Der Package Commander führt das Ganze.'],
+  ['Verband, Element, Flight', /\bverband|\bverbands|\bflight\b|\belement\b|\brotte\b/i, 'Flight bzw. Verband: meist 2 bis 4 Lfz unter einem Rufzeichen (z. B. HOG 31 bis 34). Element: Teil davon, meist 2 Lfz (Rotte), angeführt vom Lead, dahinter der Wingman.'],
+  ['NM (Seemeile)', /\bnm\b|seemeile/i, 'Nautische Meile = 1852 m. In der Luftfahrt das Standardmaß für Entfernungen; 10 NM sind gut 18 km.'],
+  ['Knoten (kn)', /\bkn\b|knoten|knots/i, 'Seemeilen pro Stunde. 100 kn sind rund 185 km/h, 450 kn (typisches Kampfflugzeug) rund 830 km/h.'],
+  ['Höhe in Fuß (ft)', /\bfuß\b|\bft\b/i, 'Die Luftfahrt gibt Höhen in Fuß an: 1 ft = 0,305 m, 1000 ft ≈ 300 m, 10 000 ft ≈ 3 km.'],
+  ['MSL und AGL', /\bmsl\b|\bagl\b|über nn|über grund/i, 'MSL = Höhe über dem Meeresspiegel (NN), AGL = Höhe über Grund. In bergigem Gelände liegen Tausende Fuß dazwischen – immer klären, welche Höhe gemeint ist (ANGELS ist z. B. MSL).'],
+  ['Mach', /\bmach\b/i, 'Vielfaches der Schallgeschwindigkeit; in Bodennähe ist Mach 1 etwa 1225 km/h bzw. 660 kn, in großer Höhe etwas weniger.'],
+  ['BULLSEYE', /bullseye/i, 'Vorab festgelegter Bezugspunkt im Einsatzraum. Positionen werden als Richtung und Entfernung von diesem Punkt gemeldet, z. B. „BULLSEYE 270/15“. Wer den Punkt nicht kennt, kann mit der Meldung nichts anfangen – das schützt vor Mithören.'],
+  ['BRAA', /\bbraa\b|bearing, range/i, 'Richtung (Bearing), Entfernung (Range), Höhe (Altitude) und Aspekt eines Ziels – anders als beim BULLSEYE bezogen auf das angesprochene Lfz selbst.'],
+  ['BVR (jenseits der Sicht)', /\bbvr\b|beyond visual range|jenseits der sicht/i, 'Beyond Visual Range: Luftkampf auf Entfernungen außerhalb der Sicht, mit radargelenkten Flugkörpern.'],
+  ['Abfangjäger', /abfangjäg|interceptor/i, 'Jagdflugzeug, das gegnerische Lfz anfliegt und bekämpft. Es sucht mit seinem Bordradar – das sieht der RWR des Gegners.'],
+  ['RWR (Radarwarnempfänger)', /\brwr\b|radar warning|radarwarn/i, 'Empfänger im Lfz, der anzeigt, welches Radar das Lfz anstrahlt, aus welcher Richtung und ob es nur sucht oder schon aufgeschaltet ist. Viele Brevity-Wörter (SPIKE, MUD, NAILS, SINGER) melden, was der RWR zeigt. Gegen IR-gelenkte MANPADS warnt er nicht.'],
+  ['Aufschaltung (Lock)', /aufschalt|lock-on|\block\b/i, 'Radar oder Suchkopf verfolgen gezielt ein einzelnes Ziel statt nur zu suchen – die Vorstufe zum Waffeneinsatz.'],
+  ['EloKa (EW)', /\beloka\b|\bew\b|electronic warfare|electromagnetic/i, 'Elektronische Kampfführung: gegnerische Abstrahlungen erfassen und orten (ES, Unterstützung), stören oder täuschen (EA, Angriff) und eigene Systeme dagegen schützen (EP, Schutz).'],
+  ['Emitter', /emitter|abstrahl/i, 'Alles, was elektromagnetisch sendet: Radar, Funkgerät, Datenlink, Störsender. Wer strahlt, kann gepeilt und bekämpft werden.'],
+  ['EMCON', /emcon|emissionsbeschränkung|emission control/i, 'Emission Control: Vorgaben, welche Sender (Radar, Funk, Datenlink) wann strahlen dürfen – damit man nicht geortet wird. Gilt auch für dein Funkgerät.'],
+  ['Störsender (Jamming)', /störsend|\bjamm|störung|störer/i, 'Ein Störsender überlagert gegnerische Radar- oder Funkfrequenzen mit Rauschen oder falschen Signalen, sodass der Empfänger nichts oder Falsches sieht bzw. hört.'],
+  ['Täuschung', /täusch|decoy|spoof|chaff|flare/i, 'Dem Gegner falsche Ziele oder Signale vorspielen: Radartäuschkörper (Decoys), Düppel (Chaff) gegen Radar, Leuchtkörper (Flares) gegen IR-Suchköpfe oder gefälschte Funksprüche.'],
+  ['Peilung und Ortung', /peil|ortung|geolocation|triangulat/i, 'Peilung heißt Richtung – in der Luftfahrt auch „Bearing“, z. B. bei BRAA die Richtung vom Lfz zum Ziel. In der EloKa ist es die Richtung zu einem Sender: Peilen mehrere Stellen denselben Sender, schneiden sich die Linien – dort steht er (Kreuzpeilung, Ortung bzw. Geolocation). So wird auch dein Funkgerät gefunden.'],
+  ['PRF und PRI', /\bprf\b|\bpri\b|pulswiederhol|pulse repetition/i, 'Pulsradare senden kurze Impulse. Wie oft (Pulswiederholfrequenz, PRF) bzw. in welchem Abstand (Pulswiederholintervall, PRI) – das ist wie ein Fingerabdruck, an dem die EloKa den Radartyp erkennt.'],
+  ['EOB', /\beob\b|order of battle/i, 'Electromagnetic Order of Battle: Übersicht, welche gegnerischen Emitter wo stehen (z. B. welches Fla-Radar an welchem Ort). Grundlage für SEAD und das Bedrohungsbild.'],
+  ['Fernmelde- und Radaraufklärung', /fernmeldeaufklär|comint|elint|communications intelligence|signals intelligence/i, 'COMINT hört gegnerischen Funkverkehr mit, ELINT erfasst Radare und andere Sender. Beides zusammen heißt SIGINT.'],
+  ['MTI bzw. GMTI', /\bmti\b|gmti|moving target/i, 'Moving Target Indicator: Radarmodus, der nur bewegte Ziele zeigt, z. B. fahrende Fahrzeuge (GMTI = am Boden) oder langsame Luftziele; Stehendes wird ausgeblendet.'],
+  ['SAR (Radarbild)', /\bsar\b|synthetic aperture|radarkarte/i, 'Synthetic Aperture Radar: erzeugt aus der Bewegung des Lfz ein fotoähnliches Radarbild des Bodens – auch durch Wolken und nachts. So ein Bild („Map“) braucht einige Sekunden, bis es fertig ist.'],
+  ['FMV (Videobild)', /\bfmv\b|full-motion|full motion|videobild/i, 'Full Motion Video: Live-Video aus dem Zielbehälter oder der Drohne, z. B. über ROVER beim JTAC.'],
+  ['ROVER', /\brover\b/i, 'Empfangsgerät bzw. Software, mit der du am Boden das Video aus dem Pod oder der Drohne live siehst – sehr hilfreich beim Talk-on.'],
+  ['Zielbehälter (Pod)', /\bpod\b|zielbehälter|targeting pod/i, 'Behälter unter dem Lfz mit Tag- und Wärmebildkamera, Laser zum Messen und Markieren und Laserspotsucher. Details im Pod-Trainer.'],
+  ['Laserspotsucher (LST)', /laserspotsucher|spot search|spot tracker|\blst\b/i, 'Empfänger im Pod oder Lfz, der einen Laserpunkt mit dem eingestellten Code sucht und anzeigt – so findet der Pilot deinen Laser.'],
+  ['Lasercode', /lasercode|laser code/i, 'Meist vierstellige Zahl (z. B. 1688), die das Pulsmuster des Lasers festlegt. Laser und Suchkopf bzw. Spotsucher müssen denselben Code haben, sonst sieht die Waffe den Punkt nicht.'],
+  ['IR-Pointer und NVG', /ir-pointer|\bnvg\b|nachtsicht|night vision/i, 'IR-Pointer: unsichtbarer Infrarot-Zeigelaser, nur mit Nachtsichtgerät (NVG) zu sehen. Er zeigt und markiert, lenkt aber keine Waffe.'],
+  ['Anti-Radar-Flugkörper (ARM)', /anti-radar|antiradiation|\barm\b|\bharm\b|\bhts\b/i, 'Flugkörper, der auf die Abstrahlung eines Radars zufliegt, z. B. HARM. Das HTS ist ein Pod, der die Radare dafür ortet. Schaltet das Radar ab, verliert der Flugkörper sein Ziel.'],
+  ['SEAD und DEAD', /\bsead\b|\bdead\b/i, 'SEAD = Unterdrückung der feindlichen Luftverteidigung, z. B. Radare zum Abschalten zwingen; DEAD = ihre Zerstörung.'],
+  ['SAM und Wirkbereich (WEZ)', /\bsam\b|fla-rakete|flugabwehrrakete|wirkbereich|\bwez\b|sam-ring/i, 'SAM = Boden-Luft-Flugkörper. Der Wirkbereich (WEZ, auf Karten oft als Ring) ist der Raum, in dem das System Lfz bekämpfen kann – er hängt von Höhe, Zielart und Gelände ab. Details im Flugabwehr-Trainer.'],
+  ['MANPADS', /manpads/i, 'Schultergestützte Fla-Rakete mit Infrarot-Suchkopf (z. B. Igla, Verba, Stinger). Kein Radar – deshalb keine RWR-Warnung; nur der Raketenwarner (MAWS) sieht den Start.'],
+  ['Marschflugkörper', /marschflugkörper|cruise missile/i, 'Flugkörper mit eigenem Triebwerk, der wie ein kleines unbemanntes Flugzeug tief und lange fliegt, z. B. Kalibr oder Taurus.'],
+  ['Ballistisch und Hyperschall', /ballistisch|hyperschall|hypersonic/i, 'Ballistische Raketen fliegen nach dem Antrieb auf einer hohen Bahn wie ein Geschoss. Hyperschall heißt: schneller als etwa Mach 5.'],
+  ['Gleitwaffe und Stand-off', /gleitwaffe|stand-off-waffe|standoff weapon|glide weapon/i, 'Gleitwaffe: Bombe ohne eigenen Antrieb, die nach dem Abwurf mit Flügeln weit gleitet (z. B. GBU-39 SDB). Stand-off heißt: Einsatz von außerhalb der gegnerischen Flugabwehr.'],
+  ['ATO, SPINS, ACO', /\bato\b|\bspins\b|\baco\b|luftraumordnung|air tasking order/i, 'ATO = täglicher Einsatzbefehl für alle Lfz (wer fliegt wann wohin mit welchem Auftrag). SPINS = besondere Anweisungen dazu (z. B. Funk, Codes, ID-Kriterien). ACO = Luftraumordnung mit Korridoren, Sperrräumen und Höhenbändern.'],
+  ['ROE', /\broe\b|einsatzregeln|rules of engagement/i, 'Rules of Engagement: Regeln, wann und wie Waffengewalt angewendet werden darf – z. B. wann ein Track als HOSTILE bekämpft werden darf.'],
+  ['PID', /\bpid\b|positive identif|positiv identifiziert|positively identified/i, 'Positive Identifizierung: hinreichende Gewissheit, dass ein Objekt ein legitimes militärisches Ziel ist. Voraussetzung für jeden Waffeneinsatz.'],
+  ['Type 1, 2 und 3', /type[- ]?[123]\b/i, 'Steuerungsarten im CAS: Type 1 = JTAC sieht Lfz und Ziel und gibt jeden Angriff einzeln frei. Type 2 = JTAC sieht Lfz oder Ziel nicht, gibt aber jeden Angriff einzeln frei. Type 3 = JTAC gibt Raum, Zeit und Ziele frei, die Lfz greifen darin selbstständig an.'],
+  ['CAS, JTAC, FAC(A)', /\bcas\b|\bjtac\b|\bfac\b|fac\(a\)/i, 'CAS = Luftnahunterstützung für Bodentruppen nahe am Feind. JTAC = Fliegerleitoffizier am Boden, der die Angriffe steuert und freigibt. FAC(A) = Fliegerleiter in der Luft mit denselben Befugnissen.'],
+  ['Talk-on und Bezugspunkt', /talk-on|bezugspunkt/i, 'Beim Talk-on führst du den Piloten mit Worten vom Groben ins Feine zum Ziel – über markante Bezugspunkte im Gelände wie Straßenkreuzung, Waldrand oder auffälliges Gebäude.'],
+  ['IP, CP, Holding', /\bip\b|\bcp\b|kontaktpunkt|anfangspunkt|holding|warteraum/i, 'IP (Initial Point) = Ausgangspunkt für den Zielanflug. CP (Contact Point) = Punkt, an dem das Lfz Verbindung mit dir aufnimmt. Holding = Warteraum, in dem das Lfz kreist, bis es gebraucht wird.'],
+  ['Einschießen und Wirkungsschießen', /einschieß|einschiess|wirkungsschieß|wirkungsschiess|salve|gipfelhöhe|max ord|spotter/i, 'Einschießen = Feuer mit einzelnen Schüssen an das Ziel heranführen; Wirkungsschießen = volle Feuerstärke, wenn die Lage stimmt. Salve = gleichzeitiger Schuss mehrerer Rohre. Gipfelhöhe (MAX ORD) = höchster Punkt der Geschossbahn – wichtig, damit Lfz nicht hineinfliegen.'],
+  ['Schiffsartillerie', /schiffsartillerie|naval gunfire|salvo/i, 'Schiffsartillerie (NGFS) unterstützt Bodentruppen vom Meer aus. Wörter wie SHOT, SPLASH oder STRADDLE stammen aus dem Einschießen mit Beobachter.'],
+  ['Frequenzsprung', /have ?quick|saturn|frequenzsprung|frequency hopping/i, 'Das Funkgerät wechselt viele Male pro Sekunde die Frequenz nach einem gemeinsamen Schlüssel und einer gemeinsamen Uhrzeit – schwer zu stören und zu peilen. Details im Funk-Trainer.'],
+  ['UHF und VHF', /\buhf\b|\bvhf\b/i, 'Militärischer UHF-Flugfunk liegt bei 225–400 MHz (AM), der VHF-Truppenfunk bei 30–88 MHz (FM). Details im Funk-Trainer.'],
+  ['Authentisierung', /authent/i, 'Prüfung per Codetabelle, ob die Gegenstation wirklich die ist, die sie vorgibt – Schutz gegen Täuschung über Funk.'],
+  ['CEC', /\bcec\b|cooperative engagement/i, 'Cooperative Engagement Capability: Netz, in dem vor allem Schiffe ihre Radardaten so genau teilen, dass einer mit den Daten des anderen schießen kann.'],
+  ['TOI', /\btoi\b|track of interest/i, 'Track of Interest: ein Track, der besonders beobachtet werden soll.'],
+  ['Bekämpfungszonen (FEZ, MEZ, JEZ)', /engagement zone|bekämpfungszone|\bfez\b|\bmez\b|\bjez\b/i, 'Räume, in denen Luftziele bekämpft werden: FEZ = durch Jagdflugzeuge, MEZ = durch Flugabwehrraketen, JEZ = durch beide gleichzeitig. Die klare Zuordnung verhindert, dass die eigene Flugabwehr eigene Lfz trifft.'],
+  ['Staffelung (Deconfliction)', /staffelung|deconflict|separation/i, 'Trennung von Lfz untereinander und von eigenem Feuer – nach Höhe, Raum oder Zeit. Für dich als JTAC zentral: Lfz dürfen nicht durch die Flugbahn von Artillerie oder Mörsern fliegen.'],
+  ['Racetrack und Orbit', /racetrack|race track|kreisbahn|\borbit|kreist/i, 'Racetrack = ovale Warteschleife, Orbit = Kreis um einen Punkt. So halten Lfz und Hubschrauber ihre Position über einem Raum, bis sie gebraucht werden.'],
+  ['CSAR und Landezone', /csar|landezone|\blz\b|search and rescue/i, 'CSAR = Suche und Rettung abgeschossener bzw. isolierter Soldaten im Gefecht. LZ = Landezone, an der der Hubschrauber landet.'],
+  ['Einsatzbereich (A/A, A/S …)', /bereich:/i, 'Die US-Brevity-Vorschrift ordnet jedes Wort einem Bereich zu: Luft-Luft (A/A, Luftkampf), Luft-Boden (A/S, u. a. CAS), Boden-Luft (S/A, Flugabwehr), Boden-Boden (S/S, z. B. Artillerie und Schiffsartillerie), Luft-See, EloKa (EW) und Weltraum. Ohne Angabe gilt das Wort allgemein.'],
+  ['NATO-Brevity (APP-7)', /app-7|nato-brevity/i, 'Die NATO hat eine eigene Brevity-Liste (APP-7). Die US-Vorschrift ATP 1-02.1 ist umfangreicher; manche Wörter gibt es nur dort oder sie bedeuten bei der NATO etwas anderes. In NATO-Übungen gilt die NATO-Bedeutung – im Zweifel im Briefing klären.'],
+  ['Funkform', /funkform/i, 'So steht das Wort im Funkspruch. Eckige Klammern sind Platzhalter, die du ersetzt – z. B. [direction] durch eine Richtung.']
+];
+/* t[3] === 'de': nur in den deutschen Texten suchen (englisch „track“ heißt oft nur „verfolgen“) */
+function termsFor(text, deText){ return TERMS.filter(t => t[1].test(t[3] === 'de' && deText != null ? deText : text)); }
+function termsHtml(text, deText){
+  const ts = termsFor(text, deText);
+  return ts.length ? `<div class="terms"><div class="th">Hintergrund</div>${ts.map(t => `<p><b>${esc(t[0])}:</b> ${esc(t[2])}</p>`).join('')}</div>` : '';
+}
+function termsAbk(a){
+  const ts = termsFor(a.long + ' ' + a.de).filter(t => !t[0].toUpperCase().includes(a.a.toUpperCase()));
+  return ts.length ? `<div class="terms"><div class="th">Hintergrund</div>${ts.map(t => `<p><b>${esc(t[0])}:</b> ${esc(t[2])}</p>`).join('')}</div>` : '';
+}
+const btext = b => b.de + ' ' + (b.note || '') + ' ' + b.en;
+const bde = b => b.de + ' ' + (b.note || '');
 const normW = s => String(s || '').toUpperCase().replace(/Ä/g,'AE').replace(/Ö/g,'OE').replace(/Ü/g,'UE').replace(/[^A-Z0-9]+/g, ' ').trim();
 const normA = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]+/g, '');
 const BWN = {}; BR.forEach(b => BWN[normW(b.w)] = b);
@@ -1697,10 +1789,10 @@ function toggleFlag(){
 /* ---------- Darstellung ---------- */
 function entryHtml(b){
   return `<div class="entry"><div class="hd"><span class="code">${esc(b.w)}</span><span class="pill">${esc(GROUPS[b.g].l)}</span>${b.opp ? `<span class="pill">Gegenstück: ${esc(b.opp)}</span>` : ''}</div>
-    <p style="margin:6px 0 0">${esc(b.de)}</p><p class="en">ATP 1-02.1: „${esc(b.en)}“</p>${b.note ? `<p class="nt">${esc(b.note)}</p>` : ''}</div>`;
+    <p style="margin:6px 0 0">${esc(b.de)}</p><p class="en">ATP 1-02.1: „${esc(b.en)}“</p>${b.note ? `<p class="nt">${esc(b.note)}</p>` : ''}${termsHtml(btext(b), bde(b))}</div>`;
 }
 function abkHtml(a){
-  return `<div class="entry"><div class="hd"><span class="code">${esc(a.a)}</span><span class="lf">${esc(a.long)}</span></div><p style="margin:6px 0 0">${esc(a.de)}</p></div>`;
+  return `<div class="entry"><div class="hd"><span class="code">${esc(a.a)}</span><span class="lf">${esc(a.long)}</span></div><p style="margin:6px 0 0">${esc(a.de)}</p>${termsAbk(a)}</div>`;
 }
 function optLabel(m, t){
   if (m.seq) return `<span class="ot seq">${t.split(' → ').map(x => `<span class="code">${esc(x)}</span>`).join('<span class="ar">→</span>')}</span>`;
@@ -1803,11 +1895,15 @@ function glossHtml(){
   const ql = glossQ.trim().toLowerCase();
   const hit = s => !ql || s.toLowerCase().includes(ql);
   let out = '';
-  if (glossTab === 'b'){
+  if (glossTab === 't'){
+    const items = TERMS.filter(t => hit(t[0]) || hit(t[2])).sort((x, y) => x[0].localeCompare(y[0], 'de'));
+    out = items.map(t => `<div class="it"><div class="hd"><strong>${esc(t[0])}</strong></div><p>${esc(t[2])}</p></div>`).join('');
+    if (out) out = `<p class="muted" style="margin:10px 0 0">Fachbegriffe, die in den Brevity-Erklärungen vorkommen – erscheinen auch nach jeder Antwort unter „Hintergrund“.</p>` + out;
+  } else if (glossTab === 'b'){
     for (const g of G_ORDER_B){
       const items = BR.filter(b => b.g === g && (hit(b.w) || hit(b.de) || hit(b.en) || hit(b.note || ''))).sort((a, b) => a.w.localeCompare(b.w));
       if (!items.length) continue;
-      out += `<h3>${esc(GROUPS[g].l)}</h3>` + items.map(b => `<div class="it"><div class="hd"><span class="code">${esc(b.w)}</span>${b.opp ? `<span class="pill">Gegenstück: ${esc(b.opp)}</span>` : ''}</div><p>${esc(b.de)}</p><p class="en">${esc(b.en)}</p>${b.note ? `<p style="font-size:.92rem">${esc(b.note)}</p>` : ''}</div>`).join('');
+      out += `<h3>${esc(GROUPS[g].l)}</h3>` + items.map(b => `<div class="it"><div class="hd"><span class="code">${esc(b.w)}</span>${b.opp ? `<span class="pill">Gegenstück: ${esc(b.opp)}</span>` : ''}</div><p>${esc(b.de)}</p><p class="en">${esc(b.en)}</p>${b.note ? `<p style="font-size:.92rem">${esc(b.note)}</p>` : ''}${termsFor(btext(b), bde(b)).length ? `<details class="gt"><summary>Hintergrund (${termsFor(btext(b), bde(b)).length})</summary>${termsHtml(btext(b), bde(b))}</details>` : ''}</div>`).join('');
     }
   } else {
     for (const g of G_ORDER_A){
@@ -1819,7 +1915,7 @@ function glossHtml(){
   return out || `<p class="empty">Nichts gefunden.</p>`;
 }
 function renderGloss(){
-  $('#app').innerHTML = `<div class="seg" role="group" aria-label="Liste wählen"><button data-tab="b" aria-pressed="${glossTab === 'b'}">Brevity (${BR.length})</button><button data-tab="a" aria-pressed="${glossTab === 'a'}">Abkürzungen (${AB.length})</button></div>
+  $('#app').innerHTML = `<div class="seg" role="group" aria-label="Liste wählen"><button data-tab="b" aria-pressed="${glossTab === 'b'}">Brevity (${BR.length})</button><button data-tab="a" aria-pressed="${glossTab === 'a'}">Abkürzungen (${AB.length})</button><button data-tab="t" aria-pressed="${glossTab === 't'}">Begriffe (${TERMS.length})</button></div>
     <input class="search" id="gsearch" type="search" placeholder="Suchen, z. B. Laser oder RED" value="${esc(glossQ)}" aria-label="Suchen">
     <div class="gl" id="gl">${glossHtml()}</div>`;
 }
