@@ -196,6 +196,42 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:va
 .tag{font-family:var(--font-b);font-size:.75rem;font-weight:600;background:var(--cta);color:var(--cta-ink);border-radius:999px;padding:1px 8px;vertical-align:middle}
 .guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
 .foot a{color:var(--ink);text-underline-offset:3px}
+/* Versions-Duell */
+.dintro{margin:4px 0 10px;font-family:var(--font-d);font-size:1.15rem;font-weight:600}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+@media (min-width:760px){.dgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.dfig{position:relative;margin:0;border-radius:10px;overflow:hidden;background:var(--feed);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.dfig img{display:block;width:100%;height:auto}
+.dfig[data-dtap]{cursor:crosshair;outline:2px dashed var(--hud);outline-offset:-2px}
+.dfig[data-zoom]{cursor:zoom-in}
+.dtag{position:absolute;left:8px;top:8px;background:rgba(10,14,15,.82);color:#fff;font-family:var(--font-d);font-weight:700;font-size:.82rem;letter-spacing:.05em;padding:2px 8px;border-radius:4px;pointer-events:none}
+.dmark{position:absolute;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;border:3px solid var(--c);box-shadow:0 0 0 2px rgba(0,0,0,.55),inset 0 0 0 2px rgba(0,0,0,.35);pointer-events:none}
+.dfig .pin{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.95rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.dstep{margin:8px 0 0}
+.dstep b{color:var(--c)}
+.drows{display:grid;gap:8px}
+.drow{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.dh{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-weight:600;line-height:1.3}
+.dh .dn{margin-right:0}
+.dh .dl{flex:1 1 11em;min-width:0}
+.drow dl{margin:6px 0 0;display:grid;grid-template-columns:minmax(0,1fr);gap:2px 10px}
+@media (min-width:560px){.drow dl{grid-template-columns:10.5em minmax(0,1fr)}}
+.drow dt{font-family:var(--font-d);font-weight:600;font-size:.88rem;color:var(--muted)}
+.drow dd{margin:0 0 4px;font-size:.94rem;line-height:1.35}
+.dtabw{overflow-x:auto}
+.dtab{width:100%;border-collapse:collapse;font-size:.93rem;line-height:1.35}
+.dtab th,.dtab td{border-top:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+.dtab th{font-family:var(--font-d);font-weight:600;font-size:.95rem}
+.dtab td:first-child{min-width:9em}
+.dn{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--hud);color:#111;font-family:var(--font-d);font-weight:700;font-size:.8rem;align-items:center;justify-content:center;margin-right:6px;vertical-align:1px}
+.dsure,.dind{display:inline-block;font-size:.72rem;font-weight:600;border-radius:999px;padding:0 7px;vertical-align:1px}
+.dsure{background:var(--ok-bg);color:var(--ok)}
+.dind{background:var(--unk-bg);color:var(--unk)}
+.ladder{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.ladder li{line-height:1.35}
+.ladder li b{display:block}
+.ladder li span{display:block;font-size:.94rem}
+.ladder em{font-style:normal;color:var(--muted);display:inline-block;min-width:3.4em}
 </style>
 <style>
 .cmpwrap{margin-top:8px}
@@ -285,6 +321,154 @@ const ANNO = {"t62": [[45, 30, "Flacher, runder Kuppelturm – beim T-62M mit ka
 const CMP = [{"a": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[42, 40, "Runder, gegossener Turm"], [38, 63, "Sechs große Laufrollen, drei Stützrollen"]]}, "b": {"fam": "t90", "i": 0, "lab": "T-90M", "pins": [[60, 44, "Kantiger, geschweißter Turm mit Relikt-Modulen"], [77, 44, "Großer Staukorb am Turmheck"], [62, 80, "Gleiches Laufwerk wie T-72"]]}, "key": "Der Turm: T-72 rund und gegossen, T-90 kantig und geschweißt. Den T-90A erkennst du zusätzlich an den Shtora-Strahlern („rote Augen“) neben der Kanone, den T-90M am großen Staukorb am Turmheck. Das Laufwerk ist bei beiden gleich."}, {"a": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[38, 63, "Große Laufrollen, darüber drei Stützrollen"], [42, 40, "Turm des T-72B3"]]}, "b": {"fam": "t80", "i": 0, "lab": "T-80BVM", "pins": [[45, 78, "Kleinere, gummibereifte Laufrollen; fünf Stützrollen (hier hinter der Schürze)"], [40, 42, "Turm mit Relikt und Sosna-U – fast wie T-72B3M"]]}, "key": "Laufwerk und Heck: Der T-80 hat kleinere, gummibereifte Laufrollen mit fünf Stützrollen und hinten ein großes Auslassgitter der Gasturbine. Der T-72 hat große Laufrollen mit drei Stützrollen und den Auspuff links hinten an der Wanne. Die Türme modernisierter Versionen sehen sich sehr ähnlich."}, {"a": {"fam": "t64", "i": 2, "lab": "T-64BV", "pins": [[57, 80, "Sechs kleine Laufrollen mit Stützrollen"], [47, 64, "Kontakt-1-Kacheln am Bug"]]}, "b": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[38, 63, "Sechs große Laufrollen"]]}, "key": "Die Laufrollen: Der T-64 hat sechs kleine, eng stehende Laufrollen mit Stützrollen, T-72 und T-90 haben sechs große. Achtung Freund-Feind: Den T-64 nutzt fast nur die Ukraine."}, {"a": {"fam": "t62", "i": 5, "lab": "T-62", "pins": [[61, 74, "Fünf Laufrollen, Lücken nach hinten größer, keine Stützrollen"], [66, 61, "Flacher, runder Kuppelturm"]]}, "b": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[38, 63, "Sechs große Laufrollen mit Stützrollen"]]}, "key": "Laufrollen zählen: T-62 fünf mit nach hinten größer werdenden Lücken, T-72 sechs gleichmäßig verteilte mit Stützrollen."}, {"a": {"fam": "bmpt", "i": 4, "lab": "BMPT Terminator", "pins": [[34, 33, "Zwei dünne 30-mm-Rohre und LFK-Behälter – keine Hauptkanone"], [55, 72, "KPz-Laufwerk (T-72 bzw. T-90)"]]}, "b": {"fam": "t72", "i": 0, "lab": "T-72B3", "pins": [[72, 32, "Langes 125-mm-Rohr"], [38, 63, "Gleiches Laufwerk"]]}, "key": "Das Rohr: Der BMPT hat keine Hauptkanone, sondern zwei dünne 30-mm-Rohre und LFK-Behälter am Turm. Wo ein BMPT fährt, sind Kampfpanzer in der Nähe."}, {"a": {"fam": "t14", "i": 7, "lab": "T-14 Armata", "pins": [[42, 70, "Sieben Laufrollen – lange Wanne"], [30, 40, "Sehr flacher, kantiger Turm ohne Luken"]]}, "b": {"fam": "t90", "i": 0, "lab": "T-90M", "pins": [[62, 80, "Sechs Laufrollen"], [60, 44, "Turm mit Luken und Visieren"]]}, "key": "Laufrollen zählen: T-14 sieben, T-90 sechs. Der Turm des T-14 ist unbemannt, sehr flach und kantig. Der T-14 ist selten – eine Sichtung genau bestätigen."}, {"a": {"fam": "bmp1", "i": 2, "lab": "BMP-1", "pins": [[42, 30, "Kleiner Kegelturm mit kurzem, dickem 73-mm-Rohr"]]}, "b": {"fam": "bmp2", "i": 0, "lab": "BMP-2", "pins": [[46, 36, "Größerer Zwei-Mann-Turm, etwas weiter hinten"], [31, 43, "Langes, dünnes 30-mm-Rohr"]]}, "key": "Turm und Rohr: BMP-1 mit kleinem Kegelturm und kurzem, dickem Rohr, BMP-2 mit größerem Turm und langem, dünnem 30-mm-Rohr. Wanne und Laufwerk sind fast gleich."}, {"a": {"fam": "bmp2", "i": 15, "lab": "BMP-2", "pins": [[55, 71, "Sechs Laufrollen"], [52, 47, "Turm in der Wannenmitte"]]}, "b": {"fam": "bmd2", "i": 2, "lab": "BMD-2", "pins": [[25, 64, "Fünf Laufrollen, sehr kleine, flache Wanne"], [42, 38, "Kleiner Turm vorne-mittig"]]}, "key": "Größe und Laufrollen: Der BMD-2 ist deutlich kleiner und flacher und hat fünf Laufrollen, der BMP-2 sechs. Aufgesessene Fallschirmjäger bedecken beim BMD fast das ganze Dach."}, {"a": {"fam": "bmd2", "i": 2, "lab": "BMD-2", "pins": [[65, 45, "Spitze Bugkante – flacher Keil"], [44, 38, "Kleiner Ein-Mann-Turm"], [22, 53, "Seiten oben nach innen geneigt"]]}, "b": {"fam": "bmd3", "i": 1, "lab": "BMD-3", "pins": [[21, 68, "Hohe, steile Bugplatte"], [45, 46, "Zwei-Mann-Turm wie BMP-2"], [72, 60, "Senkrechte, kastige Seiten"]]}, "key": "Bug und Wannenform: Der BMD-2 läuft vorn in eine tiefe, spitze Kante aus und wirkt wie ein flacher Keil. Der BMD-3 hat eine hohe, steile Bugplatte und senkrechte Seiten – ein Kasten. Dazu der Turm: beim BMD-3 der größere Zwei-Mann-Turm des BMP-2. Fünf Laufrollen haben beide."}, {"a": {"fam": "bmp3", "i": 0, "lab": "BMP-3", "pins": [[35, 85, "Sechs große Laufrollen, hohe, breite Wanne"], [55, 40, "Turm mit dickem 100-mm- und dünnem 30-mm-Rohr"]]}, "b": {"fam": "bmd4", "i": 9, "lab": "BMD-4M", "pins": [[76, 76, "Fünf kleine Laufrollen, kleine, flache Wanne"], [42, 30, "Gleiche Waffenanlage wie BMP-3"]]}, "key": "Wanne und Laufrollen: BMP-3 groß und hoch mit sechs großen Laufrollen, BMD-4M klein und flach mit fünf kleinen. Die Waffen sind gleich – und damit auch die Gefahr für Hubschrauber."}, {"a": {"fam": "bmd2", "i": 2, "lab": "BMD-2", "pins": [[42, 38, "Turm mit 30-mm-Kanone"], [25, 64, "Fünf Laufrollen"]]}, "b": {"fam": "btrd", "i": 4, "lab": "BTR-D", "pins": [[50, 45, "Kein Turm – flaches Dach"], [65, 82, "Sechs kleine Laufrollen, längere Wanne"]]}, "key": "Der Turm: BMD-2 mit 30-mm-Turm, BTR-D ohne Turm und mit längerer Wanne. Den BTR-D gibt es auch als Träger, z. B. mit ZU-23-2 auf dem Dach."}, {"a": {"fam": "tigr", "i": 0, "lab": "Tigr", "pins": [[50, 33, "Glattes Dach ohne Aufbauten"], [20, 56, "Großer Frontschutzbügel"]]}, "b": {"fam": "kornet", "i": 0, "lab": "Kornet-D auf Tigr", "pins": [[30, 15, "Zwei Starter mit je vier LFK-Rohren, aus dem Dach ausgefahren"], [45, 60, "Gleiches Fahrzeug wie Tigr"]]}, "key": "Das Dach: Beim Kornet-D fahren zwei Starter mit je vier Rohren aus dem Klappdach. Eingefahren sieht er aus wie ein normaler Tigr – dann hilft nur die Lage."}, {"a": {"fam": "tigr", "i": 0, "lab": "Tigr", "pins": [[50, 33, "Flacher Geländewagen in Humvee-Größe"], [20, 56, "Großer Frontschutzbügel"]]}, "b": {"fam": "typhoon", "i": 6, "lab": "Typhoon-VDV", "pins": [[30, 30, "Hoher, LKW-artiger Kastenaufbau mit viel Panzerglas"], [54, 80, "Große Räder, hohe Bodenfreiheit (MRAP)"]]}, "key": "Größe und Form: Der Typhoon ist ein großes, hohes MRAP mit LKW-artigem Aufbau, als Typhoon-K mit drei Achsen. Der Tigr ist kleiner und flacher, etwa in Humvee-Größe."}];
 const CRED = {"btr90": ["Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Msgevans00, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "kamaz": ["Bild: Srđan Popović, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Srđan Popović, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Srđan Popović, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "", ""], "atz": ["Bild: Stanislav Kozlovskiy, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Sergeev Pavel, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", "Bild: Boevaya mashina, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "r149": ["Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Mike1979 Russia, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Ministerstwo Obrony Rossijskoj Federazii (Министерство обороны Российской Федера, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "bmp1ksh": ["Bild: ShinePhantom, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", "Bild: ShinePhantom, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", "Bild: Ram dam bass, CC BY-SA 3.0, Wikimedia Commons (verkleinert)"], "mtu": ["Bild: Richard Allen, CC BY 2.0, Wikimedia Commons (verkleinert)", "Bild: Richard Allen, CC BY 2.0, Wikimedia Commons (verkleinert)", "Bild: Bukvoed, CC BY 2.5, Wikimedia Commons (verkleinert)", "Bild: Oren Rozen, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Richard Allen, CC BY 2.0, Wikimedia Commons (verkleinert)"], "pmp": ["Bild: Richard Allen, CC BY 2.0, Wikimedia Commons (verkleinert)", "Bild: Yevgeny Kel, CC BY 4.0, Wikimedia Commons (verkleinert)", "", "Bild: Richard Allen, CC BY 2.0, Wikimedia Commons (verkleinert)", "Bild: Zinnsoldat, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "pts": ["", "", "", "", "Bild: Srđan Popović, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "ur77": ["Bild: Ministry of Defence of the Russian Federation, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: Yevgeny Kel, CC BY 4.0, Wikimedia Commons (verkleinert)"], "imr2": ["Bild: ArmyInform, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: Alexey Vasilenko, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Alexey Vasilenko, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Ministerstwo Obrony Rossijskoj Federazii (Министерство обороны Российской Федера, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: Ministerstwo Obrony Rossijskoj Federazii (Министерство обороны Российской Федера, CC BY 4.0, Wikimedia Commons (verkleinert)"], "bat2": ["Bild: Kirill Borisenko, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: АрміяInform, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: АрміяInform, CC BY 4.0, Wikimedia Commons (verkleinert)"], "brem1": ["Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Пользователь, CC BY 3.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "gmz3": ["Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Mike1979 Russia, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", ""], "brm3k": ["Bild: Алексей Китаев, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Dinamik, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "brm1k": ["Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Mzajac, CC BY-SA 2.5, Wikimedia Commons (verkleinert)", "Bild: unbekannt, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Mzajac, CC BY-SA 2.5, Wikimedia Commons (verkleinert)", "Bild: Vadim Indeikin, CC BY-SA 3.0, Wikimedia Commons (verkleinert)"], "rkhm": ["Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Ministry of Defence of the Russian Federation, CC BY 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "bmd3": ["", "", "", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "btr60": ["", "", "", "", "Bild: Tourbillon (original picture) SuperTank17 (crop), CC BY 3.0, Wikimedia Commons (verkleinert)", "Bild: Hugh Llewelyn, CC BY-SA 2.0, Wikimedia Commons (verkleinert)"], "btr70": ["", "", "", "", "Bild: ShinePhantom, CC BY-SA 3.0, Wikimedia Commons (verkleinert)", "Bild: ShinePhantom, CC BY-SA 3.0, Wikimedia Commons (verkleinert)"], "ural": ["", "", "", "Bild: Kirill Borisenko, CC BY-SA 4.0, Wikimedia Commons (verkleinert)", "", ""], "uaz469": ["", "", "", "", ""], "uaz452": ["", "", "", "", ""], "tigr": ["", "", "", "", "Bild: Vitaly V. Kuzmin, CC BY-SA 4.0, Wikimedia Commons (verkleinert)"], "gaz66": ["", "", "", "", ""], "t72": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "Bild: Vitaly V. Kuzmin, CC BY-SA 3.0, Wikimedia Commons (verkleinert)"]};
 const CMPTXT = {"bmd2|bmd3": "Wanne und Turm: BMD-2 klein und flach – tiefe, spitze Bugkante, Seiten oben nach innen geneigt, kleiner Ein-Mann-Turm; BMD-3 ein Kasten – hohe, steile Bugplatte, senkrechte Seiten, größerer Zwei-Mann-Turm wie BMP-2.", "bmd2|bmp1": "Größe und Rohr: BMP-1 größer mit sechs Laufrollen und Kegelturm mit kurzem, dickem 73-mm-Rohr; BMD-2 klein und flach mit fünf Laufrollen und langem, dünnem 30-mm-Rohr.", "bmd3|bmd4": "Der Turm: BMD-3 mit dem Zwei-Mann-Turm des BMP-2 und nur einem dünnen 30-mm-Rohr, BMD-4M mit großem Turm, dickem 100-mm- und dünnem 30-mm-Rohr.", "bmd3|bmp2": "Gleicher Turm, andere Wanne: BMP-2 länger mit sechs Laufrollen und spitzem, geripptem Bug; BMD-3 kürzer und kastiger mit fünf Laufrollen und hoher, steiler Bugplatte.", "bmd3|btrmdm": "Der Turm: BMD-3 mit 30-mm-Turm, BTR-MDM ohne Turm – hohe, glatte Kastenwanne mit MG-Lafette vorn.", "bmd4|btrmdm": "Der Turm: BMD-4M mit großem Turm (100-mm- und 30-mm-Rohr), BTR-MDM ohne Turm – hohe, glatte Kastenwanne mit MG-Lafette vorn.", "bmp1|bmp3": "Wanne und Turm: BMP-3 mit breiter, hoher Wanne und mittigem Turm mit dickem 100-mm-Rohr; BMP-1 flach mit spitzem, geripptem Bug und kleinem Kegelturm vorne-mittig.", "bmp1|mtlb": "Turm und Laufwerk: BMP-1 mit Kegelturm, spitzem, geripptem Bug und Stützrollen; MT-LB mit flacher Kastenwanne, nur kleinem MG-Turm vorn und ohne Stützrollen.", "bmp2|bmp3": "Wanne und Rohre: BMP-3 mit breiter, hoher Wanne und Turm mit dickem 100-mm- und dünnem 30-mm-Rohr; BMP-2 flacher mit spitzem, geripptem Bug und nur einem dünnen 30-mm-Rohr.", "bmpt|t14": "Laufrollen und Rohr: BMPT auf T-72/T-90-Laufwerk mit sechs Laufrollen und zwei dünnen 30-mm-Rohren; T-14 mit sieben Laufrollen und 125-mm-Kanone im flachen, unbemannten Turm.", "bmpt|t90": "Das Rohr: Der BMPT hat keine Hauptkanone, sondern zwei dünne 30-mm-Rohre und LFK-Behälter am Turm. Das Fahrgestell ist das des T-72 bzw. T-90.", "brdm2|btr": "Die Räder: BTR-80/82A mit acht großen Rädern und Lücke für die Seitentür; BRDM-2 deutlich kleiner mit nur vier großen Rädern (dazwischen absenkbare Zusatzräder).", "brdm2|tigr": "Die Form: BRDM-2 mit bootsförmiger Panzerwanne, spitzem Bug und Kegelturm; Tigr ein kastiger Geländewagen mit Fenstern und großem Frontschutzbügel, meist ohne Turm.", "btr|typhoon": "Die Fahrzeugart: BTR-80/82A mit flacher, bootsförmiger Wanne, acht Rädern und Turm; Typhoon mit hohem, LKW-artigem Aufbau und Panzerglas auf zwei oder drei Achsen.", "btrd|btrmdm": "Bug und Höhe: BTR-D klein und flach mit spitzem BMD-Keilbug; BTR-MDM höher und kantiger mit steilem, flachem Bug und glatter Kastenwanne.", "btrd|mtlb": "Bug und Dach: BTR-D klein und flach mit spitzem, geripptem Bug wie beim BMD; MT-LB mit langer Kastenwanne, kleinem MG-Turm vorn und Fahrer- und Kommandantenluken vorn.", "kornet|shturm": "Das Fahrgestell: Kornet-D fährt auf dem Tigr (Räder), Shturm-S auf dem MT-LB (Ketten). Beide fahren ihre Starter aus dem Dach aus.", "mtlb|shturm": "Turm und Starter: Shturm-S nutzt die MT-LB-Wanne, hat aber keinen MG-Turm; ausgefahren sitzt der LFK-Starter auf dem Dach. Eingefahren sieht er fast aus wie ein MT-LB – auf den fehlenden MG-Turm achten.", "t62|t64": "Die Laufrollen: T-62 mit fünf großen Laufrollen ohne Stützrollen, T-64 mit sechs kleinen Laufrollen und Stützrollen.", "t64|t80": "Laufwerk und Heck: T-64 mit kleinen, eng stehenden Laufrollen; T-80 mit gummibereiften Laufrollen und großem Turbinengitter am Heck. Den T-64 nutzt fast nur die Ukraine.", "t80|t90": "Laufwerk und Heck: T-90 mit T-72-Laufwerk (große Laufrollen, drei Stützrollen); T-80 mit kleineren, gummibereiften Laufrollen, fünf Stützrollen und Turbinengitter am Heck. T-90A zusätzlich mit Shtora-Strahlern neben der Kanone.", "btr|btr70": "Seitentür und Turm: BTR-70 mit kleiner, tief liegender Luke zwischen 2. und 3. Achse und flachem Kegelturm mit nur ca. 30° Rohrerhöhung; BTR-80 mit großer, zweiteiliger Tür und Nebelwurfbechern hinten am Turm, BTR-82A mit größerem Turm und langem 30-mm-Rohr.", "btr60|btr70": "Seitentür: Der BTR-60PB hat keine – die Infanterie steigt über Dachluken aus. Der BTR-70 hat eine kleine, tief liegende Seitenluke zwischen 2. und 3. Achse. Turm und Bewaffnung sind gleich.", "btr|btr60": "Seitentür: BTR-60PB ohne Seitentür, BTR-80 mit großer Tür zwischen 2. und 3. Achse. BTR-82A zusätzlich mit größerem Turm und langem 30-mm-Rohr.", "btr|btr90": "Turm: BTR-90 mit dem Zwei-Mann-Turm des BMP-2, BTR-82A mit kleinerem Turm; der BTR-90 ist insgesamt größer und höher. Beide tragen eine 30-mm-Kanone.", "bmp2|btr90": "Räder oder Ketten: Gleicher Turm, aber der BTR-90 fährt auf acht Rädern, der BMP-2 auf Ketten mit sechs Laufrollen.", "kamaz|ural": "Kabine: Ural mit langer, rundlicher Motorhaube vor der Kabine, KamAZ mit flacher Front ohne Haube (Frontlenker). Beide haben drei Achsen.", "atz|ural": "Aufbau: Tankwagen mit liegendem, rundem Tank und Gefahrgut-Tafeln, Transport-Ural mit Pritsche und Plane.", "gaz66|kamaz": "Größe: GAZ-66 klein mit zwei Achsen und kurzer Kabine, KamAZ groß mit drei Achsen und breiter Kabine.", "gaz66|uaz452": "GAZ-66: Lkw mit Kabine und getrenntem Aufbau. UAZ-452: durchgehender Kasten mit großen Seitenfenstern.", "uaz452|uaz469": "UAZ-469: Geländewagen mit Kühlergrill und kurzer Haube. UAZ-452: Kleinbus mit durchgehendem Kasten, ohne Haube.", "tigr|uaz469": "Tigr: groß, gepanzert, hohe gerade Seiten mit kleinen Fenstern. UAZ-469: klein und ungeschützt, Plane oder Hardtop mit großen Scheiben.", "btr|r149": "Waffe: Der BTR-80/82A hat einen Turm mit MG bzw. Kanone, das Führungsfahrzeug R-149 keinen – dafür viele Antennen und Aufbauten.", "bmp1|bmp1ksh": "Turm: Der BMP-1 hat einen Kegelturm mit 73-mm-Kanone, der BMP-1KSh keinen Turm – nur einen flachen Aufbau mit Antennen.", "brem1|imr2": "Ausrüstung: IMR-2 mit langem Kranarm mit Greifzange und großem Räumschild; BREM-1 mit kürzerem Kran, viel Gerät auf dem Deck und kleinerem Räumschild.", "imr2|mtu": "Brückenleger mit großem, zusammengeklapptem Brückenelement über der ganzen Wanne; IMR-2 mit Kranarm und Räumschild, ohne Brücke.", "brem1|mtu": "Brückenleger mit großem Brückenelement; BREM-1 mit flachem Aufbau, Kran und Gerät auf dem Deck.", "pmp|pts": "Pontonbrücke: Lkw mit gefaltetem Ponton bzw. Pontonkette im Wasser. PTS: eigenes bootsförmiges Kettenfahrzeug mit Kabine und Ladefläche.", "bat2|imr2": "BAT-2 mit großer Kabine und sehr großem Planierschild auf eigenem Fahrgestell; IMR-2 auf Kampfpanzer-Laufwerk mit Kranarm und Greifzange.", "mtlb|ur77": "UR-77 mit großem, klappbarem Startgestell für Sprengschläuche hinten; MT-LB flacher Transporter mit kleinem MG-Turm vorn.", "gmz3|ur77": "GMZ-3 groß und kastenförmig mit Legeeinrichtung am Heck; UR-77 flach mit klappbarem Startgestell.", "bmp1|brm1k": "Turm: BMP-1 mit kleinem Kegelturm und Lenkflugkörperstarter über der Kanone; BRM-1K mit größerem Turm ohne Starter, dafür mit klappbarer Radarantenne.", "bmp3|brm3k": "Bewaffnung: BMP-3 mit dicker 100-mm-Kanone und dünnem 30-mm-Rohr daneben; BRM-3K nur mit dem dünnen 30-mm-Rohr.", "bmd4|brm3k": "Größe: BMD-4M klein und flach (Luftlande), BRM-3K mit der breiten, hohen BMP-3-Wanne und nur einem 30-mm-Rohr.", "bmp2|brm1k": "BMP-2 mit langem, dünnem 30-mm-Rohr; BRM-1K mit kurzem, dickem 73-mm-Rohr und Radarantenne am Turm.", "btr|rkhm": "Turm: BTR-80/82A mit Waffenturm vorn; RKhM mit Aufbauten für Messgeräte und Antennen statt Turm.", "r149|rkhm": "Beide auf BTR-80 ohne Waffenturm: R-149 mit vielen Funkantennen und Mast, RKhM mit Messgeräte-Aufbauten."};
+const DUEL = {
+  intro: {t72:'Zwei T-72 in verschiedenen Versionen.', t80:'Zwei T-80 in verschiedenen Versionen.', t90:'Zwei T-90 in verschiedenen Versionen.', bmp1:'Zwei BMP-1 in verschiedenen Versionen.', bmp2:'Zwei BMP-2 in verschiedenen Versionen.', btr:'Zwei BTR-80/82 in verschiedenen Versionen.', x:'Zwei Fahrzeuge, die sich stark ähneln.'},
+  feats: {
+    sosna:'Visierkasten (Sosna-U) auf dem Turmdach',
+    era:'Art der Reaktivpanzerung am Turm – kleine Kacheln, große Keile oder Module',
+    skirt:'Kästen (Relikt) in den Seitenschürzen',
+    slat:'Gitterschutz am Heck ab Werk',
+    pan:'Rundblickvisier des Kommandanten auf dem Turmdach',
+    shtora:'Störstrahler („rote Augen“) beiderseits der Kanone',
+    bustle:'Großer Staukorb bzw. Staukasten am Turmheck',
+    turret:'Turmform – rund gegossen oder kantig geschweißt',
+    gun:'Turmwaffe – Kaliber und Form des Rohrs',
+    tsize:'Form, Größe und Lage des Turms',
+    atgm:'Lenkflugkörper-Starter am Turm',
+    kornet:'Je zwei Kornet-Rohre an beiden Turmseiten',
+    sight:'Neuer Visierkasten mit Wärmebildgerät auf dem Turm',
+    wheels:'Zahl der Laufrollen und Stützrollen',
+    gun125:'Kaliber der Kanone (125 mm)',
+    exhaust:'Lage des Auspuffs',
+    driver:'Lage der Fahrerluke (Bugmitte)',
+    bow:'Bugform – spitz und gerippt',
+    doors:'Zwei Hecktüren',
+    hull:'Länge und Form der Wanne',
+    axles:'Zahl der Achsen',
+    sidedoor:'Seitentür zwischen 2. und 3. Achse',
+    cal30:'Kaliber der Kanone (30 mm)'
+  },
+  pairs: [
+    {id:'t72ab-b3', a:'t72:ab', b:'t72:b3', alt:['t72:b3m', 't90:a'],
+      rows:[['sosna', 'fehlt – das Turmdach vorn ist frei', 'großer Kasten mit Sichtfenster vorn auf dem Turmdach', 1],
+            ['era', 'T-72B: viele kleine Kontakt-1-Kacheln („Ziegelsteine“); T-72A: glatter Turm ohne Kacheln', 'wenige große, flache Kontakt-5-Keile an der Turmfront', 0]],
+      same:['wheels', 'gun125', 'exhaust', 'driver'],
+      note:'Späte T-72B (Baujahr 1989) tragen schon Kontakt-5-Keile – dann entscheidet allein der Visierkasten.'},
+    {id:'t72b3-b3m', a:'t72:b3', b:'t72:b3m', alt:['t72:ab', 't90:m'],
+      rows:[['skirt', 'glatte Gummischürzen ohne Einsätze', 'Gummischürzen mit eingesetzten Relikt-Kästen – deutlich sichtbare Rechteckfelder', 1],
+            ['slat', 'ab Werk keiner (im Krieg oft nachgerüstet)', 'ab Werk Gitter an Turm- und Wannenheck', 0],
+            ['pan', 'fehlt', 'vorhanden (PK PAN)', 0]],
+      same:['sosna', 'wheels', 'gun125', 'exhaust'],
+      note:'Beide haben den Sosna-U-Kasten – der Visierkasten hilft hier nicht. Achte auf die Schürzen.'},
+    {id:'t72ab-b3m', a:'t72:ab', b:'t72:b3m', alt:['t72:b3', 't80:bvm'],
+      rows:[['sosna', 'fehlt – das Turmdach vorn ist frei', 'großer Kasten mit Sichtfenster vorn auf dem Turmdach', 1],
+            ['skirt', 'glatte Gummischürzen', 'Gummischürzen mit eingesetzten Relikt-Kästen', 1],
+            ['era', 'T-72B: viele kleine Kontakt-1-Kacheln; T-72A: glatter Turm', 'große, flache Keile bzw. Module an der Turmfront', 0],
+            ['slat', 'keiner ab Werk', 'Gitter an Turm- und Wannenheck', 0]],
+      same:['wheels', 'gun125', 'exhaust', 'driver']},
+    {id:'t80bv-u', a:'t80:bv', b:'t80:u', alt:['t80:bvm', 't72:ab'],
+      rows:[['era', 'viele kleine Kontakt-1-Kacheln an Turm und Bug', 'große Kontakt-5-Keile in Hufeisenform um die Turmfront', 1],
+            ['bustle', 'kleinere Staukästen am Turmheck', 'großer, durchgehender Staukasten am Turmheck', 0]],
+      same:['sosna', 'wheels', 'exhaust', 'gun125'],
+      note:'Keiner der beiden hat einen Sosna-U-Kasten. Die Unterschiede sitzen an Turmfront und Turmheck.'},
+    {id:'t80u-bvm', a:'t80:u', b:'t80:bvm', alt:['t80:bv', 't72:b3m'],
+      rows:[['skirt', 'Gummischürzen ohne Relikt-Kästen', 'Seitenschürzen mit eingesetzten Relikt-Kästen', 1],
+            ['sosna', 'fehlt', 'Sosna-U-Kasten auf dem Turmdach', 1],
+            ['era', 'Kontakt-5-Keile in Hufeisenform um die Turmfront', 'Relikt-Module an der Turmfront', 0]],
+      same:['wheels', 'exhaust', 'gun125', 'driver']},
+    {id:'t80bv-bvm', a:'t80:bv', b:'t80:bvm', alt:['t80:u', 't72:b3m'],
+      rows:[['era', 'viele kleine Kontakt-1-Kacheln an Turm und Bug', 'große Relikt-Module an der Turmfront', 1],
+            ['skirt', 'glatte Gummischürzen', 'Seitenschürzen mit eingesetzten Relikt-Kästen', 1],
+            ['sosna', 'fehlt', 'Sosna-U-Kasten auf dem Turmdach', 1]],
+      same:['wheels', 'exhaust', 'gun125', 'driver']},
+    {id:'t90a-m', a:'t90:a', b:'t90:m', alt:['t72:b3', 't72:b3m'],
+      rows:[['shtora', 'zwei Störstrahler („rote Augen“) beiderseits der Kanone', 'keine – glatte, kantige Turmfront mit Relikt', 1],
+            ['bustle', 'kein großer Staukorb', 'großer Staukorb am Turmheck', 1],
+            ['pan', 'fehlt', 'Rundblickvisier des Kommandanten auf dem Turmdach', 0]],
+      same:['wheels', 'gun125', 'exhaust', 'driver']},
+    {id:'t72b3m-t90m', a:'t72:b3m', b:'t90:m', alt:['t72:b3', 't90:a', 't80:bvm'],
+      rows:[['turret', 'runder, gegossener Turm wie beim T-72B3', 'kantiger, geschweißter Turm mit Relikt-Modulen', 1],
+            ['bustle', 'kein großer Staukorb (oft Gitter am Heck)', 'großer Staukorb am Turmheck', 1]],
+      same:['wheels', 'gun125', 'exhaust', 'skirt'],
+      note:'Laufwerk, Kanone und Relikt-Schürzen sind bei beiden gleich – entscheidend ist der Turm.'},
+    {id:'bmp1-am', a:'bmp1:std', b:'bmp1:am', alt:['bmp2:std', 'btr:82'],
+      rows:[['gun', 'kurzes, dickes 73-mm-Rohr (Niederdruckkanone)', 'langes, dünnes 30-mm-Rohr', 1],
+            ['tsize', 'flacher Kegelturm', 'kleiner, runder Turm des BTR-82A', 1],
+            ['atgm', 'LFK-Schiene bzw. Fagot-Starter über dem Rohr (oft abgebaut)', 'keine LFK', 0]],
+      same:['bow', 'wheels', 'doors', 'hull']},
+    {id:'bmp2-m', a:'bmp2:std', b:'bmp2:m', alt:['bmp1:am', 'bmp1:std'],
+      rows:[['kornet', 'keine Rohre an den Turmseiten – ein Konkurs-Starter auf dem Turmdach', 'je zwei Kornet-Rohre an beiden Turmseiten', 1],
+            ['sight', 'fehlt', 'neuer Visierkasten auf dem Turm', 0]],
+      same:['cal30', 'bow', 'wheels', 'doors'],
+      note:'Beide haben dieselbe lange, dünne 30-mm-Kanone – das Rohr hilft hier nicht.'},
+    {id:'btr80-82', a:'btr:80', b:'btr:82', alt:['btr70', 'btr60'],
+      rows:[['gun', 'dickes, kurzes 14,5-mm-MG KPWT', 'langes, dünnes 30-mm-Rohr 2A72', 1],
+            ['tsize', 'kleiner, kegelförmiger Turm', 'größerer, runder Turm', 0]],
+      same:['axles', 'sidedoor', 'hull'],
+      note:'Beim BTR-80A liegt das 30-mm-Rohr frei außen am Turm, beim BTR-82A sitzt es im Turm.'},
+    {id:'bmp1am-bmp2', a:'bmp1:am', b:'bmp2:std', alt:['bmp1:std', 'bmp2:m'],
+      rows:[['tsize', 'kleiner, runder Ein-Mann-Turm vorn-mittig', 'größerer Zwei-Mann-Turm, etwas weiter hinten', 1],
+            ['atgm', 'keine LFK', 'Konkurs-Starter auf dem Turmdach', 0]],
+      same:['cal30', 'bow', 'wheels', 'doors'],
+      note:'Beide tragen ein langes, dünnes 30-mm-Rohr auf einer BMP-Wanne – unterscheide sie am Turm.'}
+  ],
+  pins: {
+    t72: {
+      '0':{sosna:[35,26], era:[50,38], skirt:[42,53,20,9]},
+      '2':{sosna:[68,26], era:[66,37], skirt:[65,56,20,9]},
+      '3':{sosna:[45,36], era:[43,52], skirt:[62,63,20,9]},
+      '28':{sosna:[68,41], era:[44,50]},
+      '12':{era:[[24,24],[45,58]]},
+      '9':{era:[78,48]},
+      '10':{era:[40,73]},
+      '15':{skirt:[25,58,20,9], era:[38,38], turret:[38,38]},
+      '16':{skirt:[20,63], era:[40,55], turret:[40,55]},
+      '17':{skirt:[50,80,22,8], slat:[94,72], era:[47,62], turret:[47,62]},
+      '20':{slat:[12,60], skirt:[35,66], sosna:[37,42]},
+      '21':{skirt:[40,70,20,9], era:[45,55], turret:[45,55]}
+    },
+    t80: {
+      '9':{era:[[35,40],[58,58]]}, '11':{era:[[60,47],[35,62]]}, '12':{era:[38,45]},
+      '17':{era:[54,47], bustle:[18,49]}, '18':{era:[63,40], bustle:[91,41]},
+      '0':{era:[33,50], skirt:[25,63,20,9]}, '1':{skirt:[22,62], era:[30,47]}, '3':{skirt:[25,68], era:[30,55]},
+      '7':{skirt:[30,55], era:[45,42]}, '8':{skirt:[85,72], era:[60,55]}
+    },
+    t90: {
+      '8':{shtora:[[40,64],[85,65]]}, '13':{shtora:[[18,45],[88,45]]}, '14':{shtora:[[35,39],[71,40]]},
+      '0':{shtora:[42,50], turret:[42,50], pan:[57,32], bustle:[78,46]},
+      '1':{shtora:[58,48], turret:[58,48], pan:[49,38]},
+      '3':{shtora:[33,47], turret:[33,47], pan:[29,29]},
+      '6':{shtora:[56,33], turret:[56,33]},
+      '7':{shtora:[35,58], turret:[35,58], pan:[24,42]}
+    },
+    bmp1: {
+      '0':{gun:[46,24], atgm:[60,13]}, '1':{gun:[45,28]}, '3':{gun:[63,30]},
+      '5':{tsize:[52,40], gun:[52,40]}, '7':{gun:[60,27], tsize:[39,18]}, '8':{tsize:[40,37], gun:[40,37]}
+    },
+    bmp2: {
+      '0':{kornet:[47,35], tsize:[47,35]}, '2':{kornet:[52,32], tsize:[52,32]}, '4':{kornet:[54,38], atgm:[54,38]}, '6':{kornet:[59,33], tsize:[59,33]},
+      '9':{kornet:[18,28], sight:[36,24]}, '16':{kornet:[84,34]}
+    },
+    btr: {
+      '7':{gun:[35,14], tsize:[42,25]},
+      '0':{gun:[66,33], tsize:[50,33]}, '1':{gun:[68,18], tsize:[52,22]}, '2':{gun:[33,26], tsize:[46,34]}, '3':{gun:[33,22]}, '5':{gun:[43,40], tsize:[55,47]}
+    }
+  },
+  ladder: {
+    t72:[['Großer Visierkasten mit Sichtfenster vorn auf dem Turmdach (Sosna-U)?', null, 'T-72A oder T-72B – glatter Turm: T-72A, viele kleine Kacheln: T-72B'],
+         ['Kästen (Relikt) in den Seitenschürzen, oft Gitter am Heck?', 'T-72B3M', 'T-72B3']],
+    t80:[['Sosna-U-Kasten auf dem Turmdach und Relikt-Kästen in den Seitenschürzen?', 'T-80BVM', null],
+         ['Viele kleine Kacheln an Turm und Bug?', 'T-80BV', null],
+         ['Große Keile in Hufeisenform um die Turmfront, großer Staukasten am Turmheck?', 'T-80U', 'Bild genauer prüfen – Merkmale verdeckt']],
+    t90:[['Zwei „rote Augen“ (Shtora-Störstrahler) beiderseits der Kanone?', 'T-90A (oder älterer T-90)', null],
+         ['Kantiger Turm mit Relikt und großer Staukorb am Turmheck?', 'T-90M', 'Bild genauer prüfen – Merkmale verdeckt']],
+    bmp1:[['Kurzes, dickes Rohr, darüber eine LFK-Schiene?', 'BMP-1', null],
+          ['Kleiner runder Turm mit langem, dünnem 30-mm-Rohr?', 'BMP-1AM', 'Bild genauer prüfen']],
+    bmp2:[['Je zwei Rohre an beiden Turmseiten (Kornet)?', 'BMP-2M', 'BMP-2 – ein Konkurs-Starter auf dem Turmdach, Seiten frei']],
+    btr:[['Langes, dünnes 30-mm-Rohr?', 'BTR-82A (beim BTR-80A liegt das Rohr außen am Turm)', 'BTR-80 – dickes, kurzes 14,5-mm-MG im kleinen Kegelturm']]
+  },
+  tip:'Im Einsatz verdecken Schutzkäfige, Gitter, Tarnnetze und Schmutz viele Merkmale. Dann zählt, was frei bleibt: Laufwerk, Turmform, Rohr und Schürzen.'
+};
 const FAMS = DATA.families;
 const FAM = Object.fromEntries(FAMS.map(f => [f.id, f]));
 const CATS = DATA.cats;
@@ -302,7 +486,7 @@ const GROUPS = [
   ['Pioniere und Unterstützung', ['mtu','pmp','pts','ur77','imr2','bat2','brem1','gmz3']],
 ];
 const MODES = {
-  mix:  {name:'Gemischte Runde', kinds:['img','cat','air','var','aa','lwr','tis','wpn','cur']},
+  mix:  {name:'Gemischte Runde', kinds:['img','cat','air','var','aa','lwr','tis','wpn','cur','duel']},
   img:  {name:'Fahrzeuge erkennen', kinds:['img']},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true},
   cat:  {name:'Fahrzeugart erkennen', kinds:['cat','air','cur'], tags:['r-']},
@@ -311,6 +495,7 @@ const MODES = {
   sens: {name:'Laser und Wärmebild', kinds:['lwr','tis','cur'], tags:['l-','t-']},
   wpn:  {name:'Wirkmittelwahl', kinds:['wpn','cur'], tags:['w-']},
   var:  {name:'Versionen unterscheiden', kinds:['var']},
+  duel: {name:'Versions-Duell', kinds:['duel']},
   conf: {name:'Verwechslungsgefahr', kinds:['img','var'], confusion:true},
 };
 const UNITS = [];
@@ -367,6 +552,160 @@ async function pushRemote(){
 })();
 
 /* ---------- question bank ---------- */
+/* ---------- Versions-Duell: zwei Versionen gegenüberstellen, Unterschied antippen, benennen, zuordnen ---------- */
+const DF = DUEL.feats;
+const dSplit = k => k.includes(':') ? k.split(':') : [k, null];
+const dName = k => { const [f, v] = dSplit(k); const F = FAM[f]; if (!F) return k; const u = v ? F.vars.find(x => x.v === v) : null; return u ? u.name : F.name; };
+const dFeats = p => p.rows.map(r => r[0]);
+function dPins(fam, i, feats){
+  const p = (DUEL.pins[fam] || {})[i] || {}, out = [];
+  for (const ft of feats) if (p[ft]) (Array.isArray(p[ft][0]) ? p[ft] : [p[ft]]).forEach(q => out.push({ft, x:q[0], y:q[1], rx:q[2] || 11, ry:q[3] || 13}));
+  return out;
+}
+function dImgs(key, feats){
+  const [fam, v] = dSplit(key);
+  return (VAR[fam] || []).map((x, i) => x === v && IMG[fam][i] && dPins(fam, i, feats).length ? i : -1).filter(i => i >= 0);
+}
+const dReady = p => dImgs(p.a, dFeats(p)).length && dImgs(p.b, dFeats(p)).length;
+function dPick(key, feats){
+  const [fam] = dSplit(key), idx = dImgs(key, feats);
+  let i = idx[Math.floor(Math.random() * idx.length)];
+  if (idx.length > 1 && S.lastImg[fam] === i) i = idx[(idx.indexOf(i) + 1) % idx.length];
+  return i;
+}
+function duelSetup(q){
+  const p = DUEL.pairs.find(x => x.id === q.pair), feats = dFeats(p);
+  const sides = shuffle([p.a, p.b]);
+  const imgs = sides.map(k => [dSplit(k)[0], dPick(k, feats)]);
+  const [L, Rk] = sides.map(dName);
+  const others = [...new Set([...(p.alt || []), ...[p.a, p.b].flatMap(k => { const [f] = dSplit(k); return FAM[f].vars.length > 1 ? FAM[f].vars.map(u => `${f}:${u.v}`) : []; })])].filter(k => k !== p.a && k !== p.b && FAM[dSplit(k)[0]]).map(dName);
+  const fmt = (a, b) => `Bild 1: ${a} · Bild 2: ${b}`;
+  const extra = shuffle(others).slice(0, 2).map((o, j) => j % 2 ? fmt(L, o) : fmt(o, Rk));
+  const asgOpts = shuffle([...new Set([fmt(L, Rk), fmt(Rk, L), ...extra])]);
+  const fams = [...new Set([p.a, p.b].map(k => dSplit(k)[0]))];
+  return {q, duel:true, p, feats, sides, imgs, fams, step:'tap', tap:null, asgOpts, asgCi:asgOpts.indexOf(fmt(L, Rk)), nameOpts:null, nameCi:-1, res:{},
+    m:{prompt:`Versions-Duell: ${dName(p.a)} oder ${dName(p.b)}`}};
+}
+function dFig(s, opts = {}){
+  const D = R.cur, [fam, i] = D.imgs[s];
+  const pins = opts.solution ? dPins(fam, i, D.feats).map(pn => ({...pn, n:D.feats.indexOf(pn.ft) + 1})) : [];
+  const t = D.tap && D.tap.s === s ? D.tap : null;
+  return `<figure class="dfig"${opts.tap ? ` data-dtap="${s}"` : opts.solution ? ` data-zoom="${fam}:${i}"` : ''}>
+    <img src="${imgSrc(fam, i)}" alt="Bild ${s + 1}${opts.solution ? ': ' + esc(dName(D.sides[s])) : ''}" draggable="false">
+    <span class="dtag">Bild ${s + 1}${opts.solution ? ' · ' + esc(dName(D.sides[s])) : ''}</span>
+    ${t ? `<span class="dmark" style="left:${t.x}%;top:${t.y}%;--c:${t.ft ? 'var(--ok)' : 'var(--bad)'}" aria-hidden="true"></span>` : ''}
+    ${pins.map(pn => `<span class="pin" style="left:${pn.x}%;top:${pn.y}%">${pn.n}</span>`).join('')}
+  </figure>`;
+}
+function dStepLine(ok, label, txt){
+  return `<p class="dstep" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}"><b>${ok ? '✓' : '✗'} ${label}</b> ${esc(txt)}</p>`;
+}
+function renderDuel(){
+  const D = R.cur;
+  $('#bar').hidden = false;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  const intro = D.fams.length > 1 ? DUEL.intro.x : (DUEL.intro[D.fams[0]] || DUEL.intro.x);
+  const done = [];
+  if (D.res.tap != null) done.push(dStepLine(D.res.tap, 'Markiert:', D.tap && D.tap.ft ? 'Treffer – dort unterscheiden sie sich.' : D.tap ? 'Daneben – dort unterscheiden sie sich nicht.' : 'Keinen Unterschied markiert.'));
+  if (D.res.name != null) done.push(dStepLine(D.res.name, 'Benannt:', D.nameOpts[D.nameCi]));
+  let body = '';
+  if (D.step === 'tap'){
+    body = `<h2 class="prompt">Schritt 1 von 3: Tippe auf einem der beiden Bilder auf eine Stelle, an der sie sich unterscheiden.</h2>
+      <div class="row"><button class="btn" data-dact="skip">Ich sehe keinen Unterschied</button></div>`;
+  } else if (D.step === 'name'){
+    body = `<h2 class="prompt">Schritt 2 von 3: ${D.tap && D.tap.ft ? 'Welcher Unterschied ist das, den du markiert hast?' : 'Woran unterscheiden sich die beiden?'}</h2>
+      <div class="opts" role="group" aria-label="Merkmal">${D.nameOpts.map((o, k) => `<button class="opt" data-dans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+  } else if (D.step === 'asg'){
+    body = `<h2 class="prompt">Schritt 3 von 3: Welche Version siehst du auf welchem Bild?</h2>
+      <div class="opts" role="group" aria-label="Zuordnung">${D.asgOpts.map((o, k) => `<button class="opt" data-dans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+  }
+  $('#app').innerHTML = `
+    <p class="dintro">${esc(intro)}</p>
+    <div class="dgrid">${D.step === 'done' ? '' : dFig(0, {tap:D.step === 'tap'}) + dFig(1, {tap:D.step === 'tap'})}</div>
+    ${D.step === 'done' ? '' : done.join('')}
+    <div id="dstep">${body}</div>
+    <div id="fb"></div>`;
+  if (D.step === 'done') dSolution();
+}
+function dTap(s, ev){
+  const D = R.cur; if (!D || !D.duel || D.step !== 'tap') return;
+  const img = ev.target.closest('[data-dtap]').querySelector('img'), r = img.getBoundingClientRect();
+  const x = (ev.clientX - r.left) / r.width * 100, y = (ev.clientY - r.top) / r.height * 100;
+  const [fam, i] = D.imgs[s];
+  let best = null, bd = 1;
+  for (const pn of dPins(fam, i, D.feats)){ const d = ((x - pn.x) / pn.rx) ** 2 + ((y - pn.y) / pn.ry) ** 2; if (d <= bd){ bd = d; best = pn; } }
+  D.tap = {s, x, y, ft:best ? best.ft : null};
+  dToName();
+}
+function dToName(){
+  const D = R.cur;
+  D.res.tap = !!(D.tap && D.tap.ft);
+  const sure = D.p.rows.find(r => r[3]) || D.p.rows[0];
+  const correct = DF[D.tap && D.tap.ft ? D.tap.ft : sure[0]];
+  D.nameOpts = shuffle([correct, ...shuffle(D.p.same).slice(0, 3).map(f => DF[f])]);
+  D.nameCi = D.nameOpts.indexOf(correct);
+  D.step = 'name'; renderDuel();
+  const st = $('#dstep'); if (st) st.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function dAnswer(k){
+  const D = R.cur;
+  if (D.step === 'name'){
+    D.nameAns = k; D.res.name = k === D.nameCi; D.step = 'asg'; renderDuel();
+    const st = $('#dstep'); if (st) st.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else if (D.step === 'asg'){
+    D.asgAns = k; D.res.asg = k === D.asgCi; D.step = 'done'; dRecord(); renderDuel();
+    const fb = $('#fb'); if (fb) fb.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+function dRecord(){
+  const D = R.cur, q = D.q, ok = D.res.tap && D.res.name && D.res.asg;
+  R.answered = true;
+  const bump = (o, key) => { const s = o[key] || (o[key] = {c:0, w:0}); ok ? s.c++ : s.w++; };
+  bump(S.q, q.id); D.fams.forEach(f => bump(S.fam, f));
+  [D.p.a, D.p.b].forEach(k => { if (UNIT[k]) bump(S.fam, k); });
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  D.imgs.forEach(([f, i]) => { S.lastImg[f] = i; });
+  save();
+  if (ok) R.score++; else R.missed.push({fam:D.fams[0], prompt:`Versions-Duell: ${dName(D.p.a)} oder ${dName(D.p.b)}`, correct:D.asgOpts[D.asgCi]});
+}
+function ladderHtml(fid){
+  const L = DUEL.ladder[fid]; if (!L) return '';
+  return `<ol class="ladder">${L.map(([qq, yes, no]) => `<li><b>${esc(qq)}</b><span><em>Ja:</em> ${yes ? `<strong>${esc(yes)}</strong>` : 'weiter mit der nächsten Frage'}</span><span><em>Nein:</em> ${no ? `<strong>${esc(no)}</strong>` : 'weiter mit der nächsten Frage'}</span></li>`).join('')}</ol>`;
+}
+const ladderSec = fid => DUEL.ladder[fid] ? `<div class="sec"><h3>Erkennungs-Leiter</h3><p class="small muted" style="margin:0 0 6px">Prüfe die Fragen der Reihe nach – die erste passende Antwort ist die Version.</p>${ladderHtml(fid)}</div>` : '';
+function dSolution(){
+  const D = R.cur, p = D.p, q = D.q;
+  const ok = D.res.tap && D.res.name && D.res.asg, n = [D.res.tap, D.res.name, D.res.asg].filter(Boolean).length;
+  const txt = k => k === p.a ? 1 : 2;
+  const col = s => txt(D.sides[s]);
+  const flagged = !!S.flags[q.id];
+  const asgTxt = D.asgOpts[D.asgCi];
+  const btns = [p.a, p.b].map(k => UNIT[k] ? `<button class="btn sm" data-card="${k}">Steckbrief ${esc(dName(k))}</button>` : '').join('') +
+    [...new Set([p.a, p.b].map(k => M3D[k] ? k : null).filter(Boolean))].map(k => `<a class="btn sm" href="${M3D[k][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[k][1])}</a>`).join('');
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig – alle drei Schritte' : `${n} von 3 Schritten richtig`}</div>
+    ${dStepLine(D.res.tap, 'Markiert:', D.tap && D.tap.ft ? `Treffer – ${DF[D.tap.ft]}.` : 'kein Unterschied getroffen. Die Nummern unten zeigen, wo du hättest tippen können.')}
+    ${dStepLine(D.res.name, 'Benannt:', D.res.name ? D.nameOpts[D.nameCi] : `richtig wäre: ${D.nameOpts[D.nameCi]}`)}
+    ${dStepLine(D.res.asg, 'Zugeordnet:', D.res.asg ? asgTxt : `richtig ist: ${asgTxt}`)}
+    <div class="dgrid" style="margin-top:12px">${dFig(0, {solution:true})}${dFig(1, {solution:true})}</div>
+    <div class="sec"><h3>Gegenüberstellung</h3><div class="drows">${p.rows.map((r, k) => `<div class="drow">
+      <div class="dh"><span class="dn">${k + 1}</span><span class="dl">${esc(DF[r[0]])}</span>${r[3] ? '<span class="dsure">sicher</span>' : '<span class="dind">Indiz</span>'}</div>
+      <dl><dt>Bild 1 · ${esc(dName(D.sides[0]))}</dt><dd>${esc(r[col(0)])}</dd><dt>Bild 2 · ${esc(dName(D.sides[1]))}</dt><dd>${esc(r[col(1)])}</dd></dl>
+    </div>`).join('')}</div>
+    <p class="small muted" style="margin:8px 0 0"><span class="dsure">sicher</span> reicht allein für die Zuordnung. <span class="dind">Indiz</span> stützt sie, kann aber fehlen, nachgerüstet oder verdeckt sein.</p>
+    ${p.note ? `<p style="margin:8px 0 0">${esc(p.note)}</p>` : ''}</div>
+    ${D.fams.map(f => DUEL.ladder[f] ? `<div class="sec"><h3>Erkennungs-Leiter ${esc(FAM[f].name)}</h3>${ladderHtml(f)}</div>` : '').join('')}
+    <p class="small muted" style="margin:10px 0 0">${esc(DUEL.tip)}</p>
+    ${btns ? `<div class="capbtns" style="margin-top:12px">${btns}</div>` : ''}
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const nb = $('#fb .btn.main'); if (nb) nb.focus({preventScroll:true});
+}
+
 function buildBank(){
   const bank = [];
   for (const f of FAMS){
@@ -381,6 +720,7 @@ function buildBank(){
     });
   }
   AIR.forEach((_, i) => bank.push({id:`air:${i}`, kind:'air', fam:'air', i}));
+  DUEL.pairs.forEach(p => { if (dReady(p)) bank.push({id:`duel:${p.id}`, kind:'duel', fam:dSplit(p.a)[0], pair:p.id}); });
   for (const [id, fam, q, opts, ex] of DATA.curated) bank.push({id, kind:'cur', fam, q, opts, ex});
   return bank;
 }
@@ -396,6 +736,7 @@ function weight(q, prevFam){
   if (q.fam === prevFam) w *= 0.25;
   if (q.kind === 'img') w *= 0.9;
   if (q.kind === 'var' || q.kind === 'cat') w *= 0.8;
+  if (q.kind === 'duel') w *= 1.6;
   return w;
 }
 function pickRound(mode){
@@ -406,7 +747,7 @@ function pickRound(mode){
   const out = []; let prevFam = null;
   const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
-  const isImg = q => q.kind === 'img' || q.kind === 'var';
+  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'duel';
   while (out.length < n && pool.length){
     const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
@@ -414,6 +755,13 @@ function pickRound(mode){
     const q = pool.splice(k, 1)[0];
     if (isImg(q)) usedImgFam[q.fam] = true;
     out.push(q); prevFam = q.fam;
+  }
+  if (mode === 'mix'){ /* in jeder gemischten Runde mindestens drei Versions-Duelle */
+    const want = Math.min(3, BANK.filter(q => q.kind === 'duel').length);
+    let have = out.filter(q => q.kind === 'duel').length;
+    const rest = BANK.filter(q => q.kind === 'duel' && !out.includes(q)).map(q => [q, weight(q, null) * Math.random()]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+    let guard = 0;
+    while (have < want && rest.length && out.length > 1 && guard++ < 200){ const pos = 1 + Math.floor(Math.random() * (out.length - 1)); if (out[pos].kind !== 'duel'){ out[pos] = rest.shift(); have++; } }
   }
   return out;
 }
@@ -562,6 +910,7 @@ function renderHome(){
     <button class="mode" data-start="sens"><span class="mi"><strong>Laser und Wärmebild</strong><small>Merkt er deinen Laser? Sieht er dich nachts und hinter Deckung?</small></span><span class="n">${countPool('sens')} Fragen</span></button>
     <button class="mode" data-start="wpn"><span class="mi"><strong>Wirkmittelwahl</strong><small>Welche Waffe gegen welche Panzerung, Schwachstellen</small></span><span class="n">${countPool('wpn')} Fragen</span></button>
     <button class="mode" data-start="var"><span class="mi"><strong>Versionen unterscheiden</strong><small>T-72B oder B3, T-90A oder M, BTR-80 oder 82A …</small></span><span class="n">${countPool('var')} Bilder</span></button>
+    <button class="mode" data-start="duel"><span class="mi"><strong>Versions-Duell</strong><small>Zwei Versionen nebeneinander: Unterschied antippen, benennen, zuordnen – mit Gegenüberstellung und Erkennungs-Leiter</small></span><span class="n">${countPool('duel')} Paare</span></button>
     <button class="mode" data-start="conf"><span class="mi"><strong>Verwechslungsgefahr</strong><small>Bilder nur gegen ähnliche Fahrzeuge, z. B. T-72 und T-90</small></span><span class="n">${countPool('conf')} Bilder</span></button>
     <button class="mode" data-act="merk"><span class="mi"><strong>Merkblatt</strong><small>Laser, Wärmebild und Deckung, Bedrohung, Wirkmittel auf einen Blick</small></span><span class="n"></span></button>
     <a class="mode" href="3d/t72.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>3D-Modell T-72</strong><small>Varianten A, B, B3 und B3M umschalten – Merkmale, Wärmebild-Ansicht und Vergleichstabelle</small></span><span class="n">3D</span></a>
@@ -646,6 +995,7 @@ function nextQ(first){
   if (!first) R.i++;
   if (R.i >= R.qs.length){ view = 'end'; return render(); }
   const q = R.qs[R.i];
+  if (q.kind === 'duel'){ R.cur = duelSetup(q); R.answered = false; render(); window.scrollTo(0, 0); return; }
   const m = materialize(q, R.mode);
   const all = [m.correct, ...m.wrong.slice(0, 3)];
   const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
@@ -655,6 +1005,7 @@ function nextQ(first){
   window.scrollTo(0, 0);
 }
 function renderQuiz(){
+  if (R.cur && R.cur.duel) return renderDuel();
   $('#bar').hidden = false;
   const {m, opts} = R.cur;
   setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
@@ -675,7 +1026,7 @@ function fbAnno(f, m){
   return `<div class="annobox"><button class="btn" data-act="anno" aria-expanded="${S.annoOpen ? 'true' : 'false'}">${S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen'}</button><div id="annoarea"${S.annoOpen ? '' : ' hidden'}><p class="small muted" style="margin:10px 0 0">${esc(a.title)}</p>${a.html}</div></div>`;
 }
 function answer(k){
-  if (R.answered) return;
+  if (R.answered || (R.cur && R.cur.duel)) return;
   R.answered = true;
   const {q, m, ci} = R.cur;
   const ok = k === ci;
@@ -856,6 +1207,7 @@ function drawCard(){
     ${m3dBtn(U.key)}
     ${sec(`Woran erkennst du den ${esc(U.name)}?`, unitAnno(f, U) + `<p style="margin:10px 0 0"><strong>${esc(U.recog)}</strong></p><p class="small muted" style="margin:6px 0 0">Gilt für alle ${esc(f.name)}: ${esc(f.recog)}</p>`)}
     ${sec('Unterschied zu den anderen Versionen', others.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join(''))}
+    ${ladderSec(f.id)}
     ${sec('Gefahr für dein Lfz', p(U.aa))}
     ${sec('Laser – merkt er es?', p(lwrLong(U)))}
     ${sec('Nachtsicht und Wärmebild', p(tisLong(U)))}
@@ -869,6 +1221,7 @@ function drawCard(){
     <div class="row" style="margin-top:12px">${f.vars.map(u => `<button class="btn" data-card="${u.key}">Steckbrief ${esc(u.name)}</button>`).join('')}${M3D[f.id] ? `<a class="btn" href="${M3D[f.id][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[f.id][1])}</a>` : ''}</div>
     ${sec('Nutzer', p(f.users))}${bothSec(f)}
     ${ANNO[f.id] ? sec(`Merkmale aller ${esc(f.name)}`, annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
+    ${ladderSec(f.id)}
     ${sec('Versionen unterscheiden', f.vars.map(u => `<div class="vbox">
         <h4>${esc(u.name)}</h4>${unitChips(u)}
         <div style="margin-top:8px">${unitAnno(f, u)}</div>
@@ -942,8 +1295,11 @@ function render(){
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('button,[data-zoom],[data-czoom]');
+  const t = e.target.closest('button,[data-zoom],[data-czoom],[data-dtap]');
   if (!t) return;
+  if (t.dataset.dtap != null){ dTap(Number(t.dataset.dtap), e); return; }
+  if (t.dataset.dans != null){ dAnswer(Number(t.dataset.dans)); return; }
+  if (t.dataset.dact === 'skip' && R && R.cur && R.cur.duel){ R.cur.tap = null; dToName(); return; }
   if (t.dataset.img && cardState){
     e.stopPropagation();
     const n = cardImgs().length;
@@ -1006,6 +1362,7 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
   if (!$('#sheet').hidden){ if (e.key === 'Escape') closeCard(); return; }
   if (view !== 'quiz' || !R) return;
+  if (R.cur && R.cur.duel && !R.answered){ if (/^[1-4]$/.test(e.key) && (R.cur.step === 'name' || R.cur.step === 'asg')){ const k = Number(e.key) - 1; if (k < (R.cur.step === 'name' ? R.cur.nameOpts : R.cur.asgOpts).length) dAnswer(k); } return; }
   if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
   else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
 });
