@@ -47,3 +47,5 @@ Jeder Push auf `main` baut die Website und veröffentlicht sie über GitHub Page
 ## Updates
 
 Beim Build bekommt jede Datei eine Prüfsumme. Der Service Worker lädt beim nächsten Start nur Dateien neu, deren Inhalt sich geändert hat. Seiten kommen aus dem Netz, wenn es innerhalb von drei Sekunden antwortet, sonst aus dem Speicher.
+
+`assets/terms.js` – gemeinsame Fachbegriffe: erscheinen in allen Trainern nach jeder Antwort unter „Hintergrund“ und aufklappbar am Ende jedes Steckbriefs (der Brevity-Trainer hat eine eigene Liste).
