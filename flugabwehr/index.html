@@ -196,6 +196,43 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:va
 .tag{font-family:var(--font-b);font-size:.75rem;font-weight:600;background:var(--cta);color:var(--cta-ink);border-radius:999px;padding:1px 8px;vertical-align:middle}
 .guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
 .foot a{color:var(--ink);text-underline-offset:3px}
+
+/* Versions-Duell */
+.dintro{margin:4px 0 10px;font-family:var(--font-d);font-size:1.15rem;font-weight:600}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+@media (min-width:760px){.dgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.dfig{position:relative;margin:0;border-radius:10px;overflow:hidden;background:var(--feed);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.dfig img{display:block;width:100%;height:auto}
+.dfig[data-dtap]{cursor:crosshair;outline:2px dashed var(--hud);outline-offset:-2px}
+.dfig[data-zoom]{cursor:zoom-in}
+.dtag{position:absolute;left:8px;top:8px;background:rgba(10,14,15,.82);color:#fff;font-family:var(--font-d);font-weight:700;font-size:.82rem;letter-spacing:.05em;padding:2px 8px;border-radius:4px;pointer-events:none}
+.dmark{position:absolute;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;border:3px solid var(--c);box-shadow:0 0 0 2px rgba(0,0,0,.55),inset 0 0 0 2px rgba(0,0,0,.35);pointer-events:none}
+.dfig .pin{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--hud);color:#111;border:2px solid #111;font-family:var(--font-d);font-weight:700;font-size:.95rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.dstep{margin:8px 0 0}
+.dstep b{color:var(--c)}
+.drows{display:grid;gap:8px}
+.drow{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.dh{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-weight:600;line-height:1.3}
+.dh .dn{margin-right:0}
+.dh .dl{flex:1 1 11em;min-width:0}
+.drow dl{margin:6px 0 0;display:grid;grid-template-columns:minmax(0,1fr);gap:2px 10px}
+@media (min-width:560px){.drow dl{grid-template-columns:10.5em minmax(0,1fr)}}
+.drow dt{font-family:var(--font-d);font-weight:600;font-size:.88rem;color:var(--muted)}
+.drow dd{margin:0 0 4px;font-size:.94rem;line-height:1.35}
+.dtabw{overflow-x:auto}
+.dtab{width:100%;border-collapse:collapse;font-size:.93rem;line-height:1.35}
+.dtab th,.dtab td{border-top:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+.dtab th{font-family:var(--font-d);font-weight:600;font-size:.95rem}
+.dtab td:first-child{min-width:9em}
+.dn{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--hud);color:#111;font-family:var(--font-d);font-weight:700;font-size:.8rem;align-items:center;justify-content:center;margin-right:6px;vertical-align:1px}
+.dsure,.dind{display:inline-block;font-size:.72rem;font-weight:600;border-radius:999px;padding:0 7px;vertical-align:1px}
+.dsure{background:var(--ok-bg);color:var(--ok)}
+.dind{background:var(--unk-bg);color:var(--unk)}
+.ladder{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.ladder li{line-height:1.35}
+.ladder li b{display:block}
+.ladder li span{display:block;font-size:.94rem}
+.ladder em{font-style:normal;color:var(--muted);display:inline-block;min-width:3.4em}
 </style>
 <style>
 .cmpwrap{margin-top:8px}
@@ -265,7 +302,7 @@ const MIX_LEN = 30; /* gemischte Runde */
 const GROUPS = DATA.groups;
 const IS2C = APP === '2C';
 const MODES = IS2C ? {
-  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','wez','rwr','elem','var','wpn','cur']},
+  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','wez','rwr','elem','var','wpn','cur','duel']},
   img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true, desc:'Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto'},
   air:  {name:'Aus der Luft erkennen', kinds:['air','cat'], desc:'Drohnen- und Pod-Bilder, auch Wärmebild – dazu die Systemart'},
@@ -274,6 +311,7 @@ const MODES = IS2C ? {
   elem: {name:'Radare und Elemente', kinds:['elem','cur'], tags:['e-'], desc:'Radar erkannt = System erkannt: 30N6, 92N6, 9S18 …'},
   wpn:  {name:'Wirkmittel und Taktik', kinds:['wpn','cur'], tags:['w-'], desc:'Stand-off, SEAD/DEAD oder Lenkbombe – was passt?'},
   var:  {name:'Versionen unterscheiden', kinds:['var'], desc:'Tor-M1 oder M2, Buk-M1/M1-2, M2 oder M3, Pantsir-S1 oder SM'},
+  duel: {name:'Versions-Duell', kinds:['duel'], desc:'Zwei Versionen nebeneinander: Unterschied antippen, benennen, zuordnen – Tor-M1/M2, Buk-M1/M2/M3, mit Erkennungs-Leiter'},
   conf: {name:'Verwechslungsgefahr', kinds:['img','var'], confusion:true, desc:'Bilder nur gegen ähnliche Systeme, z. B. S-300V und S-300P, Buk und Tor'},
 } : {
   mix:  {name:'Gemischte Runde', kinds:['img','air','cat','rng','pos','wpn','ew','cur']},
@@ -342,6 +380,205 @@ async function pushRemote(){
 })();
 
 /* ---------- question bank ---------- */
+const DUEL = {
+  intro: {tor:'Zwei Tor in verschiedenen Versionen.', buk:'Zwei Buk-Startfahrzeuge in verschiedenen Versionen.', x:'Zwei Systeme, die sich stark ähneln.'},
+  feats: {
+    srad:'Form des Suchradars oben auf dem Turm',
+    frad:'Feuerleitradar vorn am Turm – mit oder ohne große runde Haube',
+    launcher:'Lenkflugkörper auf dem Drehstarter – offen oder in Kanistern',
+    chassis:'Kettenfahrgestell',
+    wheels:'Zahl der Laufrollen',
+    frontrad:'Feuerleitradar vorn am Turm',
+    vls:'Lenkflugkörper senkrecht im Turm',
+    open4:'Vier offene Lenkflugkörper auf dem Drehstarter'
+  },
+  pairs: [
+    {id:'tor-m1-m2', a:'tor:m1', b:'tor:m2', alt:['osa', 'buk:m2'],
+      rows:[['srad', 'gewölbte, runde Gitterantenne oben auf dem Turm', 'flache, rechteckige Platte oben auf dem Turm', 1]],
+      same:['chassis', 'frontrad', 'vls', 'wheels'],
+      note:'Beide starten ihre Lenkflugkörper senkrecht aus dem Turm und haben vorn ein Feuerleitradar. Eingeklappt (Marsch) ist das Suchradar kaum zu sehen – dann hilft nur die Bauform des Turms.'},
+    {id:'buk-m1-m2', a:'buk:m12', b:'buk:m2', alt:['buk:m3', 'tor:m2'],
+      rows:[['frad', 'Radar unter großer, runder Haube vorn am Turm', 'flache Radarantenne vorn am Turm, ohne die große runde Haube', 1]],
+      same:['open4', 'chassis', 'wheels'],
+      note:'Beide tragen vier offene Lenkflugkörper. Buk-M1 und M1-2 sehen praktisch gleich aus – nur die Flügel der Lenkflugkörper unterscheiden sich.'},
+    {id:'buk-m2-m3', a:'buk:m2', b:'buk:m3', alt:['buk:m12', 'tor:m2'],
+      rows:[['launcher', 'vier offene Lenkflugkörper auf Startschienen', 'sechs geschlossene Startkanister', 1],
+            ['frad', 'flache Radarantenne ohne große Haube', 'Radar unter einer Haube vorn am Turm', 0]],
+      same:['chassis', 'wheels']},
+    {id:'buk-m1-m3', a:'buk:m12', b:'buk:m3', alt:['buk:m2', 'tor:m1'],
+      rows:[['launcher', 'vier offene Lenkflugkörper auf Startschienen', 'sechs geschlossene Startkanister', 1]],
+      same:['chassis', 'wheels', 'vls']}
+  ],
+  pins: {
+    tor: {'0':{srad:[22,15]}, '1':{srad:[70,12]}, '2':{srad:[37,17]}, '3':{srad:[37,12]}},
+    buk: {
+      '0':{frad:[82,35], launcher:[45,15,18,12]}, '1':{frad:[78,45], launcher:[55,15,18,14]},
+      '2':{frad:[20,45], launcher:[55,30,20,12]}, '3':{launcher:[58,28,22,12]}, '11':{launcher:[38,24,18,12]}, '12':{launcher:[55,24,18,12]},
+      '4':{launcher:[57,22,14,16]}, '5':{launcher:[55,20,12,16], frad:[78,42]}
+    }
+  },
+  ladder: {
+    tor:[['Flache, rechteckige Platte oben auf dem Turm?', 'Tor-M2', 'Tor-M1 – gewölbte, runde Gitterantenne']],
+    buk:[['Sechs geschlossene Kanister auf dem Drehstarter?', 'Buk-M3', null],
+         ['Große, runde Haube über dem Radar vorn am Turm?', 'Buk-M1 oder M1-2', 'Buk-M2 – flache Radarantenne ohne Haube']]
+  },
+  tip:'Im Einsatz stehen diese Systeme oft getarnt oder mit eingeklapptem Radar. Dann zählt, was frei bleibt: Starter, Kanister oder offene Lenkflugkörper und die Bauform des Turms.'
+};
+const VAR = Object.fromEntries(Object.keys(IMG).map(f => [f, IMG[f].map((_, i) => isAir(f, i) ? null : (meta(f, i).v || null))]));
+/* ---------- Versions-Duell: zwei Versionen gegenüberstellen, Unterschied antippen, benennen, zuordnen ---------- */
+const DF = DUEL.feats;
+const dSplit = k => k.includes(':') ? k.split(':') : [k, null];
+const dName = k => { const [f, v] = dSplit(k); const F = FAM[f]; if (!F) return k; const u = v ? F.vars.find(x => x.v === v) : null; return u ? u.name : F.name; };
+const dFeats = p => p.rows.map(r => r[0]);
+function dPins(fam, i, feats){
+  const p = (DUEL.pins[fam] || {})[i] || {}, out = [];
+  for (const ft of feats) if (p[ft]) (Array.isArray(p[ft][0]) ? p[ft] : [p[ft]]).forEach(q => out.push({ft, x:q[0], y:q[1], rx:q[2] || 11, ry:q[3] || 13}));
+  return out;
+}
+function dImgs(key, feats){
+  const [fam, v] = dSplit(key);
+  return (VAR[fam] || []).map((x, i) => x === v && IMG[fam][i] && dPins(fam, i, feats).length ? i : -1).filter(i => i >= 0);
+}
+const dReady = p => dImgs(p.a, dFeats(p)).length && dImgs(p.b, dFeats(p)).length;
+function dPick(key, feats){
+  const [fam] = dSplit(key), idx = dImgs(key, feats);
+  let i = idx[Math.floor(Math.random() * idx.length)];
+  if (idx.length > 1 && S.lastImg[fam] === i) i = idx[(idx.indexOf(i) + 1) % idx.length];
+  return i;
+}
+function duelSetup(q){
+  const p = DUEL.pairs.find(x => x.id === q.pair), feats = dFeats(p);
+  const sides = shuffle([p.a, p.b]);
+  const imgs = sides.map(k => [dSplit(k)[0], dPick(k, feats)]);
+  const [L, Rk] = sides.map(dName);
+  const others = [...new Set([...(p.alt || []), ...[p.a, p.b].flatMap(k => { const [f] = dSplit(k); return FAM[f].vars.length > 1 ? FAM[f].vars.map(u => `${f}:${u.v}`) : []; })])].filter(k => k !== p.a && k !== p.b && FAM[dSplit(k)[0]]).map(dName);
+  const fmt = (a, b) => `Bild 1: ${a} · Bild 2: ${b}`;
+  const extra = shuffle(others).slice(0, 2).map((o, j) => j % 2 ? fmt(L, o) : fmt(o, Rk));
+  const asgOpts = shuffle([...new Set([fmt(L, Rk), fmt(Rk, L), ...extra])]);
+  const fams = [...new Set([p.a, p.b].map(k => dSplit(k)[0]))];
+  return {q, duel:true, p, feats, sides, imgs, fams, step:'tap', tap:null, asgOpts, asgCi:asgOpts.indexOf(fmt(L, Rk)), nameOpts:null, nameCi:-1, res:{},
+    m:{prompt:`Versions-Duell: ${dName(p.a)} oder ${dName(p.b)}`}};
+}
+function dFig(s, opts = {}){
+  const D = R.cur, [fam, i] = D.imgs[s];
+  const pins = opts.solution ? dPins(fam, i, D.feats).map(pn => ({...pn, n:D.feats.indexOf(pn.ft) + 1})) : [];
+  const t = D.tap && D.tap.s === s ? D.tap : null;
+  return `<figure class="dfig"${opts.tap ? ` data-dtap="${s}"` : opts.solution ? ` data-zoom="${fam}:${i}"` : ''}>
+    <img src="${imgSrc(fam, i)}" alt="Bild ${s + 1}${opts.solution ? ': ' + esc(dName(D.sides[s])) : ''}" draggable="false">
+    <span class="dtag">Bild ${s + 1}${opts.solution ? ' · ' + esc(dName(D.sides[s])) : ''}</span>
+    ${t ? `<span class="dmark" style="left:${t.x}%;top:${t.y}%;--c:${t.ft ? 'var(--ok)' : 'var(--bad)'}" aria-hidden="true"></span>` : ''}
+    ${pins.map(pn => `<span class="pin" style="left:${pn.x}%;top:${pn.y}%">${pn.n}</span>`).join('')}
+  </figure>`;
+}
+function dStepLine(ok, label, txt){
+  return `<p class="dstep" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}"><b>${ok ? '✓' : '✗'} ${label}</b> ${esc(txt)}</p>`;
+}
+function renderDuel(){
+  const D = R.cur;
+  $('#bar').hidden = false;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  const intro = D.fams.length > 1 ? DUEL.intro.x : (DUEL.intro[D.fams[0]] || DUEL.intro.x);
+  const done = [];
+  if (D.res.tap != null) done.push(dStepLine(D.res.tap, 'Markiert:', D.tap && D.tap.ft ? 'Treffer – dort unterscheiden sie sich.' : D.tap ? 'Daneben – dort unterscheiden sie sich nicht.' : 'Keinen Unterschied markiert.'));
+  if (D.res.name != null) done.push(dStepLine(D.res.name, 'Benannt:', D.nameOpts[D.nameCi]));
+  let body = '';
+  if (D.step === 'tap'){
+    body = `<h2 class="prompt">Schritt 1 von 3: Tippe auf einem der beiden Bilder auf eine Stelle, an der sie sich unterscheiden.</h2>
+      <div class="row"><button class="btn" data-dact="skip">Ich sehe keinen Unterschied</button></div>`;
+  } else if (D.step === 'name'){
+    body = `<h2 class="prompt">Schritt 2 von 3: ${D.tap && D.tap.ft ? 'Welcher Unterschied ist das, den du markiert hast?' : 'Woran unterscheiden sich die beiden?'}</h2>
+      <div class="opts" role="group" aria-label="Merkmal">${D.nameOpts.map((o, k) => `<button class="opt" data-dans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+  } else if (D.step === 'asg'){
+    body = `<h2 class="prompt">Schritt 3 von 3: Welche Version siehst du auf welchem Bild?</h2>
+      <div class="opts" role="group" aria-label="Zuordnung">${D.asgOpts.map((o, k) => `<button class="opt" data-dans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+  }
+  $('#app').innerHTML = `
+    <p class="dintro">${esc(intro)}</p>
+    <div class="dgrid">${D.step === 'done' ? '' : dFig(0, {tap:D.step === 'tap'}) + dFig(1, {tap:D.step === 'tap'})}</div>
+    ${D.step === 'done' ? '' : done.join('')}
+    <div id="dstep">${body}</div>
+    <div id="fb"></div>`;
+  if (D.step === 'done') dSolution();
+}
+function dTap(s, ev){
+  const D = R.cur; if (!D || !D.duel || D.step !== 'tap') return;
+  const img = ev.target.closest('[data-dtap]').querySelector('img'), r = img.getBoundingClientRect();
+  const x = (ev.clientX - r.left) / r.width * 100, y = (ev.clientY - r.top) / r.height * 100;
+  const [fam, i] = D.imgs[s];
+  let best = null, bd = 1;
+  for (const pn of dPins(fam, i, D.feats)){ const d = ((x - pn.x) / pn.rx) ** 2 + ((y - pn.y) / pn.ry) ** 2; if (d <= bd){ bd = d; best = pn; } }
+  D.tap = {s, x, y, ft:best ? best.ft : null};
+  dToName();
+}
+function dToName(){
+  const D = R.cur;
+  D.res.tap = !!(D.tap && D.tap.ft);
+  const sure = D.p.rows.find(r => r[3]) || D.p.rows[0];
+  const correct = DF[D.tap && D.tap.ft ? D.tap.ft : sure[0]];
+  D.nameOpts = shuffle([correct, ...shuffle(D.p.same).slice(0, 3).map(f => DF[f])]);
+  D.nameCi = D.nameOpts.indexOf(correct);
+  D.step = 'name'; renderDuel();
+  const st = $('#dstep'); if (st) st.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function dAnswer(k){
+  const D = R.cur;
+  if (D.step === 'name'){
+    D.nameAns = k; D.res.name = k === D.nameCi; D.step = 'asg'; renderDuel();
+    const st = $('#dstep'); if (st) st.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else if (D.step === 'asg'){
+    D.asgAns = k; D.res.asg = k === D.asgCi; D.step = 'done'; dRecord(); renderDuel();
+    const fb = $('#fb'); if (fb) fb.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+function dRecord(){
+  const D = R.cur, q = D.q, ok = D.res.tap && D.res.name && D.res.asg;
+  R.answered = true;
+  const bump = (o, key) => { const s = o[key] || (o[key] = {c:0, w:0}); ok ? s.c++ : s.w++; };
+  bump(S.q, q.id); D.fams.forEach(f => bump(S.fam, f));
+  [D.p.a, D.p.b].forEach(k => { if (UNIT[k]) bump(S.fam, k); });
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  D.imgs.forEach(([f, i]) => { S.lastImg[f] = i; });
+  save();
+  if (ok) R.score++; else R.missed.push({fam:D.fams[0], prompt:`Versions-Duell: ${dName(D.p.a)} oder ${dName(D.p.b)}`, correct:D.asgOpts[D.asgCi]});
+}
+function ladderHtml(fid){
+  const L = DUEL.ladder[fid]; if (!L) return '';
+  return `<ol class="ladder">${L.map(([qq, yes, no]) => `<li><b>${esc(qq)}</b><span><em>Ja:</em> ${yes ? `<strong>${esc(yes)}</strong>` : 'weiter mit der nächsten Frage'}</span><span><em>Nein:</em> ${no ? `<strong>${esc(no)}</strong>` : 'weiter mit der nächsten Frage'}</span></li>`).join('')}</ol>`;
+}
+const ladderSec = fid => DUEL.ladder[fid] ? `<div class="sec"><h3>Erkennungs-Leiter</h3><p class="small muted" style="margin:0 0 6px">Prüfe die Fragen der Reihe nach – die erste passende Antwort ist die Version.</p>${ladderHtml(fid)}</div>` : '';
+function dSolution(){
+  const D = R.cur, p = D.p, q = D.q;
+  const ok = D.res.tap && D.res.name && D.res.asg, n = [D.res.tap, D.res.name, D.res.asg].filter(Boolean).length;
+  const txt = k => k === p.a ? 1 : 2;
+  const col = s => txt(D.sides[s]);
+  const flagged = !!S.flags[q.id];
+  const asgTxt = D.asgOpts[D.asgCi];
+  const btns = [p.a, p.b].map(k => UNIT[k] ? `<button class="btn sm" data-card="${k}">Steckbrief ${esc(dName(k))}</button>` : '').join('') +
+    [...new Set([p.a, p.b].map(k => M3D[k] ? k : null).filter(Boolean))].map(k => `<a class="btn sm" href="${M3D[k][0]}" style="color:inherit;text-decoration:none">3D-Modell ${esc(M3D[k][1])}</a>`).join('');
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig – alle drei Schritte' : `${n} von 3 Schritten richtig`}</div>
+    ${dStepLine(D.res.tap, 'Markiert:', D.tap && D.tap.ft ? `Treffer – ${DF[D.tap.ft]}.` : 'kein Unterschied getroffen. Die Nummern unten zeigen, wo du hättest tippen können.')}
+    ${dStepLine(D.res.name, 'Benannt:', D.res.name ? D.nameOpts[D.nameCi] : `richtig wäre: ${D.nameOpts[D.nameCi]}`)}
+    ${dStepLine(D.res.asg, 'Zugeordnet:', D.res.asg ? asgTxt : `richtig ist: ${asgTxt}`)}
+    <div class="dgrid" style="margin-top:12px">${dFig(0, {solution:true})}${dFig(1, {solution:true})}</div>
+    <div class="sec"><h3>Gegenüberstellung</h3><div class="drows">${p.rows.map((r, k) => `<div class="drow">
+      <div class="dh"><span class="dn">${k + 1}</span><span class="dl">${esc(DF[r[0]])}</span>${r[3] ? '<span class="dsure">sicher</span>' : '<span class="dind">Indiz</span>'}</div>
+      <dl><dt>Bild 1 · ${esc(dName(D.sides[0]))}</dt><dd>${esc(r[col(0)])}</dd><dt>Bild 2 · ${esc(dName(D.sides[1]))}</dt><dd>${esc(r[col(1)])}</dd></dl>
+    </div>`).join('')}</div>
+    <p class="small muted" style="margin:8px 0 0"><span class="dsure">sicher</span> reicht allein für die Zuordnung. <span class="dind">Indiz</span> stützt sie, kann aber fehlen, nachgerüstet oder verdeckt sein.</p>
+    ${p.note ? `<p style="margin:8px 0 0">${esc(p.note)}</p>` : ''}</div>
+    ${D.fams.map(f => DUEL.ladder[f] ? `<div class="sec"><h3>Erkennungs-Leiter ${esc(FAM[f].name)}</h3>${ladderHtml(f)}</div>` : '').join('')}
+    <p class="small muted" style="margin:10px 0 0">${esc(DUEL.tip)}</p>
+    ${btns ? `<div class="capbtns" style="margin-top:12px">${btns}</div>` : ''}
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const nb = $('#fb .btn.main'); if (nb) nb.focus({preventScroll:true});
+}
+
 function buildBank(){
   const bank = [];
   for (const f of FAMS){
@@ -363,6 +600,7 @@ function buildBank(){
     }
   }
   for (const [id, fam, q, opts, ex] of DATA.curated) bank.push({id, kind:'cur', fam, q, opts, ex});
+  if (IS2C) DUEL.pairs.forEach(p => { if (dReady(p)) bank.push({id:`duel:${p.id}`, kind:'duel', fam:dSplit(p.a)[0], pair:p.id}); });
   return bank;
 }
 const BANK = buildBank();
@@ -377,6 +615,7 @@ function weight(q, prevFam){
   if (q.fam === prevFam) w *= 0.25;
   if (q.kind === 'img') w *= 0.9;
   if (q.kind === 'var' || q.kind === 'cat' || q.kind === 'elem') w *= 0.8;
+  if (q.kind === 'duel') w *= 1.6;
   return w;
 }
 function poolFor(mode){
@@ -392,7 +631,7 @@ function pickRound(mode){
   const out = []; let prevFam = null;
   const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
-  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'air' || q.kind === 'elem';
+  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'air' || q.kind === 'elem' || q.kind === 'duel';
   while (out.length < n && pool.length){
     const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
@@ -400,6 +639,13 @@ function pickRound(mode){
     const q = pool.splice(k, 1)[0];
     if (isImg(q)) usedImgFam[q.fam] = true;
     out.push(q); prevFam = q.fam;
+  }
+  if (mode === 'mix'){ /* in jeder gemischten Runde mindestens drei Versions-Duelle */
+    const want = Math.min(3, BANK.filter(q => q.kind === 'duel').length);
+    let have = out.filter(q => q.kind === 'duel').length;
+    const rest = BANK.filter(q => q.kind === 'duel' && !out.includes(q)).map(q => [q, weight(q, null) * Math.random()]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+    let guard = 0;
+    while (have < want && rest.length && out.length > 1 && guard++ < 200){ const pos = 1 + Math.floor(Math.random() * (out.length - 1)); if (out[pos].kind !== 'duel'){ out[pos] = rest.shift(); have++; } }
   }
   return out;
 }
@@ -665,6 +911,7 @@ function nextQ(first){
   if (!first) R.i++;
   if (R.i >= R.qs.length){ view = 'end'; return render(); }
   const q = R.qs[R.i];
+  if (q.kind === 'duel'){ R.cur = duelSetup(q); R.answered = false; render(); window.scrollTo(0, 0); return; }
   const m = materialize(q, R.mode);
   const all = uniq([m.correct, ...m.wrong.slice(0, 3)]);
   const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
@@ -674,6 +921,7 @@ function nextQ(first){
   window.scrollTo(0, 0);
 }
 function renderQuiz(){
+  if (R.cur && R.cur.duel) return renderDuel();
   $('#bar').hidden = false;
   const {m, opts} = R.cur;
   setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
@@ -695,7 +943,7 @@ function fbAnno(f, m){
   return `<div class="annobox"><button class="btn" data-act="anno" aria-expanded="${S.annoOpen ? 'true' : 'false'}">${S.annoOpen ? 'Erkennungsmerkmale ausblenden' : 'Erkennungsmerkmale zeigen'}</button><div id="annoarea"${S.annoOpen ? '' : ' hidden'}><p class="small muted" style="margin:10px 0 0">${esc(a.title)}</p>${a.html}</div></div>`;
 }
 function answer(k){
-  if (R.answered) return;
+  if (R.answered || (R.cur && R.cur.duel)) return;
   R.answered = true;
   const {q, m, ci} = R.cur;
   const ok = k === ci;
@@ -909,6 +1157,7 @@ function drawCard(){
     ${cmpSec(f)}
     ${sec('Unterschied zu den anderen Versionen', others.map(x => `<div class="vbox"><h4>${esc(x.name)}</h4><p style="margin:4px 0 0">${esc(x.recog)}</p><button class="linkbtn" data-card="${x.key}" style="margin-top:6px">Steckbrief ${esc(x.name)}</button></div>`).join(''))}
     ${verSec(f)}
+    ${ladderSec(f.id)}
     ${sec('Bekämpfungszone', p(U.wez || '–'))}
     ${sec('Warnt dein Radarwarner?', p(rwrTxt(U)))}
     ${common}
@@ -921,6 +1170,7 @@ function drawCard(){
     ${sec('Nutzer', p(f.users))}
     ${pinsFor(f.id, 0) ? sec(`Merkmale aller ${esc(f.name)}`, annoHtml(f) + `<p style="margin:10px 0 0">${esc(f.recog)}</p>`) : sec('Erkennung', p(f.recog))}
     ${cmpSec(f)}
+    ${ladderSec(f.id)}
     ${sec('Versionen unterscheiden', f.vars.map(u => `<div class="vbox">
         <h4>${esc(u.name)}</h4>${unitChips(u)}
         <div style="margin-top:8px">${unitAnno(f, u)}</div>
@@ -998,8 +1248,11 @@ function render(){
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('button,[data-zoom],[data-czoom]');
+  const t = e.target.closest('button,[data-zoom],[data-czoom],[data-dtap]');
   if (!t) return;
+  if (t.dataset.dtap != null){ dTap(Number(t.dataset.dtap), e); return; }
+  if (t.dataset.dans != null){ dAnswer(Number(t.dataset.dans)); return; }
+  if (t.dataset.dact === 'skip' && R && R.cur && R.cur.duel){ R.cur.tap = null; dToName(); return; }
   if (t.dataset.img && cardState){
     e.stopPropagation();
     const n = cardImgs().length;
@@ -1062,6 +1315,7 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
   if (!$('#sheet').hidden){ if (e.key === 'Escape') closeCard(); return; }
   if (view !== 'quiz' || !R) return;
+  if (R.cur && R.cur.duel && !R.answered){ if (/^[1-4]$/.test(e.key) && (R.cur.step === 'name' || R.cur.step === 'asg')){ const k = Number(e.key) - 1; if (k < (R.cur.step === 'name' ? R.cur.nameOpts : R.cur.asgOpts).length) dAnswer(k); } return; }
   if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
   else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
 });
