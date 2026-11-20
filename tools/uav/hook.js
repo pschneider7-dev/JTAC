@@ -45,5 +45,20 @@
       });
       return {url:url, pins:pins};
     }
-    return {setGround:setGround, shot:shot, mode:function(m){ setMode(m); }};
+    function sprite(o){
+      if(ground) ground.visible = false; bushes.forEach(function(b){ b.visible = false; });
+      if(typeof grid !== 'undefined' && grid) grid.visible = false;
+      turret.visible = !o.noTurret;
+      var Wd = o.w || 960, Hd = o.h || 720;
+      renderer.setPixelRatio(1); renderer.setSize(Wd, Hd, false); camera.aspect = Wd/Hd; camera.updateProjectionMatrix();
+      var D = Math.PI/180; cam.az = o.az*D; cam.el = o.el*D; cam.r = o.r; cam.t.copy(CENTER);
+      placeCamera(); scene.updateMatrixWorld(true); renderer.render(scene, camera);
+      var url = renderer.domElement.toDataURL('image/png');
+      function proj(v){ var p = v.clone().project(camera); return [(p.x*0.5 + 0.5)*Wd, (-p.y*0.5 + 0.5)*Hd]; }
+      var bow = null; FL().forEach(function(f){ if((f.id === 'bow' || f.id === 'bug') && f.anchor){ var w = new T.Vector3(); f.anchor.getWorldPosition(w); bow = proj(w); } });
+      var hb = new T.Box3().setFromObject(hull), c = hb.getCenter(new T.Vector3());
+      turret.visible = true;
+      return {url:url, center:proj(c), bow:bow, hullLen:+(hb.max.x - hb.min.x).toFixed(2), hullW:+(hb.max.z - hb.min.z).toFixed(2)};
+    }
+    return {setGround:setGround, shot:shot, sprite:sprite, mode:function(m){ setMode(m); }};
   })();
