@@ -7,6 +7,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,6 +15,52 @@ OUT = os.path.join(ROOT, '_site')
 SKIP_DIRS = {'.git', '.github', '_site', 'tools'}
 SKIP_FILES = {'README.md', '.gitignore'}
 NOT_PRECACHED = ('.txt', '.md')
+IMG_EXT = ('.webp', '.jpg', '.jpeg', '.png', '.gif', '.svg')
+TEXT_EXT = ('.html', '.js', '.css', '.json', '.webmanifest')
+IMG_REF = re.compile(r'(?<![\w/.-])((?:\.\./)*(?:[\w-]+/)*img/)([\w.-]+?\.(?:webp|jpe?g|png|gif|svg))(?![\w.-])')
+
+
+def hash_images():
+    """Gibt jedem Bild in einem img/-Ordner einen Namen mit Prüfsumme (t90-8.webp → t90-8.3fa91c2e.webp)
+    und trägt die neuen Namen in alle Seiten und Skripte ein. Ein geändertes Bild bekommt so immer eine neue
+    Adresse: Eine zwischengespeicherte alte Seite kann nie das neue Bild mit den alten Markierungen zeigen."""
+    names = {}
+    for dirpath, _, filenames in os.walk(OUT):
+        if os.path.basename(dirpath) != 'img':
+            continue
+        for name in filenames:
+            if not name.lower().endswith(IMG_EXT):
+                continue
+            path = os.path.join(dirpath, name)
+            with open(path, 'rb') as fh:
+                digest = hashlib.sha256(fh.read()).hexdigest()[:8]
+            base, ext = os.path.splitext(name)
+            new = f'{base}.{digest}{ext}'
+            os.rename(path, os.path.join(dirpath, new))
+            names[os.path.relpath(path, OUT).replace(os.sep, '/')] = new
+    broken = []
+    for dirpath, _, filenames in os.walk(OUT):
+        for name in filenames:
+            if not name.endswith(TEXT_EXT) or name == 'sw.js':
+                continue
+            path = os.path.join(dirpath, name)
+            with open(path, encoding='utf-8') as fh:
+                text = fh.read()
+            here = os.path.relpath(dirpath, OUT)
+
+            def swap(m):
+                target = os.path.normpath(os.path.join(here, m.group(1), m.group(2))).replace(os.sep, '/')
+                if target in names:
+                    return m.group(1) + names[target]
+                broken.append(f'{os.path.relpath(path, OUT)}: {m.group(0)}')
+                return m.group(0)
+            new_text = IMG_REF.sub(swap, text)
+            if new_text != text:
+                with open(path, 'w', encoding='utf-8') as fh:
+                    fh.write(new_text)
+    if broken:
+        raise SystemExit('Bildverweise ohne Datei:\n  ' + '\n  '.join(sorted(set(broken))[:40]))
+    return len(names)
 
 
 def site_files():
@@ -32,18 +79,24 @@ def main():
     import gen_symbole  # Symbol-Trainer: Fahrzeugnamen und -bilder aus den Rot-Trainern
     gen_symbole.main()
     shutil.rmtree(OUT, ignore_errors=True)
-    entries = []
     for rel in site_files():
         dest = os.path.join(OUT, rel)
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         shutil.copy2(os.path.join(ROOT, rel), dest)
-        if rel == 'sw.js' or rel.endswith(NOT_PRECACHED):
-            continue
-        with open(dest, 'rb') as fh:
-            digest = hashlib.sha256(fh.read()).hexdigest()[:12]
-        # Seiten werden über ihren Ordner aufgerufen („manoever/“ statt „manoever/index.html“)
-        url = rel[:-len('index.html')] if rel.endswith('index.html') else rel
-        entries.append([url or './', digest])
+    n_img = hash_images()
+    entries = []
+    for dirpath, dirnames, filenames in os.walk(OUT):
+        dirnames.sort()
+        for name in sorted(filenames):
+            dest = os.path.join(dirpath, name)
+            rel = os.path.relpath(dest, OUT).replace(os.sep, '/')
+            if rel == 'sw.js' or rel.endswith(NOT_PRECACHED):
+                continue
+            with open(dest, 'rb') as fh:
+                digest = hashlib.sha256(fh.read()).hexdigest()[:12]
+            # Seiten werden über ihren Ordner aufgerufen („manoever/“ statt „manoever/index.html“)
+            url = rel[:-len('index.html')] if rel.endswith('index.html') else rel
+            entries.append([url or './', digest])
 
     # Seiten und Skripte zuerst, Bilder danach
     entries.sort(key=lambda e: ('/img/' in e[0], e[0]))
@@ -61,7 +114,7 @@ def main():
     with open(sw_path, 'w', encoding='utf-8') as fh:
         fh.write(sw)
 
-    print(f'_site/ gebaut: {len(entries)} Dateien offline verfügbar, Version {version}')
+    print(f'_site/ gebaut: {len(entries)} Dateien offline verfügbar ({n_img} Bilder mit Prüfsummen-Namen), Version {version}')
 
 
 if __name__ == '__main__':

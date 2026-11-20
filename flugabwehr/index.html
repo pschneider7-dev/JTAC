@@ -593,6 +593,7 @@ const partPins = (fid, i) => pinsFor(fid, i) || (i === 0 && typeof ANNO !== 'und
 const PART_TXT = {netz:'Unter einem Tarnnetz ist nur ein Teil zu sehen.', laub:'Im Bewuchs ist nur ein Teil zu sehen.',
   wall:'Das Fahrzeug steht hinter einem Erdwall – nur der obere Teil ist zu sehen.', zoom:'Enges Sichtfeld (Pod-Zoom): nur ein Ausschnitt.'};
 const PART_HUD = {netz:'NETZ', laub:'BEWUCHS', wall:'STELLUNG', zoom:'ZOOM'};
+const COVERS = ['img/cover-0.webp', 'img/cover-1.webp', 'img/cover-2.webp', 'img/cover-3.webp', 'img/cover-4.webp']; /* feste Pfade, damit der Build sie umbenennen kann */
 /* Bildkoordinaten (Prozent des Fotos) auf den 4:3-Rahmen umrechnen – das Foto wird mit Rand eingepasst */
 function figPt(x, y, ar){ const F = 4 / 3; return ar >= F ? [x, 50 + (y - 50) * F / ar] : [50 + (x - 50) * ar / F, y]; }
 function makePart(fid, i, k){
@@ -609,11 +610,11 @@ function partHtml(fid, i, p){
   let cover = '';
   if (p.kind === 'netz' || p.kind === 'laub'){
     const g = `radial-gradient(ellipse ${p.rx}% ${p.ry}% at ${X.toFixed(1)}% ${Y.toFixed(1)}%, transparent 55%, #000 100%)`;
-    cover = `<div class="cover" style="background-image:url(img/cover-${p.tex}.webp);-webkit-mask-image:${g};mask-image:${g}"></div>`;
+    cover = `<div class="cover" style="background-image:url(${COVERS[p.tex]});-webkit-mask-image:${g};mask-image:${g}"></div>`;
   } else if (p.kind === 'wall'){
     const top = Math.min(90, Y + 8);
     const pts = p.wave.map((d, j) => `${j * 10}% ${(top + d).toFixed(1)}%`).concat(['100% 100%', '0% 100%']).join(',');
-    cover = `<div class="cover" style="background-image:url(img/cover-4.webp);clip-path:polygon(${pts});-webkit-clip-path:polygon(${pts})"></div>`;
+    cover = `<div class="cover" style="background-image:url(${COVERS[4]});clip-path:polygon(${pts});-webkit-clip-path:polygon(${pts})"></div>`;
   }
   return `<figure class="feed part" data-partzoom="${fid}:${i}">
     <div class="pin-in" style="transform:scale(${p.s});transform-origin:${X.toFixed(1)}% ${Y.toFixed(1)}%"><img src="${imgSrc(fid, i)}" alt="Teilweise verdecktes Fahrzeug">${cover}</div>${hudSvg()}
