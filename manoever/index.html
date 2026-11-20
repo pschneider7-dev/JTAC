@@ -95,6 +95,13 @@ h3{font-size:1.25rem;font-weight:600}
 .feed .nav.l{left:8px} .feed .nav.r{right:8px}
 .feed canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .feed.fx:not(.open){cursor:default}
+.feed.part{cursor:default}
+.feed.part .pin-in{position:absolute;inset:0;transition:transform .6s}
+.feed.part .pin-in img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed.part .cover{position:absolute;inset:-2px;background-size:cover;background-position:center;opacity:.97;transition:opacity .6s}
+.feed.part.open .cover{opacity:0}
+.feed.part.open .pin-in{transform:none!important}
+.feed.part.open{cursor:zoom-in}
 .feed.fx img,.feed.fx canvas{transition:filter .5s,transform .5s}
 .feed.fx-whot img,.feed.fx-whot canvas{filter:grayscale(1) invert(1) contrast(1.35) brightness(1.05) blur(.6px)}
 .feed.fx-bhot img,.feed.fx-bhot canvas{filter:grayscale(1) contrast(1.5) blur(.6px)}
@@ -560,9 +567,10 @@ const GROUPS = [
   ['Pioniere und Unterstützung', ['mtu','pmp','pts','ur77','imr2','bat2','brem1','gmz3']],
 ];
 const MODES = {
-  mix:  {name:'Gemischte Runde', kinds:['img','cat','air','uav','var','aa','lwr','tis','wpn','cur','duel']},
+  mix:  {name:'Gemischte Runde', kinds:['img','cat','air','uav','part','var','aa','lwr','tis','wpn','cur','duel']},
   img:  {name:'Fahrzeuge erkennen', kinds:['img']},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true},
+  part: {name:'Teilweise verdeckt', kinds:['part']},
   uav:  {name:'Drohnenblick', kinds:['uav']},
   cat:  {name:'Fahrzeugart erkennen', kinds:['cat','air','cur'], tags:['r-']},
   side: {name:'Wer fährt was?', kinds:['side','cur'], tags:['s-']},
@@ -781,12 +789,52 @@ function dSolution(){
   const nb = $('#fb .btn.main'); if (nb) nb.focus({preventScroll:true});
 }
 
+/* ---------- Teilweise verdeckt: nur ein Merkmal bleibt frei ---------- */
+const partPins = (fid, i) => pinsFor(fid, i) || (i === 0 && typeof ANNO !== 'undefined' ? ANNO[fid] : null) || null;
+const PART_TXT = {netz:'Unter einem Tarnnetz ist nur ein Teil zu sehen.', laub:'Im Bewuchs ist nur ein Teil zu sehen.',
+  wall:'Das Fahrzeug steht hinter einem Erdwall – nur der obere Teil ist zu sehen.', zoom:'Enges Sichtfeld (Pod-Zoom): nur ein Ausschnitt.'};
+const PART_HUD = {netz:'NETZ', laub:'BEWUCHS', wall:'STELLUNG', zoom:'ZOOM'};
+/* Bildkoordinaten (Prozent des Fotos) auf den 4:3-Rahmen umrechnen – das Foto wird mit Rand eingepasst */
+function figPt(x, y, ar){ const F = 4 / 3; return ar >= F ? [x, 50 + (y - 50) * F / ar] : [50 + (x - 50) * ar / F, y]; }
+function makePart(fid, i, k){
+  const pins = partPins(fid, i), [px, py] = pins[k], ar = (ARS[fid] || [])[i] || 4 / 3;
+  const kinds = ['netz', 'netz', 'laub', 'laub', 'zoom']; if (py <= 58) kinds.push('wall', 'wall');
+  const kind = kinds[Math.floor(Math.random() * kinds.length)];
+  const p = {kind, x:px, y:py, ar, s:kind === 'zoom' ? +(2.2 + Math.random() * .5).toFixed(2) : +(1.2 + Math.random() * .3).toFixed(2),
+    rx:Math.round(12 + Math.random() * 6), ry:Math.round(15 + Math.random() * 7), tex:kind === 'netz' ? Math.floor(Math.random() * 2) : kind === 'laub' ? 2 + Math.floor(Math.random() * 2) : 4};
+  if (kind === 'wall') p.wave = Array.from({length:11}, () => +(Math.random() * 5 - 2.5).toFixed(1));
+  return p;
+}
+function partHtml(fid, i, p){
+  const [X, Y] = figPt(p.x, p.y, p.ar);
+  let cover = '';
+  if (p.kind === 'netz' || p.kind === 'laub'){
+    const g = `radial-gradient(ellipse ${p.rx}% ${p.ry}% at ${X.toFixed(1)}% ${Y.toFixed(1)}%, transparent 55%, #000 100%)`;
+    cover = `<div class="cover" style="background-image:url(img/cover-${p.tex}.webp);-webkit-mask-image:${g};mask-image:${g}"></div>`;
+  } else if (p.kind === 'wall'){
+    const top = Math.min(90, Y + 8);
+    const pts = p.wave.map((d, j) => `${j * 10}% ${(top + d).toFixed(1)}%`).concat(['100% 100%', '0% 100%']).join(',');
+    cover = `<div class="cover" style="background-image:url(img/cover-4.webp);clip-path:polygon(${pts});-webkit-clip-path:polygon(${pts})"></div>`;
+  }
+  return `<figure class="feed part" data-partzoom="${fid}:${i}">
+    <div class="pin-in" style="transform:scale(${p.s});transform-origin:${X.toFixed(1)}% ${Y.toFixed(1)}%"><img src="${imgSrc(fid, i)}" alt="Teilweise verdecktes Fahrzeug">${cover}</div>${hudSvg()}
+    <span class="hud tl">${p.kind === 'zoom' ? 'NFOV' : 'TV'}</span><span class="hud tr">${PART_HUD[p.kind]}</span>
+  </figure>`;
+}
+function partReveal(){
+  const fig = document.querySelector('.feed.part'); if (!fig) return;
+  fig.classList.add('open'); fig.dataset.zoom = fig.dataset.partzoom;
+  const tl = fig.querySelector('.hud.tl'), tr = fig.querySelector('.hud.tr');
+  if (tl) tl.textContent = 'ORIGINAL'; if (tr) tr.textContent = '';
+}
+
 function buildBank(){
   const bank = [];
   for (const f of FAMS){
     const imgs = IMG[f.id] || [];
     imgs.forEach((_, i) => bank.push({id:`img:${f.id}:${i}`, kind:'img', fam:f.id, i}));
     if (multi(f)) imgs.forEach((_, i) => { if (VAR[f.id][i] && pinsFor(f.id, i)) bank.push({id:`var:${f.id}:${i}`, kind:'var', fam:f.id, i}); });
+    imgs.forEach((_, i) => { const pp = partPins(f.id, i); if (pp) pp.forEach((_, k) => bank.push({id:`part:${f.id}:${i}:${k}`, kind:'part', fam:f.id, i, k})); });
     bank.push({id:`cat:${f.id}`, kind:'cat', fam:f.id});
     if (f.side) bank.push({id:`side:${f.id}`, kind:'side', fam:f.id});
     bank.push({id:`wpn:${f.id}`, kind:'wpn', fam:f.id});
@@ -813,6 +861,7 @@ function weight(q, prevFam){
   if (q.kind === 'img') w *= 0.9;
   if (q.kind === 'var' || q.kind === 'cat') w *= 0.8;
   if (q.kind === 'duel') w *= 1.6;
+  if (q.kind === 'part') w *= 0.45;
   return w;
 }
 function pickRound(mode){
@@ -823,7 +872,7 @@ function pickRound(mode){
   const out = []; let prevFam = null;
   const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
-  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'duel' || q.kind === 'uav';
+  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'duel' || q.kind === 'uav' || q.kind === 'part';
   while (out.length < n && pool.length){
     const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
@@ -931,6 +980,16 @@ function materialize(q, mode){
         unit:uu && multi(f) ? uu : null, correct:askVar ? uu.name : f.name, wrong:askVar ? varDistractors(f, uu) : nameDistractors(f, true),
         ex:`${uu && multi(f) ? uu.name : f.name}, ${look}. Von oben: ${UAVTIP[f.id] || f.recog}` + (askVar && uu.recog ? ` Diese Version: ${uu.recog}` : '') + confTxt + ' Hinweis: Das Bild ist aus dem vereinfachten 3D-Modell der App erzeugt. Echte Drohnenbilder sind unschärfer und oft verwackelt, das Fahrzeug ist häufig getarnt oder teilweise verdeckt.'};
     }
+    case 'part': {
+      const part = makePart(f.id, q.i, q.k), pt = partPins(f.id, q.i)[q.k][2], uu = unitOfImg(f, q.i);
+      let feat = null;
+      for (const [ft, v] of Object.entries((DUEL.pins[f.id] || {})[q.i] || {}))
+        for (const c of (Array.isArray(v[0]) ? v : [v])) if (!feat && Math.hypot(c[0] - part.x, c[1] - part.y) < 8) feat = ft;
+      const askVar = !!(uu && multi(f) && feat && Math.random() < .6);
+      return {prompt:`${PART_TXT[part.kind]} ${askVar ? `Welche Version des ${f.name} ist das?` : 'Welches Fahrzeug ist das?'}`, img:[f.id, q.i], part, partK:q.k,
+        unit:uu && multi(f) ? uu : null, correct:askVar ? uu.name : f.name, wrong:askVar ? varDistractors(f, uu) : nameDistractors(f, true),
+        ex:`Im Ausschnitt zu sehen: ${pt}.` + (askVar ? ` Das ist ein Versionsmerkmal – ${DF[feat]}: daran erkennst du den ${uu.name}.` : '') + ` ${f.name}: ${f.recog}` + confTxt + ` ${DUEL.tip}`};
+    }
     case 'aa':
       return {unit:u, prompt:`${u.name}: Was ist die größte Gefahr für einen Hubschrauber?`, img:randomImg(f, u), correct:u.aaQ[0], wrong:shuffle(u.aaQ[1]).slice(0, 3),
         ex:`${u.aa} ${DATA.fj}`};
@@ -989,6 +1048,7 @@ function renderHome(){
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="img"><span class="mi"><strong>Fahrzeuge erkennen</strong><small>Welches Fahrzeug ist das? Mit markierten Erkennungsmerkmalen</small></span><span class="n">${nImg} Bilder</span></button>
     <button class="mode" data-start="sicht"><span class="mi"><strong>Unter Sichtbedingungen</strong><small>Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto</small></span><span class="n">${nImg} Bilder</span></button>
+    <button class="mode" data-start="part"><span class="mi"><strong>Teilweise verdeckt</strong><small>Tarnnetz, Bewuchs, Erdwall oder enger Pod-Zoom: nur ein Merkmal bleibt frei – erkennen an dem, was du siehst</small></span><span class="n">${countPool('part')} Ausschnitte</span></button>
     <button class="mode" data-start="uav"><span class="mi"><strong>Drohnenblick</strong><small>Fahrzeuge schräg und senkrecht von oben, bei Tag und im Wärmebild – so wie im UAV- oder Pod-Bild. Danach markiert: was du von oben erkennst</small></span><span class="n">${countPool('uav')} Bilder</span></button>
     <button class="mode" data-start="cat"><span class="mi"><strong>Fahrzeugart erkennen</strong><small>KPz, SPz, Radfahrzeug, Panzerjäger – auch aus Drohnen- und Pod-Perspektive</small></span><span class="n">${countPool('cat')} Fragen</span></button>
     <button class="mode" data-start="side"><span class="mi"><strong>Wer fährt was?</strong><small>Welche Fahrzeuge setzen Russland und die Ukraine beide ein – Freund oder Feind nie am Typ festmachen</small></span><span class="n">${countPool('side')} Fragen</span></button>
@@ -1020,6 +1080,7 @@ function hudSvg(){
   <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
 }
 function feedHtml(famId, i, opts = {}){
+  if (opts.part) return partHtml(famId, i, opts.part);
   const fx = opts.fx;
   const cls = fx ? ` fx${fx.tone ? ' fx-' + fx.tone : ''}${fx.geo ? ' fx-' + fx.geo : ''}` : '';
   const st = fx && fx.geo === 'crop' ? ` style="transform:scale(${fx.s});transform-origin:${fx.x}% ${fx.y}%"` : '';
@@ -1096,7 +1157,7 @@ function renderQuiz(){
   const {m, opts} = R.cur;
   setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
   $('#app').innerHTML = `
-    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx}) : ''}
+    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx, part:m.part}) : ''}
     <h2 class="prompt">${esc(m.prompt)}</h2>
     <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
     <div id="fb"></div>`;
@@ -1104,6 +1165,7 @@ function renderQuiz(){
 }
 function fbAnno(f, m){
   if (!f) return '';
+  if (m.part) return `<div class="sec"><h3>Merkmale auf diesem Bild – im Ausschnitt war Nr. ${m.partK + 1}</h3>${annoFig(f.id, m.img[1], partPins(f.id, m.img[1]), m.correct)}</div>`;
   if (m.img && m.img[0] === 'uav') return `<div class="sec"><h3>Was du von oben erkennst</h3>${annoFig('uav', m.img[1], UAV[m.img[1]].pins, m.correct)}</div>`;
   const idx = m.img && m.img[0] === f.id ? m.img[1] : null;
   if (m.pinsNow){
@@ -1122,7 +1184,7 @@ function answer(k){
     if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
   });
   const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
-  fxReveal();
+  fxReveal(); partReveal();
   ok ? qs.c++ : qs.w++;
   const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
   ok ? fs.c++ : fs.w++;
@@ -1137,6 +1199,7 @@ function answer(k){
   const flagged = !!S.flags[q.id];
   $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
     <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    ${m.part ? `<p class="fxnote">Oben siehst du jetzt das ganze Bild.</p>` : ''}
     ${R.cur.fx ? `<p class="fxnote">Ansicht: ${esc(fxLabel(R.cur.fx))}. Oben siehst du jetzt das Originalbild.</p>` : ''}
     <p>${esc(m.ex)}</p>
     ${fbAnno(f, m)}
