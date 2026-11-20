@@ -356,8 +356,17 @@ function pickRound(mode){
 
 /* distractor helpers */
 const typeAlternatives = t => Object.keys(TYPES).filter(x => x !== t && TYPES[x].grp === TYPES[t].grp && !(DATA.typeExclude[t] || []).includes(x));
-function nameDistractors(f, strict){
-  const pool = FAMS.filter(x => x.g === f.g && x.id !== f.id);
+/* Waffen, die sich im Bild nur durch die Größe (oder gar nicht) unterscheiden: bei Bildfragen nie gemeinsam zur Auswahl */
+const LOOKALIKE = [
+  {ids:['gbu38', 'gbu32', 'gbu31'], note:'GBU-38, GBU-32 und GBU-31 sind dasselbe JDAM-Heckkit auf 500-, 1000- und 2000-lb-Bomben. Im Bild unterscheiden sie sich nur durch die Größe – ohne Maßstab nicht sicher. Deshalb stand nur eine von ihnen zur Wahl. Die Größe schätzt du nur im Vergleich (Träger, Pylon, Personen, andere Bomben).'},
+  {ids:['gbu12', 'gbu16', 'gbu10', 'egbu'], note:'GBU-12, GBU-16 und GBU-10 sind derselbe Paveway-II-Laserlenksatz auf 500-, 1000- und 2000-lb-Bomben; die Enhanced Paveway sieht fast gleich aus. Im Bild ohne Maßstab nicht sicher zu trennen – deshalb stand nur eine von ihnen zur Wahl.'},
+  {ids:['mk82', 'mk84'], note:'Mk 82 und Mk 84 unterscheiden sich im Bild nur durch die Größe – ohne Maßstab nicht sicher. Deshalb stand nur eine von beiden zur Wahl.'},
+  {ids:['cbu87', 'cbu97'], note:'CBU-87 und CBU-97 nutzen fast den gleichen Behälter und sehen von außen gleich aus – sicher nur über die Beschriftung. Deshalb stand nur eine von beiden zur Wahl.'},
+];
+const lookOf = id => LOOKALIKE.find(g => g.ids.includes(id)) || null;
+function nameDistractors(f, strict, excl = []){
+  const pool = FAMS.filter(x => x.g === f.g && x.id !== f.id && !excl.includes(x.id));
+  f = {...f, confuse:f.confuse.filter(id => !excl.includes(id))};
   const conf = shuffle(f.confuse.map(id => FAM[id]).filter(Boolean));
   const same = shuffle(pool.filter(x => x.type === f.type && !f.confuse.includes(x.id)));
   const rest = shuffle(pool.filter(x => x.type !== f.type && !f.confuse.includes(x.id)));
@@ -386,9 +395,11 @@ function materialize(q, mode){
   const strict = MODES[mode].confusion;
   const confTxt = f && f.confuse.length ? ` Verwechslungsgefahr mit ${f.confuse.map(c => FAM[c].name).join(', ')}.` : '';
   switch (q.kind){
-    case 'img':
-      return {prompt:'Welche Waffe ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict),
-        ex:`${f.name}: ${TYPES[f.type].label}. Erkennung: ${f.recog}` + confTxt};
+    case 'img': {
+      const lg = lookOf(f.id), excl = lg ? lg.ids.filter(x => x !== f.id) : [];
+      return {prompt:'Welche Waffe ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict, excl),
+        ex:`${f.name}: ${TYPES[f.type].label}. Erkennung: ${f.recog}` + confTxt + (lg ? ' ' + lg.note : '')};
+    }
     case 'pimg':
       return {prompt:'Welches Luftfahrzeug ist das?', img:[f.id, q.i], correct:f.name, wrong:nameDistractors(f, strict),
         ex:`${f.name}: ${f.role}. Erkennung: ${f.recog}` + confTxt};
