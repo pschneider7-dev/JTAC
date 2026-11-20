@@ -431,9 +431,14 @@ const DUEL = {
   pins: {
     tor: {'0':{srad:[22,15]}, '1':{srad:[70,12]}, '2':{srad:[37,17]}, '3':{srad:[37,12]}},
     buk: {
-      '0':{frad:[72,33,17,17], launcher:[45,15,18,12]}, '1':{frad:[84,45,16,15], launcher:[55,15,18,14]},
-      '2':{frad:[20,45], launcher:[55,30,20,12]}, '3':{launcher:[58,28,22,12]}, '11':{launcher:[38,24,18,12]}, '12':{launcher:[55,24,18,12]},
-      '4':{launcher:[57,22,14,16]}, '5':{launcher:[55,20,12,16], frad:[80,42,14,12]}
+      '0':{frad:[71,33,18,17], launcher:[[22,22,12,10],[40,18,13,11],[56,14,10,9]]},
+      '1':{frad:[85,46,16,16], launcher:[[60,14,13,12],[47,30,14,14],[35,45,12,12]]},
+      '2':{frad:[18,45,10,14], launcher:[[35,30,12,9],[55,28,12,9],[75,27,12,9]]},
+      '3':{frad:[21,46,9,15], launcher:[[47,28,14,11],[68,28,14,11]]},
+      '11':{launcher:[[27,26,10,9],[40,25,11,9],[53,26,8,8]]},
+      '12':{frad:[24,36,8,12], launcher:[[45,24,13,11],[65,24,13,11],[80,24,8,9]]},
+      '4':{launcher:[[53,14,10,12],[44,29,11,12],[35,44,10,12],[29,57,8,8]]},
+      '5':{launcher:[[53,13,9,11],[51,30,9,12],[50,45,8,10]], frad:[80,42,15,13]}
     }
   },
   ladder: {
@@ -524,7 +529,7 @@ function dTap(s, ev){
   const img = ev.target.closest('[data-dtap]').querySelector('img'), r = img.getBoundingClientRect();
   const x = (ev.clientX - r.left) / r.width * 100, y = (ev.clientY - r.top) / r.height * 100;
   const [fam, i] = D.imgs[s];
-  let best = null, bd = 1;
+  let best = null, bd = 1.35; /* etwas Toleranz: ein Tipp knapp neben dem Bauteil zählt noch */
   for (const pn of dPins(fam, i, D.feats)){ const d = ((x - pn.x) / pn.rx) ** 2 + ((y - pn.y) / pn.ry) ** 2; if (d <= bd){ bd = d; best = pn; } }
   D.tap = {s, x, y, ft:best ? best.ft : null};
   dToName();
