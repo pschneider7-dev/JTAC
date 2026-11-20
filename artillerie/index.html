@@ -95,6 +95,14 @@ h3{font-size:1.25rem;font-weight:600}
 .feed .nav.l{left:8px} .feed .nav.r{right:8px}
 .feed canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .feed.fx:not(.open){cursor:default}
+.feed.blitz{cursor:default}
+.feed.blitz img{visibility:hidden}
+.feed.blitz.show img,.feed.blitz.open img{visibility:visible}
+.feed.blitz .bl{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 24px;text-align:center;background:var(--feed);color:var(--hud);font-family:var(--font-d);font-weight:600;font-size:1.25rem;letter-spacing:.06em}
+.feed.blitz .bl small{font-family:inherit;font-weight:400;font-size:.85rem;letter-spacing:0;opacity:.85}
+.feed.blitz.show .bl,.feed.blitz.open .bl{display:none}
+.feed.blitz.open{cursor:zoom-in}
+.opts.wait .opt{opacity:.45}
 .feed.part{cursor:default}
 .feed.part .pin-in{position:absolute;inset:0;transition:transform .6s}
 .feed.part .pin-in img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
@@ -282,6 +290,7 @@ const MODES = IS2C ? {
   mix:  {name:'Gemischte Runde', kinds:['img','air','cat','part','wez','rwr','elem','var','wpn','cur']},
   img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true, desc:'Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto'},
+  blitz:{name:'Blitzerkennung', kinds:['img'], blitz:true, desc:'Das Bild steht nur kurz – wie ein schneller Blick durchs Glas. Die Zeit passt sich an: richtig = kürzer, falsch = länger'},
   part: {name:'Teilweise verdeckt', kinds:['part'], desc:'Tarnnetz, Bewuchs, Erdwall oder enger Pod-Zoom: nur ein Merkmal bleibt frei – erkennen an dem, was du siehst'},
   air:  {name:'Aus der Luft erkennen', kinds:['air','cat'], desc:'Drohnen- und Pod-Bilder, auch Wärmebild – dazu die Systemart'},
   thr:  {name:'Bekämpfungszone', kinds:['wez','cur'], tags:['t-'], desc:'Wie weit und wie hoch reicht welches System?'},
@@ -294,6 +303,7 @@ const MODES = IS2C ? {
   mix:  {name:'Gemischte Runde', kinds:['img','air','cat','part','rng','pos','wpn','ew','cur']},
   img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true, desc:'Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto'},
+  blitz:{name:'Blitzerkennung', kinds:['img'], blitz:true, desc:'Das Bild steht nur kurz – wie ein schneller Blick durchs Glas. Die Zeit passt sich an: richtig = kürzer, falsch = länger'},
   part: {name:'Teilweise verdeckt', kinds:['part'], desc:'Tarnnetz, Bewuchs, Erdwall oder enger Pod-Zoom: nur ein Merkmal bleibt frei – erkennen an dem, was du siehst'},
   air:  {name:'Art erkennen – auch aus der Luft', kinds:['air','cat','cur'], tags:['a-'], desc:'Panzerhaubitze, Geschütz, Raketenwerfer – auch auf Drohnenbildern'},
   rng:  {name:'Reichweite und Stellung', kinds:['rng','pos','cur'], tags:['r-'], desc:'Wie weit schießt sie, wie weit hinter der Front steht sie?'},
@@ -396,6 +406,45 @@ function partReveal(){
   fig.classList.add('open'); fig.dataset.zoom = fig.dataset.partzoom;
   const tl = fig.querySelector('.hud.tl'), tr = fig.querySelector('.hud.tr');
   if (tl) tl.textContent = 'ORIGINAL'; if (tr) tr.textContent = '';
+}
+
+/* ---------- Blitzerkennung: Bild nur kurz sichtbar, Zeit passt sich an ---------- */
+const BLITZ_MIN = 500, BLITZ_MAX = 2500, BLITZ_START = 1800;
+const wantBlitz = q => q.kind === 'img' && (!!MODES[R.mode].blitz || (R.mode === 'mix' && Math.random() < .12));
+const blitzMs = () => Math.min(BLITZ_MAX, Math.max(BLITZ_MIN, Math.round((S.blitzMs || BLITZ_START) / 100) * 100));
+const fmtS = ms => (ms / 1000).toFixed(1).replace('.', ',') + ' s';
+let blitzTimers = [];
+function blitzStop(){ blitzTimers.forEach(clearTimeout); blitzTimers = []; }
+function blitzHtml(famId, i, B){
+  return feedHtml(famId, i, {}).replace('<figure class="feed" data-zoom=', '<figure class="feed blitz" data-bzoom=')
+    .replace(/<\/figure>\s*$/, `<div class="bl" aria-live="polite"><strong>Bild lädt …</strong></div></figure>`);
+}
+function blitzRun(){
+  blitzStop();
+  const B = R.cur.blitz, fig = document.querySelector('.feed.blitz'), box = document.querySelector('.opts');
+  if (!fig || !box) return;
+  B.ready = false; box.classList.add('wait'); box.querySelectorAll('.opt').forEach(b => { b.disabled = true; });
+  const msg = (t, sub) => { const o = fig.querySelector('.bl'); if (o) o.innerHTML = `<strong>${t}</strong>${sub ? `<small>${sub}</small>` : ''}`; };
+  const im = fig.querySelector('img'); let started = false;
+  const go = () => {
+    if (started) return; started = true;
+    msg('Achtung', `Das Bild erscheint gleich für ${fmtS(B.ms)}`);
+    blitzTimers.push(setTimeout(() => fig.classList.add('show'), 1200));
+    blitzTimers.push(setTimeout(() => {
+      fig.classList.remove('show'); msg('Bild weg', 'Was hast du gesehen?');
+      B.ready = true; box.classList.remove('wait'); box.querySelectorAll('.opt').forEach(b => { b.disabled = false; });
+    }, 1200 + B.ms));
+  };
+  if (im && im.complete && im.naturalWidth) go();
+  else { if (im){ im.addEventListener('load', go, {once:true}); im.addEventListener('error', go, {once:true}); } blitzTimers.push(setTimeout(go, 4000)); }
+}
+function blitzReveal(ok){
+  const B = R.cur && R.cur.blitz; if (!B) return;
+  blitzStop();
+  const fig = document.querySelector('.feed.blitz'); if (fig){ fig.classList.add('open'); fig.dataset.zoom = fig.dataset.bzoom; }
+  const next = Math.min(BLITZ_MAX, Math.max(BLITZ_MIN, Math.round((B.ms + (ok ? -200 : 300)) / 100) * 100));
+  S.blitzMs = next;
+  B.note = `Das Bild war ${fmtS(B.ms)} zu sehen. ${ok ? 'Richtig erkannt – beim nächsten Blitzbild etwas kürzer' : 'Beim nächsten Blitzbild etwas länger'}: ${fmtS(next)}.`;
 }
 
 function buildBank(){
@@ -670,6 +719,7 @@ function hudSvg(){
   <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
 }
 function feedHtml(famId, i, opts = {}){
+  if (opts.blitz) return blitzHtml(famId, i, opts.blitz);
   if (opts.part) return partHtml(famId, i, opts.part);
   const fx = opts.fx;
   const cls = fx ? ` fx${fx.tone ? ' fx-' + fx.tone : ''}${fx.geo ? ' fx-' + fx.geo : ''}` : '';
@@ -729,13 +779,16 @@ function startRound(mode){
   view = 'quiz'; nextQ(true);
 }
 function nextQ(first){
+  blitzStop();
   if (!first) R.i++;
   if (R.i >= R.qs.length){ view = 'end'; return render(); }
   const q = R.qs[R.i];
   const m = materialize(q, R.mode);
   const all = uniq([m.correct, ...m.wrong.slice(0, 3)]);
   const opts = m.order ? m.order.filter(o => all.includes(o)) : shuffle(all);
-  R.cur = {q, m, opts, ci:opts.indexOf(m.correct), fx:m.img && wantFx(q) ? pickFx(m.img[0], m.img[1]) : null};
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct), blitz:null, fx:null};
+  if (m.img && !m.part && wantBlitz(q)) R.cur.blitz = {ms:blitzMs(), ready:false};
+  else if (m.img && wantFx(q)) R.cur.fx = pickFx(m.img[0], m.img[1]);
   R.answered = false;
   render();
   window.scrollTo(0, 0);
@@ -745,11 +798,12 @@ function renderQuiz(){
   const {m, opts} = R.cur;
   setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
   $('#app').innerHTML = `
-    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx, part:m.part}) : ''}
+    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx, part:m.part, blitz:R.cur.blitz}) : ''}
     <h2 class="prompt">${esc(m.prompt)}</h2>
     <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
     <div id="fb"></div>`;
   if (R.cur.fx && R.cur.fx.geo === 'far') farPaint();
+  if (R.cur.blitz && !R.answered) blitzRun();
 }
 function fbAnno(f, m){
   if (!f) return '';
@@ -764,6 +818,7 @@ function fbAnno(f, m){
 }
 function answer(k){
   if (R.answered) return;
+  if (R.cur && R.cur.blitz && !R.cur.blitz.ready) return;
   R.answered = true;
   const {q, m, ci} = R.cur;
   const ok = k === ci;
@@ -772,7 +827,7 @@ function answer(k){
     if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
   });
   const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
-  fxReveal(); partReveal();
+  fxReveal(); partReveal(); blitzReveal(ok);
   ok ? qs.c++ : qs.w++;
   const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
   ok ? fs.c++ : fs.w++;
@@ -792,6 +847,7 @@ function answer(k){
   $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
     <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
     ${m.part ? `<p class="fxnote">Oben siehst du jetzt das ganze Bild.</p>` : ''}
+    ${R.cur.blitz && R.cur.blitz.note ? `<p class="fxnote">${esc(R.cur.blitz.note)}</p>` : ''}
     ${R.cur.fx ? `<p class="fxnote">Ansicht: ${esc(fxLabel(R.cur.fx))}. Oben siehst du jetzt das Originalbild.</p>` : ''}
     <p>${esc(m.ex)}</p>
     ${cmpFb}
