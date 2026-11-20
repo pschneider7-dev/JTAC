@@ -95,6 +95,13 @@ h3{font-size:1.25rem;font-weight:600}
 .feed .nav.l{left:8px} .feed .nav.r{right:8px}
 .feed canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .feed.fx:not(.open){cursor:default}
+.feed.part{cursor:default}
+.feed.part .pin-in{position:absolute;inset:0;transition:transform .6s}
+.feed.part .pin-in img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.feed.part .cover{position:absolute;inset:-2px;background-size:cover;background-position:center;opacity:.97;transition:opacity .6s}
+.feed.part.open .cover{opacity:0}
+.feed.part.open .pin-in{transform:none!important}
+.feed.part.open{cursor:zoom-in}
 .feed.fx img,.feed.fx canvas{transition:filter .5s,transform .5s}
 .feed.fx-whot img,.feed.fx-whot canvas{filter:grayscale(1) invert(1) contrast(1.35) brightness(1.05) blur(.6px)}
 .feed.fx-bhot img,.feed.fx-bhot canvas{filter:grayscale(1) contrast(1.5) blur(.6px)}
@@ -272,9 +279,10 @@ const MIX_LEN = 30; /* gemischte Runde */
 const GROUPS = DATA.groups;
 const IS2C = APP === '2C';
 const MODES = IS2C ? {
-  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','wez','rwr','elem','var','wpn','cur']},
+  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','part','wez','rwr','elem','var','wpn','cur']},
   img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true, desc:'Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto'},
+  part: {name:'Teilweise verdeckt', kinds:['part'], desc:'Tarnnetz, Bewuchs, Erdwall oder enger Pod-Zoom: nur ein Merkmal bleibt frei – erkennen an dem, was du siehst'},
   air:  {name:'Aus der Luft erkennen', kinds:['air','cat'], desc:'Drohnen- und Pod-Bilder, auch Wärmebild – dazu die Systemart'},
   thr:  {name:'Bekämpfungszone', kinds:['wez','cur'], tags:['t-'], desc:'Wie weit und wie hoch reicht welches System?'},
   rwr:  {name:'Radarwarner und Gegenmaßnahmen', kinds:['rwr','cur'], tags:['r-'], desc:'Warnt dein RWR? Flares oder Chaff?'},
@@ -283,9 +291,10 @@ const MODES = IS2C ? {
   var:  {name:'Versionen unterscheiden', kinds:['var'], desc:'Tor-M1 oder M2, Buk-M1/M1-2, M2 oder M3, Pantsir-S1 oder SM'},
   conf: {name:'Verwechslungsgefahr', kinds:['img','var'], confusion:true, desc:'Bilder nur gegen ähnliche Systeme, z. B. S-300V und S-300P, Buk und Tor'},
 } : {
-  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','rng','pos','wpn','ew','cur']},
+  mix:  {name:'Gemischte Runde', kinds:['img','air','cat','part','rng','pos','wpn','ew','cur']},
   img:  {name:'Systeme erkennen', kinds:['img'], desc:'Welches System ist das? Mit markierten Erkennungsmerkmalen'},
   sicht:{name:'Unter Sichtbedingungen', kinds:['img'], fx:true, desc:'Wärmebild-Optik, Dunst, Dämmerung, große Entfernung oder nur ein Ausschnitt – erkennen an Merkmalen statt am bekannten Foto'},
+  part: {name:'Teilweise verdeckt', kinds:['part'], desc:'Tarnnetz, Bewuchs, Erdwall oder enger Pod-Zoom: nur ein Merkmal bleibt frei – erkennen an dem, was du siehst'},
   air:  {name:'Art erkennen – auch aus der Luft', kinds:['air','cat','cur'], tags:['a-'], desc:'Panzerhaubitze, Geschütz, Raketenwerfer – auch auf Drohnenbildern'},
   rng:  {name:'Reichweite und Stellung', kinds:['rng','pos','cur'], tags:['r-'], desc:'Wie weit schießt sie, wie weit hinter der Front steht sie?'},
   wpn:  {name:'Wirkmittel und Zeitfenster', kinds:['wpn','cur'], tags:['w-'], desc:'Welche Waffe, wann zuschlagen, was mitbekämpfen?'},
@@ -349,11 +358,51 @@ async function pushRemote(){
 })();
 
 /* ---------- question bank ---------- */
+/* ---------- Teilweise verdeckt: nur ein Merkmal bleibt frei ---------- */
+const partPins = (fid, i) => pinsFor(fid, i) || (i === 0 && typeof ANNO !== 'undefined' ? ANNO[fid] : null) || null;
+const PART_TXT = {netz:'Unter einem Tarnnetz ist nur ein Teil zu sehen.', laub:'Im Bewuchs ist nur ein Teil zu sehen.',
+  wall:'Das Fahrzeug steht hinter einem Erdwall – nur der obere Teil ist zu sehen.', zoom:'Enges Sichtfeld (Pod-Zoom): nur ein Ausschnitt.'};
+const PART_HUD = {netz:'NETZ', laub:'BEWUCHS', wall:'STELLUNG', zoom:'ZOOM'};
+/* Bildkoordinaten (Prozent des Fotos) auf den 4:3-Rahmen umrechnen – das Foto wird mit Rand eingepasst */
+function figPt(x, y, ar){ const F = 4 / 3; return ar >= F ? [x, 50 + (y - 50) * F / ar] : [50 + (x - 50) * ar / F, y]; }
+function makePart(fid, i, k){
+  const pins = partPins(fid, i), [px, py] = pins[k], ar = (ARS[fid] || [])[i] || 4 / 3;
+  const kinds = ['netz', 'netz', 'laub', 'laub', 'zoom']; if (py <= 58) kinds.push('wall', 'wall');
+  const kind = kinds[Math.floor(Math.random() * kinds.length)];
+  const p = {kind, x:px, y:py, ar, s:kind === 'zoom' ? +(2.2 + Math.random() * .5).toFixed(2) : +(1.2 + Math.random() * .3).toFixed(2),
+    rx:Math.round(12 + Math.random() * 6), ry:Math.round(15 + Math.random() * 7), tex:kind === 'netz' ? Math.floor(Math.random() * 2) : kind === 'laub' ? 2 + Math.floor(Math.random() * 2) : 4};
+  if (kind === 'wall') p.wave = Array.from({length:11}, () => +(Math.random() * 5 - 2.5).toFixed(1));
+  return p;
+}
+function partHtml(fid, i, p){
+  const [X, Y] = figPt(p.x, p.y, p.ar);
+  let cover = '';
+  if (p.kind === 'netz' || p.kind === 'laub'){
+    const g = `radial-gradient(ellipse ${p.rx}% ${p.ry}% at ${X.toFixed(1)}% ${Y.toFixed(1)}%, transparent 55%, #000 100%)`;
+    cover = `<div class="cover" style="background-image:url(img/cover-${p.tex}.webp);-webkit-mask-image:${g};mask-image:${g}"></div>`;
+  } else if (p.kind === 'wall'){
+    const top = Math.min(90, Y + 8);
+    const pts = p.wave.map((d, j) => `${j * 10}% ${(top + d).toFixed(1)}%`).concat(['100% 100%', '0% 100%']).join(',');
+    cover = `<div class="cover" style="background-image:url(img/cover-4.webp);clip-path:polygon(${pts});-webkit-clip-path:polygon(${pts})"></div>`;
+  }
+  return `<figure class="feed part" data-partzoom="${fid}:${i}">
+    <div class="pin-in" style="transform:scale(${p.s});transform-origin:${X.toFixed(1)}% ${Y.toFixed(1)}%"><img src="${imgSrc(fid, i)}" alt="Teilweise verdecktes Fahrzeug">${cover}</div>${hudSvg()}
+    <span class="hud tl">${p.kind === 'zoom' ? 'NFOV' : 'TV'}</span><span class="hud tr">${PART_HUD[p.kind]}</span>
+  </figure>`;
+}
+function partReveal(){
+  const fig = document.querySelector('.feed.part'); if (!fig) return;
+  fig.classList.add('open'); fig.dataset.zoom = fig.dataset.partzoom;
+  const tl = fig.querySelector('.hud.tl'), tr = fig.querySelector('.hud.tr');
+  if (tl) tl.textContent = 'ORIGINAL'; if (tr) tr.textContent = '';
+}
+
 function buildBank(){
   const bank = [];
   for (const f of FAMS){
     const imgs = IMG[f.id] || [];
     imgs.forEach((_, i) => bank.push({id:`${isAir(f.id, i) ? 'air' : 'img'}:${f.id}:${i}`, kind:isAir(f.id, i) ? 'air' : 'img', fam:f.id, i}));
+    imgs.forEach((_, i) => { const pp = !isAir(f.id, i) && partPins(f.id, i); if (pp) pp.forEach((_, k) => bank.push({id:`part:${f.id}:${i}:${k}`, kind:'part', fam:f.id, i, k})); });
     if (multi(f)) imgs.forEach((_, i) => { if (meta(f.id, i).v && !isAir(f.id, i)) bank.push({id:`var:${f.id}:${i}`, kind:'var', fam:f.id, i}); });
     bank.push({id:`cat:${f.id}`, kind:'cat', fam:f.id});
     bank.push({id:`wpn:${f.id}`, kind:'wpn', fam:f.id});
@@ -384,6 +433,7 @@ function weight(q, prevFam){
   if (q.fam === prevFam) w *= 0.25;
   if (q.kind === 'img') w *= 0.9;
   if (q.kind === 'var' || q.kind === 'cat' || q.kind === 'elem') w *= 0.8;
+  if (q.kind === 'part') w *= 0.5;
   return w;
 }
 function poolFor(mode){
@@ -399,7 +449,7 @@ function pickRound(mode){
   const out = []; let prevFam = null;
   const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
   const usedImgFam = {};
-  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'air' || q.kind === 'elem';
+  const isImg = q => q.kind === 'img' || q.kind === 'var' || q.kind === 'air' || q.kind === 'elem' || q.kind === 'part';
   while (out.length < n && pool.length){
     const ws = pool.map(q => weight(q, prevFam) * (isImg(q) && usedImgFam[q.fam] ? 0.2 : 1));
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
@@ -523,6 +573,17 @@ function materialize(q, mode){
     case 'cat':
       return {prompt:'Was für ein System ist das?', img:randomImg(f), correct:CATS[f.cat].label, wrong:catAlternatives(f),
         ex:`${f.name}: ${CATS[f.cat].label} – ${CATS[f.cat].cap}.`};
+    case 'part': {
+      const part = makePart(f.id, q.i, q.k), pt = partPins(f.id, q.i)[q.k][2], uu = unitOfImg(f, q.i);
+      let feat = null;
+      if (typeof DUEL !== 'undefined') for (const [ft, v] of Object.entries((DUEL.pins[f.id] || {})[q.i] || {}))
+        for (const c of (Array.isArray(v[0]) ? v : [v])) if (!feat && Math.hypot(c[0] - part.x, c[1] - part.y) < 8) feat = ft;
+      const askVar = !!(uu && multi(f) && feat && Math.random() < .6);
+      return {prompt:`${PART_TXT[part.kind]} ${askVar ? `Welche Version des ${f.name} ist das?` : 'Welches System ist das?'}`, img:[f.id, q.i], part, partK:q.k,
+        unit:uu && multi(f) ? uu : null, correct:askVar ? uu.name : f.name, wrong:askVar ? varDistractors(f, uu) : nameDistractors(f, true),
+        ex:`Im Ausschnitt zu sehen: ${pt}.` + (askVar ? ` Das ist ein Versionsmerkmal – ${DUEL.feats[feat]}: daran erkennst du den ${uu.name}.` : '') + ` ${f.name}: ${f.recog}` + confTxt
+          + ' Im Einsatz verdecken Tarnnetze, Bewuchs und Stellungsbau viele Merkmale – dann zählt, was frei bleibt: Starter und Lenkflugkörper, Radar, Rohr, Fahrgestell.'};
+    }
     case 'wpn':
       if (f.wpnQ) return {prompt:f.wpnQ.prompt, img:randomImg(f), correct:f.wpnQ.correct, wrong:shuffle(f.wpnQ.wrong).slice(0, 3), ex:f.wpnQ.ex};
       return {prompt:`Wie bekämpfst du ${f.name}?`, img:randomImg(f, null, (DATA.wpnSkip || {})[f.id]),
@@ -608,6 +669,7 @@ function hudSvg(){
   <path d="M200 132v-14M200 168v14M182 150h-14M218 150h14" opacity=".7"/></g></svg>`;
 }
 function feedHtml(famId, i, opts = {}){
+  if (opts.part) return partHtml(famId, i, opts.part);
   const fx = opts.fx;
   const cls = fx ? ` fx${fx.tone ? ' fx-' + fx.tone : ''}${fx.geo ? ' fx-' + fx.geo : ''}` : '';
   const st = fx && fx.geo === 'crop' ? ` style="transform:scale(${fx.s});transform-origin:${fx.x}% ${fx.y}%"` : '';
@@ -682,7 +744,7 @@ function renderQuiz(){
   const {m, opts} = R.cur;
   setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
   $('#app').innerHTML = `
-    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx}) : ''}
+    ${m.img ? feedHtml(m.img[0], m.img[1], {fx:R.cur.fx, part:m.part}) : ''}
     <h2 class="prompt">${esc(m.prompt)}</h2>
     <div class="opts" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
     <div id="fb"></div>`;
@@ -690,6 +752,7 @@ function renderQuiz(){
 }
 function fbAnno(f, m){
   if (!f) return '';
+  if (m.part) return `<div class="sec"><h3>Merkmale auf diesem Bild – im Ausschnitt war Nr. ${m.partK + 1}</h3>${annoFig(f.id, m.img[1], partPins(f.id, m.img[1]), m.correct)}</div>`;
   const idx = m.img && m.img[0] === f.id ? m.img[1] : null;
   if (m.pinsNow){
     const p = pinsFor(f.id, idx);
@@ -708,7 +771,7 @@ function answer(k){
     if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim');
   });
   const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0});
-  fxReveal();
+  fxReveal(); partReveal();
   ok ? qs.c++ : qs.w++;
   const fs = S.fam[q.fam] || (S.fam[q.fam] = {c:0, w:0});
   ok ? fs.c++ : fs.w++;
@@ -727,6 +790,7 @@ function answer(k){
     if (c) cmpFb = `<div class="sec"><h3>Direktvergleich: ${esc(f.name)} und ${esc(cf.name)}</h3>${cmpHtml(c, f.id)}</div>`; }
   $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
     <div class="v">${ok ? 'Richtig' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    ${m.part ? `<p class="fxnote">Oben siehst du jetzt das ganze Bild.</p>` : ''}
     ${R.cur.fx ? `<p class="fxnote">Ansicht: ${esc(fxLabel(R.cur.fx))}. Oben siehst du jetzt das Originalbild.</p>` : ''}
     <p>${esc(m.ex)}</p>
     ${cmpFb}
