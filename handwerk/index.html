@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JTAC-Handwerk</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --surface2:#E9EEEC; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --ok:#2A7848; --ok-bg:#DCEEE2; --bad:#B0382B; --bad-bg:#F6DEDA;
+  --cta:#E0A526; --cta-ink:#1A2326; --feed:#0B1113; --hud:#F2B632;
+  --font-d:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --font-b:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18;
+    --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --surface2:#1D282B; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --ok:#56B57F; --ok-bg:#16301F; --bad:#E36D5E; --bad-bg:#3A1C18;
+  --cta:#E3AA2E; --cta-ink:#111719; --feed:#06090A;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 18px 48px}
+h1,h2,h3{font-family:var(--font-d);line-height:1.1;margin:0}
+h2{font-size:1.45rem;font-weight:600;letter-spacing:.005em}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+
+/* Kopfleiste */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:720px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;min-height:52px}
+.bar .t{font-family:var(--font-d);font-weight:600;font-size:1.2rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;min-width:40px;height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:500}
+.prog{height:3px;background:var(--line)}
+.prog>i{display:block;height:100%;background:var(--cta);transition:width .25s}
+
+/* Start */
+.hero{padding:28px 0 20px}
+.hero h1{font-size:clamp(3rem,13vw,5.2rem);font-weight:700;letter-spacing:-.015em;line-height:.9}
+.hero p{max-width:34em;margin:12px 0 0;color:var(--muted);font-size:1.05rem}
+.board{margin:8px 0 24px}
+.board-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cells{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (min-width:600px){.cells{grid-template-columns:repeat(6,1fr)}}
+.cell{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px 12px;min-height:66px;overflow:hidden}
+.cell b{display:block;font-family:var(--font-d);font-weight:700;font-size:1.2rem;line-height:1}
+.cell span{display:block;font-size:.72rem;color:var(--muted);line-height:1.2;margin-top:3px}
+.cell i{position:absolute;left:0;bottom:0;height:5px;background:var(--line)}
+.cell[data-s="bad"] i{background:var(--bad)} .cell[data-s="mid"] i{background:var(--cta)} .cell[data-s="ok"] i{background:var(--ok)}
+.cell[data-s="none"]{border-style:dashed}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.legend em{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.legend em::before{content:"";width:12px;height:5px;background:var(--c)}
+.cta{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--cta);color:var(--cta-ink);border:0;border-radius:10px;padding:16px 18px;text-align:left}
+.cta strong{font-family:var(--font-d);font-size:1.5rem;font-weight:700;display:block;line-height:1.05}
+.cta small{display:block;font-size:.9rem;opacity:.85}
+.cta .go{font-family:var(--font-d);font-size:1.6rem;font-weight:700}
+.modes{margin-top:22px;border-top:1px solid var(--line)}
+.mode{display:flex;width:100%;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px}
+.mode .mi{flex:1}
+.mode strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}
+.mode small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}
+.mode .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}
+.mode:hover strong{text-decoration:underline;text-underline-offset:3px}
+.foot{margin-top:28px;font-size:.82rem;color:var(--muted);max-width:40em}
+.guide-link{display:flex;gap:14px;align-items:center;margin-top:18px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}.guide-link .mi{flex:1}.guide-link strong{display:block;font-family:var(--font-d);font-size:1.3rem;font-weight:600;line-height:1.1}.guide-link small{display:block;color:var(--muted);font-size:.9rem;margin-top:2px}.guide-link .n{font-family:var(--font-d);font-size:1.1rem;color:var(--muted);white-space:nowrap}.guide-link:hover strong{text-decoration:underline;text-underline-offset:3px}
+
+/* Bilder */
+.scene{position:relative;margin:0;background:var(--feed);border-radius:10px;overflow:hidden;cursor:zoom-in}
+.scene svg{display:block;width:100%;height:auto}
+.scene.map{background:#fbf8ee}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));cursor:zoom-out}
+.lightbox svg{width:100%;height:auto;max-height:100%;max-width:calc((100vh - 24px) * 1.333)}
+
+/* Frage */
+.lage{margin:14px 0 0;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;line-height:1.45}
+.say{margin:14px 0 0;padding:10px 14px;background:var(--surface);border-left:4px solid var(--cta);border-radius:0 10px 10px 0;line-height:1.45}
+.say-h{display:block;font-family:var(--font-d);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:14px 0 14px;text-wrap:balance}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.35;min-height:52px}
+.opts.long .opt{font-size:.95rem;line-height:1.4}
+.opt .k{flex:none;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;color:var(--muted);font-size:.95rem}
+.opt:not([disabled]):hover{border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg)} .opt.correct .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)} .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.fb{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c,var(--ok));border-radius:10px;padding:14px 16px}
+.fb .v{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--c)}
+.fb p{margin:6px 0 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 14px;font-weight:600}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink);flex:1;min-width:9em}
+.btn.flagged{border-color:var(--bad);color:var(--bad)}
+
+/* Auswertung, Statistik */
+.score{font-family:var(--font-d);font-size:5rem;font-weight:700;line-height:.9;margin:24px 0 4px}
+.misslist{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.misslist li{padding:10px 0;border-bottom:1px solid var(--line)}
+.stat-top{display:flex;gap:28px;margin:18px 0 6px}
+.stat-top b{display:block;font-family:var(--font-d);font-size:2.4rem;line-height:1}
+.srow{display:grid;grid-template-columns:minmax(0,10em) 1fr 4.2em;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.94rem}
+.sbar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.sbar i{display:block;height:100%}
+textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+
+/* Kurzlehre */
+.lehre section{margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.lehre section:first-child{margin-top:10px;border-top:0;padding-top:0}
+.lehre h2{margin-bottom:10px}
+.lehre p,.lehre li{max-width:40em}
+.lehre ul,.lehre ol{padding-left:1.2em;margin:8px 0 0}
+.lehre li{margin:5px 0}
+.lehre-fig{margin:6px 0 12px}
+.lehre-fig svg{display:block;max-width:100%;height:auto}
+.lehre-fig.compass svg{width:min(260px,100%);margin:0 auto}
+.lehre-scene{margin:6px 0 8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="bar" id="bar"><div class="bar-in" id="barin"></div><div class="prog" id="prog" hidden><i></i></div></header>
+<main class="wrap" id="app" aria-live="polite"></main>
+<script>
+/* ---------- Luftbild-Zeichner: Szenen aus Daten, Norden oben, 400 × 300 Pixel (1 Pixel ≈ 0,8 m) ---------- */
+let SVGN = 0;
+function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const PTS = s => s.trim().split(/\s+/).map(p => p.split(',').map(Number));
+function inPoly(x, y, P){ let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
+const FIELD = {acker:['#8c6f4c', '#7a5f3f'], raps:['#cfbd47', '#bba93b'], stoppel:['#c4ae79', '#b29c68'], wiese:['#7f9d58', '#76944f'], gruen:['#93ab62', '#86a058']};
+const ROOF = {haus:'#a9583f', haus2:'#6e6b69', stall:'#8b6a4d', flach:'#9d9c97', halle:'#b4b9bc'};
+const VCOL = {mil:'#4b5129', milT:'#3a3f1f'};
+function vehSvg(v, ir){
+  const [x, y, h, k, col] = v; const hot = ir ? '#f4f4f0' : null;
+  const body = hot || (k === 'pkw' || k === 'bus' ? col || '#e8e8e8' : VCOL.mil), dark = hot ? '#ffffff' : VCOL.milT;
+  let s = '';
+  if (k === 'kpz') s = `<rect x="-2.6" y="-4.6" width="5.2" height="9.2" rx=".6" fill="${body}"/><circle cx="0" cy=".6" r="2.2" fill="${dark}"/><line x1="0" y1=".6" x2="0" y2="-8.4" stroke="${dark}" stroke-width="1"/>`;
+  else if (k === 'spz') s = `<rect x="-2.4" y="-4.4" width="4.8" height="8.8" rx=".8" fill="${body}"/><rect x="-1.4" y="-2.4" width="2.8" height="2.8" fill="${dark}"/><line x1="0" y1="-2.4" x2="0" y2="-6.2" stroke="${dark}" stroke-width=".8"/>`;
+  else if (k === 'lkw') s = `<rect x="-2" y="-5.2" width="4" height="2.6" rx=".4" fill="${dark}"/><rect x="-2.3" y="-2.3" width="4.6" height="7.4" fill="${body}"/>`;
+  else if (k === 'fla') s = `<rect x="-2.6" y="-4.8" width="5.2" height="9.6" rx="1.6" fill="${body}"/><rect x="-1.9" y="-1.6" width="3.8" height="3.6" fill="${dark}"/><circle cx="0" cy="-3" r="1.3" fill="${dark}"/>`;
+  else if (k === 'pkw') s = `<rect x="-1.5" y="-2.7" width="3" height="5.4" rx=".9" fill="${body}"/><rect x="-1.2" y="-1.6" width="2.4" height="1.1" fill="rgba(20,30,40,.55)"/>`;
+  else if (k === 'bus') s = `<rect x="-1.9" y="-6" width="3.8" height="12" rx=".6" fill="${body}"/>`;
+  const shadow = ir ? '' : `<rect x="-2" y="-4" width="5" height="9" rx="1" fill="rgba(0,0,0,.35)" transform="translate(1.6 1.6)"/>`;
+  const glow = ir ? `<circle r="7" fill="url(#IRG)"/>` : '';
+  return `<g transform="translate(${x} ${y}) rotate(${h}) scale(1.5)">${glow}${shadow}<g stroke="rgba(0,0,0,.55)" stroke-width=".4">${s}</g></g>`;
+}
+function bldSvg([x, y, w, h, r = 0, k = 'haus']){
+  const c = ROOF[k] || ROOF.haus, flat = k === 'flach' || k === 'halle';
+  const long = w >= h;
+  let s = `<rect x="${-w / 2 + 2}" y="${-h / 2 + 2}" width="${w}" height="${h}" fill="rgba(0,0,0,.33)"/>`;
+  s += `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="${c}" stroke="rgba(0,0,0,.35)" stroke-width=".5"/>`;
+  if (flat){
+    if (k === 'halle') for (let i = 1; i < Math.floor(w / 7); i++) s += `<line x1="${-w / 2 + i * 7}" y1="${-h / 2}" x2="${-w / 2 + i * 7}" y2="${h / 2}" stroke="rgba(0,0,0,.12)" stroke-width=".6"/>`;
+    s += `<rect x="${-w / 2 + 1}" y="${-h / 2 + 1}" width="${w - 2}" height="${h - 2}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width=".6"/>`;
+  } else {
+    s += long ? `<rect x="${-w / 2}" y="0" width="${w}" height="${h / 2}" fill="rgba(0,0,0,.2)"/><line x1="${-w / 2}" y1="0" x2="${w / 2}" y2="0" stroke="rgba(0,0,0,.35)" stroke-width=".6"/>`
+              : `<rect x="0" y="${-h / 2}" width="${w / 2}" height="${h}" fill="rgba(0,0,0,.2)"/><line x1="0" y1="${-h / 2}" x2="0" y2="${h / 2}" stroke="rgba(0,0,0,.35)" stroke-width=".6"/>`;
+  }
+  return `<g transform="translate(${x} ${y}) rotate(${r})">${s}</g>`;
+}
+function churchSvg([x, y, r = 0]){
+  const L = 40, W = 15, T = 10;
+  return `<g transform="translate(${x} ${y}) rotate(${r})">
+    <rect x="${-L / 2 - T + 6}" y="${-T / 2 + 6}" width="${T}" height="${T}" fill="rgba(0,0,0,.33)"/>
+    <rect x="${-L / 2 + 2}" y="${-W / 2 + 2}" width="${L}" height="${W}" fill="rgba(0,0,0,.33)"/>
+    <path d="M${L / 2} ${-W / 2 + 2} A${W / 2 - 2} ${W / 2 - 2} 0 0 1 ${L / 2} ${W / 2 - 2}Z" fill="#56636b"/>
+    <rect x="${-L / 2}" y="${-W / 2}" width="${L}" height="${W}" fill="#5d6c75" stroke="rgba(0,0,0,.4)" stroke-width=".5"/>
+    <rect x="${-L / 2}" y="0" width="${L}" height="${W / 2}" fill="rgba(0,0,0,.2)"/>
+    <line x1="${-L / 2}" y1="0" x2="${L / 2}" y2="0" stroke="rgba(0,0,0,.4)" stroke-width=".6"/>
+    <rect x="${-L / 2 - T + 1}" y="${-T / 2}" width="${T}" height="${T}" fill="#4a565d" stroke="rgba(0,0,0,.5)" stroke-width=".5"/>
+    <path d="M${-L / 2 - T + 1} ${-T / 2}L${-L / 2 + 1} ${T / 2}M${-L / 2 + 1} ${-T / 2}L${-L / 2 - T + 1} ${T / 2}" stroke="rgba(255,255,255,.3)" stroke-width=".6"/></g>`;
+}
+function specSvg(sp, id){
+  const [k, x, y, a = 0, b = 0, r = 0] = sp;
+  if (k === 'sport'){ const w = a, h = b;
+    return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="${-w / 2 - 5}" y="${-h / 2 - 5}" width="${w + 10}" height="${h + 10}" rx="${h / 2 + 5}" fill="#a3553f"/><rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="#5e9c49"/>
+      <g fill="none" stroke="rgba(255,255,255,.85)" stroke-width=".7"><rect x="${-w / 2 + 2}" y="${-h / 2 + 2}" width="${w - 4}" height="${h - 4}"/><line x1="0" y1="${-h / 2 + 2}" x2="0" y2="${h / 2 - 2}"/><circle r="${h / 6}"/><rect x="${-w / 2 + 2}" y="${-h / 5}" width="${w / 8}" height="${h * 2 / 5}"/><rect x="${w / 2 - 2 - w / 8}" y="${-h / 5}" width="${w / 8}" height="${h * 2 / 5}"/></g></g>`; }
+  if (k === 'platz') return `<polygon points="${a}" fill="#aba596" stroke="rgba(0,0,0,.15)" stroke-width=".6"/>`;
+  if (k === 'hof') return `<polygon points="${a}" fill="#a99c82"/>`;
+  if (k === 'tanke') return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-30" y="-14" width="60" height="38" fill="#7f7f7b"/>
+      <rect x="-20" y="-9" width="40" height="18" fill="rgba(0,0,0,.3)" transform="translate(2 2)"/><rect x="-20" y="-9" width="40" height="18" fill="#e3e3df" stroke="rgba(0,0,0,.35)" stroke-width=".5"/>
+      <rect x="-24" y="13" width="24" height="10" fill="rgba(0,0,0,.33)" transform="translate(2 2)"/><rect x="-24" y="13" width="24" height="10" fill="${ROOF.flach}" stroke="rgba(0,0,0,.35)" stroke-width=".5"/></g>`;
+  if (k === 'kh') return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-38" y="-20" width="76" height="40" fill="rgba(0,0,0,.33)" transform="translate(3 3)"/><rect x="-38" y="-20" width="76" height="40" fill="#cbc6bd" stroke="rgba(0,0,0,.35)" stroke-width=".5"/>
+      <rect x="-9" y="-9" width="18" height="18" fill="#fff"/><rect x="-2.5" y="-7" width="5" height="14" fill="#d32f2f"/><rect x="-7" y="-2.5" width="14" height="5" fill="#d32f2f"/></g>`;
+  if (k === 'heli') return `<g transform="translate(${x} ${y})"><circle r="11" fill="#8a8c88"/><circle r="9" fill="none" stroke="#f2f2ee" stroke-width="1"/><path d="M-3.5 -5V5M3.5 -5V5M-3.5 0H3.5" stroke="#f2f2ee" stroke-width="1.3"/></g>`;
+  if (k === 'silo') return `<g><circle cx="${x + 2.5}" cy="${y + 2.5}" r="${a || 5}" fill="rgba(0,0,0,.35)"/><circle cx="${x}" cy="${y}" r="${a || 5}" fill="#c1c2bd" stroke="rgba(0,0,0,.4)" stroke-width=".5"/><circle cx="${x}" cy="${y}" r="${(a || 5) * .35}" fill="#9fa09b"/></g>`;
+  if (k === 'windrad') return `<g><rect x="${x - 9}" y="${y - 6}" width="18" height="12" fill="#bdb6a4"/><line x1="${x}" y1="${y}" x2="${x + 44}" y2="${y + 30}" stroke="rgba(0,0,0,.4)" stroke-width="2.2"/>
+      <line x1="${x + 44 - 14}" y1="${y + 30 + 16}" x2="${x + 44 + 14}" y2="${y + 30 - 16}" stroke="rgba(0,0,0,.35)" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="3.2" fill="#e8e8e4" stroke="rgba(0,0,0,.4)" stroke-width=".5"/>
+      <line x1="${x - 16}" y1="${y + 10}" x2="${x + 16}" y2="${y - 10}" stroke="#f2f2ee" stroke-width="1.6"/></g>`;
+  if (k === 'kies') return `<polygon points="${a}" fill="#d6ccb3" stroke="rgba(0,0,0,.15)" stroke-width=".6"/>`;
+  return '';
+}
+function scene(sc, o = {}){
+  const id = 'sc' + (++SVGN), R = mulberry(sc.seed || 7), ir = !!o.ir;
+  let defs = `<radialGradient id="IRG"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>`;
+  let g = `<rect width="400" height="300" fill="${sc.ground || '#7f9d58'}"/>`;
+  (sc.fields || []).forEach(([p, k, a = 0], i) => {
+    const [c1, c2] = FIELD[k]; const pid = `${id}f${i}`;
+    defs += `<pattern id="${pid}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(${a})"><rect width="6" height="6" fill="${c1}"/><rect width="6" height="2.4" fill="${c2}"/></pattern>`;
+    g += `<polygon points="${p}" fill="url(#${pid})" stroke="rgba(0,0,0,.12)" stroke-width=".8"/>`;
+  });
+  (sc.spec || []).filter(s => ['platz', 'hof', 'kies'].includes(s[0])).forEach(s => g += specSvg(s, id));
+  (sc.ponds || []).forEach(p => g += `<polygon points="${p}" fill="#3e6b86" stroke="#55745a" stroke-width="2.5"/>`);
+  (sc.rivers || []).forEach(([p, w]) => g += `<polyline points="${p}" fill="none" stroke="#5b7a4c" stroke-width="${w + 7}" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${p}" fill="none" stroke="#3b6984" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${p}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="${w / 3}" stroke-linejoin="round"/>`);
+  (sc.forest || []).forEach(p => {
+    const P = PTS(p); g += `<polygon points="${p}" fill="#2f4625"/>`;
+    const cuts = (sc.cuts || []).map(([c, w]) => [PTS(c), w]);
+    const nearCut = (x, y) => cuts.some(([C, w]) => C.some((a, i) => { if (!i) return false; const b = C[i - 1], dx = a[0] - b[0], dy = a[1] - b[1], t = Math.max(0, Math.min(1, ((x - b[0]) * dx + (y - b[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - b[0] - t * dx, y - b[1] - t * dy) < w / 2 + 3; }));
+    const xs = P.map(q => q[0]), ys = P.map(q => q[1]); let cr = '', sh = '';
+    for (let yy = Math.min(...ys); yy <= Math.max(...ys); yy += 6) for (let xx = Math.min(...xs); xx <= Math.max(...xs); xx += 6){
+      const x = xx + (R() - .5) * 5, y = yy + (R() - .5) * 5; if (!inPoly(x, y, P) || nearCut(x, y)) continue;
+      const r = 3.2 + R() * 1.8, c = ['#3d5a2c', '#46652f', '#355127', '#4c6b34'][Math.floor(R() * 4)];
+      sh += `<circle cx="${(x + 1.6).toFixed(1)}" cy="${(y + 1.6).toFixed(1)}" r="${r.toFixed(1)}" fill="rgba(0,0,0,.28)"/>`;
+      cr += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${c}"/>`;
+    }
+    g += sh + cr;
+  });
+  (sc.cuts || []).forEach(([c, w]) => g += `<polyline points="${c}" fill="none" stroke="#86a058" stroke-width="${w}"/>`);
+  const roads = sc.roads || [];
+  const RW = {main:9, minor:6.5, track:3.6};
+  roads.forEach(([p, k]) => { if (k !== 'track') g += `<polyline points="${p}" fill="none" stroke="#5f5f5a" stroke-width="${RW[k] + 2}" stroke-linejoin="round"/>`; });
+  roads.forEach(([p, k]) => g += `<polyline points="${p}" fill="none" stroke="${k === 'track' ? '#bba67d' : '#8e8e88'}" stroke-width="${RW[k]}" stroke-linejoin="round"/>`);
+  roads.forEach(([p, k]) => { if (k === 'main') g += `<polyline points="${p}" fill="none" stroke="rgba(255,255,255,.75)" stroke-width=".7" stroke-dasharray="5 5"/>`; });
+  (sc.rail || []).forEach(p => g += `<polyline points="${p}" fill="none" stroke="#7b7268" stroke-width="9"/><polyline points="${p}" fill="none" stroke="#3d3a36" stroke-width="7" stroke-dasharray="1 2"/><polyline points="${p}" fill="none" stroke="#9b9b98" stroke-width="3.4"/><polyline points="${p}" fill="none" stroke="#5e5a55" stroke-width="1.6"/>`);
+  (sc.bridges || []).forEach(([x, y, w, h, r = 0]) => g += `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="${-w / 2 + 2}" y="${-h / 2 + 2}" width="${w}" height="${h}" fill="rgba(0,0,0,.35)"/><rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="#a6a59f" stroke="#57564f" stroke-width="1"/></g>`);
+  (sc.power || []).forEach(p => { const P = PTS(p); g += `<polyline points="${p}" fill="none" stroke="rgba(30,30,30,.55)" stroke-width=".5"/>`;
+    for (let i = 0; i < P.length; i++){ const [x, y] = P[i]; g += `<line x1="${x}" y1="${y}" x2="${x + 9}" y2="${y + 9}" stroke="rgba(0,0,0,.35)" stroke-width="1.6"/><rect x="${x - 2}" y="${y - 2}" width="4" height="4" fill="#9a9a96" stroke="#333" stroke-width=".4"/>`; } });
+  (sc.spec || []).filter(s => !['platz', 'hof', 'kies'].includes(s[0])).forEach(s => g += specSvg(s, id));
+  (sc.bld || []).forEach(b => g += bldSvg(b));
+  (sc.church || []).forEach(c => g += churchSvg(c));
+  (sc.trees || []).forEach(([x, y, r = 4.5]) => g += `<circle cx="${x + 2}" cy="${y + 2}" r="${r}" fill="rgba(0,0,0,.3)"/><circle cx="${x}" cy="${y}" r="${r}" fill="#3f5f2c" stroke="rgba(0,0,0,.25)" stroke-width=".5"/>`);
+  let top = '';
+  const veh = [...(sc.veh || []).filter(v => !o.show || !v[5] || o.show.includes(v[5])), ...(o.veh || [])];
+  veh.forEach(v => top += vehSvg(v, ir));
+  [...(sc.people || []), ...(o.people || [])].forEach(([x, y, n = 5, kind = 'ziv']) => {
+    const r2 = mulberry(Math.round(x * 31 + y * 7));
+    for (let i = 0; i < n; i++){ const px = x + (r2() - .5) * (n > 3 ? 12 : 6), py = y + (r2() - .5) * (n > 3 ? 12 : 6);
+      const c = ir ? '#f6f6f2' : kind === 'mil' ? '#3a3f1f' : ['#d84a3a', '#2f6fd6', '#f2f2ee', '#e0a526'][i % 4];
+      top += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.25" fill="${c}" stroke="rgba(0,0,0,.6)" stroke-width=".35"/>`; } });
+  (o.mortar || sc.mortar || []).forEach(([x, y]) => top += `<g transform="translate(${x} ${y})"><circle r="6" fill="#6b5a3e" stroke="#4a3d29" stroke-width="2"/><circle r="1.6" fill="${ir ? '#fff' : '#2c3018'}"/></g>`);
+  // Überlagerungen (nicht Teil des Bildes, sondern Markierungen)
+  let ov = '';
+  (o.friends || []).forEach(p => ov += `<polyline points="${p}" fill="none" stroke="#1e64d6" stroke-width="3" stroke-dasharray="7 4" stroke-linecap="round"/>`);
+  if (o.friendLabel) ov += `<g transform="translate(${o.friendLabel[0]} ${o.friendLabel[1]})"><rect x="-38" y="-8" width="76" height="16" rx="3" fill="#1e64d6"/><text x="0" y="4" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="Barlow, sans-serif">EIGENE TRUPPEN</text></g>`;
+  (o.boxes || []).forEach(([x, y, s = 13, c = '#ff3b30']) => ov += `<path d="M${x - s} ${y - s + 5}V${y - s}H${x - s + 5}M${x + s - 5} ${y - s}H${x + s}V${y - s + 5}M${x + s} ${y + s - 5}V${y + s}H${x + s - 5}M${x - s + 5} ${y + s}H${x - s}V${y + s - 5}" fill="none" stroke="${c}" stroke-width="2.2"/>`);
+  (o.labels || []).forEach(([x, y, t, dx = 13, dy = -13]) => ov += `<line x1="${x}" y1="${y}" x2="${x + dx * .62}" y2="${y + dy * .62}" stroke="#fff" stroke-width="1.2"/><circle cx="${x + dx}" cy="${y + dy}" r="8" fill="#fff" stroke="#111" stroke-width="1.3"/><text x="${x + dx}" y="${y + dy + 3.6}" text-anchor="middle" font-size="11" font-weight="700" font-family="Barlow, sans-serif" fill="#111">${t}</text>`);
+  // HUD
+  const hud = ir ? '#ffffff' : '#F2B632';
+  ov += `<g fill="none" stroke="${hud}" stroke-width="1.6" opacity=".9"><path d="M8 26V8h18M374 8h18v18M392 274v18h-18M26 292H8v-18"/></g>
+    <g transform="translate(376 40)"><circle r="11" fill="rgba(0,0,0,.45)"/><path d="M0 -8L4 3L0 1L-4 3Z" fill="${hud}"/><text y="-12.5" text-anchor="middle" font-size="9" font-weight="700" fill="${hud}" font-family="Barlow, sans-serif" style="paint-order:stroke" stroke="rgba(0,0,0,.6)" stroke-width="2">N</text></g>
+    <g transform="translate(18 282)"><rect x="-4" y="-13" width="72" height="18" rx="2" fill="rgba(0,0,0,.45)"/><path d="M0 0H62M0 -3V3M62 -3V3M31 -2V2" stroke="${hud}" stroke-width="1.4"/><text x="31" y="-4" text-anchor="middle" font-size="8.5" font-weight="600" fill="${hud}" font-family="Barlow, sans-serif">50 m</text></g>`;
+  if (ir) defs += `<filter id="${id}ir" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".3 .5 .2 0 -.08  .3 .5 .2 0 -.08  .3 .5 .2 0 -.08  0 0 0 1 0"/><feComponentTransfer><feFuncR type="gamma" exponent="1.4"/><feFuncG type="gamma" exponent="1.4"/><feFuncB type="gamma" exponent="1.4"/></feComponentTransfer></filter>`;
+  const base = ir ? `<g filter="url(#${id}ir)">${g}</g>` : g;
+  return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${o.alt ? o.alt.replace(/"/g, '&quot;') : 'Luftbild-Skizze'}"><defs>${defs}</defs>${base}${top}${ov}</svg>`;
+}
+/* Szenen: Norden oben. Fahrzeuge [x, y, Richtung in Grad (0 = Nord), Art, Farbe, Kennung] */
+const SC = {
+  dorf: {name:'Dorf am Fluss', seed:11, ground:'#7f9d58',
+    fields:[['250,0 318,0 314,38 262,64 252,40', 'acker', 15], ['282,132 400,124 400,205 292,210', 'raps', 0],
+            ['0,248 182,240 182,300 0,300', 'acker', 75], ['222,250 400,246 400,300 222,300', 'stoppel', 20],
+            ['0,150 52,148 54,206 0,210', 'gruen', 0], ['332,0 400,0 400,40 384,44 330,30', 'stoppel', 60]],
+    forest:['0,0 128,0 140,30 118,62 70,80 20,76 0,82'],
+    rivers:[['0,214 70,222 140,218 200,226 270,234 340,226 400,232', 18]],
+    roads:[['200,0 200,300', 'main'], ['0,122 120,121 200,120 300,117 400,114', 'minor'], ['296,117 312,96 326,74', 'track']],
+    bridges:[[200, 226, 15, 32]],
+    spec:[['hof', 0, 0, '326,58 360,58 360,86 326,86'], ['sport', 92, 182, 60, 34]],
+    church:[[247, 94, 0]],
+    bld:[[184,30,15,11,0,'haus'], [184,58,15,12,0,'haus2'], [183,88,14,12,0,'haus'], [216,26,14,11,0,'haus'], [217,54,15,12,0,'haus'],
+         [160,106,12,15,0,'haus'], [135,107,13,14,0,'haus2'], [110,108,14,13,0,'haus'], [150,138,14,12,0,'haus'], [122,137,12,13,0,'haus'],
+         [184,150,15,12,0,'haus'], [216,148,14,12,0,'haus2'], [184,180,14,12,0,'haus'], [217,178,15,11,0,'haus'], [268,104,13,12,0,'haus'],
+         [342,52,34,11,0,'stall'], [365,72,11,30,0,'stall'], [342,92,34,11,0,'haus']],
+    trees:[[338,168,6]],
+    veh:[[112,74,135,'kpz',0,'v1'], [341,72,270,'spz',0,'v2'], [45,122,90,'lkw',0,'v3'], [236,270,0,'kpz',0,'v4'], [167,151,0,'kpz',0,'v6'],
+         [200,62,180,'pkw','#e8e8e4'], [276,117,90,'pkw','#c0392b'], [152,121,270,'pkw','#2f5fa8'], [206,200,0,'pkw','#222']]},
+  wald: {name:'Waldrand', seed:23, ground:'#7f9d58',
+    fields:[['160,0 290,0 285,95 172,108', 'acker', 30], ['300,110 400,100 400,215 312,205', 'raps', 0],
+            ['160,212 400,222 400,300 152,300', 'stoppel', 80], ['300,0 400,0 400,92 296,104', 'gruen', 0]],
+    forest:['0,0 150,0 162,40 152,92 184,116 204,138 186,160 158,196 140,250 150,300 0,300', '305,38 336,32 346,60 322,80 300,68'],
+    cuts:[['0,214 70,208 134,203 170,200', 14]],
+    ponds:['272,250 282,240 300,238 310,248 306,260 288,264 276,260'],
+    roads:[['234,0 238,108 246,212 252,300', 'track']],
+    power:['6,214 70,208 134,203 198,198 262,193 326,188 392,183'],
+    bld:[[264,58,26,12,0,'stall']],
+    trees:[[244,30,4.5], [247,82,4.5], [252,132,4.5], [256,180,4.5], [259,235,4.5]],
+    veh:[[214,140,90,'kpz',0,'b1'], [264,72,180,'spz',0,'b2'], [241,178,0,'lkw',0,'b3'], [266,252,45,'kpz',0,'b4'], [354,60,270,'spz',0,'b5']]},
+  ort: {name:'Ortsrand', seed:37, ground:'#7f9d58',
+    fields:[['300,0 400,0 400,120 300,124', 'acker', 70], ['0,262 96,258 96,300 0,300', 'gruen', 0]],
+    roads:[['0,150 400,150', 'main'], ['120,150 120,0', 'minor'], ['290,150 290,300', 'minor'], ['20,150 20,0', 'minor'], ['120,212 290,212', 'minor']],
+    spec:[['platz', 0, 0, '30,160 90,160 90,196 30,196'], ['tanke', 60, 178], ['platz', 0, 0, '312,226 392,226 392,268 312,268'],
+          ['platz', 0, 0, '140,28 262,28 262,74 140,74'], ['sport', 214, 106, 62, 30]],
+    bld:[[44,24,13,11,0,'haus'], [44,52,13,12,0,'haus2'], [44,82,14,11,0,'haus'], [44,112,13,12,0,'haus'], [96,24,13,12,0,'haus'], [96,54,14,11,0,'haus2'], [96,86,13,12,0,'haus'], [96,116,14,12,0,'haus'],
+         [180,22,70,14,0,'flach'], [150,50,14,40,0,'flach'],
+         [350,195,70,36,0,'halle'],
+         [136,176,13,12,0,'haus'], [166,176,14,12,0,'haus2'], [196,176,13,11,0,'haus'], [226,178,14,12,0,'haus'], [262,178,13,12,0,'haus2'],
+         [140,240,13,12,0,'haus'], [172,242,14,11,0,'haus'], [204,240,13,12,0,'haus2'], [238,242,14,12,0,'haus'], [264,244,12,12,0,'haus']],
+    trees:[[124,276,5], [140,282,4.5], [110,288,5]],
+    veh:[[58,176,90,'lkw',0,'c1'], [214,106,0,'fla',0,'c2'], [290,276,180,'kpz',0,'c3'], [330,247,270,'spz',0,'c4'], [175,150,90,'lkw',0,'c5'],
+         [330,150,270,'pkw','#e8e8e4'], [250,150,90,'pkw','#2f5fa8'], [76,184,90,'pkw','#c0392b'], [372,240,0,'pkw','#ddd'], [356,256,0,'pkw','#555']]},
+  kreuz: {name:'Kreuzung', seed:41, ground:'#7f9d58',
+    fields:[['0,0 180,0 180,128 0,128', 'acker', 10], ['220,0 400,0 400,40 296,86 220,128', 'stoppel', 50], ['226,170 400,170 400,300 226,300', 'raps', 0],
+            ['0,172 176,174 178,300 0,300', 'gruen', 0], ['300,92 400,48 400,152 300,152', 'acker', 100]],
+    roads:[['0,142 200,150 400,158', 'main'], ['192,0 200,150 208,300', 'minor'], ['202,148 300,94 400,52', 'track']],
+    spec:[['hof', 0, 0, '74,46 108,46 108,74 74,74'], ['hof', 0, 0, '280,212 314,212 314,240 280,240'], ['hof', 0, 0, '62,226 96,226 96,254 62,254'],
+          ['windrad', 304, 70], ['silo', 326, 214, 6], ['silo', 338, 226, 6]],
+    bld:[[91,40,34,10,0,'stall'], [70,60,10,28,0,'stall'], [91,80,34,10,0,'haus'],
+         [297,206,34,10,0,'stall'], [276,226,10,28,0,'stall'], [297,246,34,10,0,'haus'],
+         [79,220,34,10,0,'stall'], [100,240,10,28,0,'stall'], [79,260,34,10,0,'haus']],
+    trees:[[40,170,4.5], [170,30,5]],
+    veh:[[214,134,270,'lkw',0,'d1'], [91,64,180,'kpz',0,'d2'], [352,226,90,'spz',0,'d3'], [312,76,0,'kpz',0,'d4'], [79,240,0,'spz',0,'d5'],
+         [120,146,90,'pkw','#e8e8e4'], [204,230,0,'pkw','#2f5fa8']]},
+  bahn: {name:'Bahnlinie', seed:53, ground:'#7f9d58',
+    fields:[['0,120 120,140 150,90 160,0 230,0 210,150 0,190', 'gruen', 0], ['300,300 400,300 400,180', 'stoppel', 30]],
+    spec:[['kies', 0, 0, '30,30 120,20 140,80 90,112 25,90'], ['platz', 0, 0, '236,12 384,12 384,58 236,90'],
+          ['platz', 0, 0, '258,238 388,238 388,292 258,292'], ['kh', 300, 210], ['heli', 365, 205]],
+    ponds:['50,45 110,40 118,72 92,92 48,80'],
+    rail:['0,262 400,62'],
+    roads:[['170,0 170,300', 'minor'], ['170,236 300,236 300,300', 'minor'], ['170,60 250,60', 'minor']],
+    bridges:[[170, 177, 26, 16, -26.6]],
+    bld:[[290,46,56,30,0,'halle'], [352,34,40,24,0,'halle'],
+         [40,262,13,12,0,'haus'], [72,266,14,11,0,'haus2'], [104,262,13,12,0,'haus'], [44,290,13,11,0,'haus'], [80,292,14,11,0,'haus'], [118,290,13,12,0,'haus2']],
+    veh:[[116,96,315,'kpz',0,'e1'], [270,80,90,'lkw',0,'e2'], [170,150,180,'spz',0,'e3'], [340,262,0,'kpz',0,'e4'],
+         [282,262,0,'pkw','#e8e8e4'], [300,262,0,'pkw','#c0392b'], [318,262,0,'pkw','#2f5fa8'], [170,240,0,'pkw','#ddd']]}
+};
+/* ---------- Talk-on: Fehlerarten ---------- */
+const FL = {
+  small:'Beginnt beim Ziel statt beim großen Bezugspunkt',
+  ambig:'Ein Bezugspunkt ist nicht eindeutig – es gibt ihn mehrfach',
+  lr:'Links, rechts, vor oder hinter statt Himmelsrichtungen',
+  hidden:'Ein Merkmal ist für den Piloten nicht zu erkennen',
+  wrong:'Eine Richtungsangabe passt nicht zum Gelände'
+};
+const FL_WHY = {
+  small:'Die Einweisung beginnt beim kleinsten Detail. Der Pilot müsste das ganze Gebiet danach absuchen. Richtig ist die umgekehrte Reihenfolge: vom Großen zum Kleinen.',
+  lr:'„Links“, „rechts“, „vor“ und „hinter“ hängen von der Blickrichtung ab. Der Pilot fliegt aus einer anderen Richtung an oder kreist – für ihn ist „rechts“ etwas anderes als für dich. Nimm Himmelsrichtungen.'
+};
+/* Talk-on-Aufgaben: Szene, Ziel (Kennung), Kandidaten für „Talk-on folgen“, richtige Einweisung, falsche Einweisungen [Fehlerart, Text, Erklärung] */
+const TALK = [
+  {id:'A1', sc:'dorf', tgt:'v2', cand:['v1', 'v2', 'v3', 'v4'],
+   ok:'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung in der Ortsmitte → nordöstlich davon die Kirche, Turm am Westende. Kreuzung bis Kirche ist eine Einheit → zwei Einheiten östlich der Kirche ein Gehöft, drei Gebäude um einen Hof → im Hof ein Schützenpanzer.',
+   why:'Fluss und Brücke sind groß und einmalig, die Kreuzung liegt an der Straße, die Kirche ist das größte Gebäude im Ort. Die Strecke Kreuzung–Kirche dient als Maßstab („Einheit“): So versteht ihr beide unter „zwei Einheiten“ dasselbe.',
+   bad:[['small', 'Schützenpanzer in einem Hof → der Hof gehört zu einem Gehöft → das Gehöft liegt bei der Kirche → die Kirche steht im Dorf am Fluss.'],
+        ['ambig', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zum Haus mit dem roten Dach → östlich davon ein Gehöft → im Hof ein Schützenpanzer.', '„Das Haus mit dem roten Dach“ gibt es im Dorf dutzendfach. Ein Bezugspunkt muss einmalig sein – etwa die Kreuzung in der Ortsmitte oder die Kirche.'],
+        ['lr', 'Fluss → Brücke → der Straße folgen bis zur Kreuzung → dort rechts → hinter der Kirche das Gehöft → im Hof ein Schützenpanzer.'],
+        ['wrong', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung → nordöstlich davon die Kirche. Kreuzung bis Kirche ist eine Einheit → zwei Einheiten westlich der Kirche ein Gehöft → im Hof ein Schützenpanzer.', 'Das Gehöft liegt östlich der Kirche. Westlich der Kirche stehen nur Wohnhäuser an der Straße. Prüfe jede Richtung am Bild, bevor du sie funkst.'],
+        ['hidden', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Bushaltestelle → östlich davon das Gehöft mit dem grünen Hoftor → im Hof ein Schützenpanzer.', 'Eine Bushaltestelle und die Farbe eines Hoftors sieht der Pilot aus großer Höhe nicht. Nimm Merkmale, die von oben groß und deutlich sind: Straßen, Kreuzungen, Gebäudeformen, Waldränder, Gewässer.']]},
+  {id:'A2', sc:'dorf', tgt:'v1', cand:['v1', 'v2', 'v3', 'v4'],
+   ok:'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung in der Ortsmitte → nordwestlich der Kreuzung der große Wald → an seinem Südostrand, zur Wiese hin, ein Kampfpanzer, Rohr nach Südosten.',
+   why:'Fluss, Brücke, Kreuzung und Wald sind große, eindeutige Bezugspunkte. „Südostrand“ grenzt den langen Waldrand auf ein kurzes Stück ein, die Rohrrichtung bestätigt das Fahrzeug.',
+   bad:[['small', 'Kampfpanzer am Waldrand → der Wald liegt beim Dorf → das Dorf liegt an einem Fluss.'],
+        ['ambig', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung → von dort zum Waldrand → am Waldrand ein Kampfpanzer.', 'Der Waldrand ist lang. Ohne Angabe, welcher Abschnitt gemeint ist („Südostrand“), muss der Pilot den ganzen Rand absuchen.'],
+        ['lr', 'Fluss → Brücke → der Straße folgen bis zur Kreuzung → dort links → vor dem Wald ein Kampfpanzer.'],
+        ['wrong', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung → nordöstlich der Kreuzung der große Wald → an seinem Rand ein Kampfpanzer.', 'Der Wald liegt nordwestlich der Kreuzung. Nordöstlich liegen Kirche, Gehöft und Felder.'],
+        ['hidden', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zum Wegweiser „Waldweg“ → dort am Waldrand ein Kampfpanzer.', 'Einen Wegweiser sieht der Pilot von oben nicht. Außerdem bleibt offen, wo am Waldrand das Fahrzeug steht.']]},
+  {id:'A3', sc:'dorf', ir:true, tgt:'v4', cand:['v1', 'v2', 'v3', 'v4'],
+   ok:'Norden oben, Wärmebild. Fluss von West nach Ost → die einzige Brücke → südlich der Brücke, östlich der Straße, auf dem Feld ein heller Punkt: ein Kampfpanzer, Rohr nach Norden.',
+   why:'Im Wärmebild gibt es keine Farben. Fluss, Brücke und Straße sind auch nachts gut zu erkennen; das Fahrzeug fällt als warmer, heller Punkt auf.',
+   bad:[['hidden', 'Norden oben, Wärmebild. Fluss von West nach Ost → die einzige Brücke → südlich davon das gelbe Stoppelfeld → darauf ein Kampfpanzer.', '„Gelb“ gibt es im Wärmebild nicht – es zeigt nur Wärmeunterschiede in Grautönen. Nachts beschreibst du Formen, Linien und warme Objekte, keine Farben.'],
+        ['ambig', 'Norden oben, Wärmebild. Fluss von West nach Ost → das helle Fahrzeug → südlich davon ein Kampfpanzer.', 'Im Wärmebild leuchten mehrere Fahrzeuge hell. Außerdem bewegen sich Fahrzeuge. Nimm feste, einmalige Bezugspunkte wie die Brücke.'],
+        ['wrong', 'Norden oben, Wärmebild. Fluss von West nach Ost → die einzige Brücke → südlich der Brücke, westlich der Straße, auf dem Feld ein Kampfpanzer.', 'Der Panzer steht östlich der Straße, nicht westlich.'],
+        ['lr', 'Wärmebild. Fluss → über die Brücke drüber → rechts auf dem Feld ein Kampfpanzer.']]},
+  {id:'B1', sc:'wald', tgt:'b2', cand:['b1', 'b2', 'b3', 'b4'],
+   ok:'Norden oben. Großer Wald im Westen → die Waldnase, die in der Mitte seines Ostrands ins Feld ragt → östlich davon der Feldweg von Nord nach Süd → dem Feldweg nach Norden folgen bis zur einzigen Feldscheune östlich des Wegs → an ihrer Südseite ein Schützenpanzer.',
+   why:'Wald, Waldnase, Feldweg, Scheune: Jeder Bezugspunkt ist einmalig und von oben deutlich. Die Waldnase grenzt den langen Waldrand auf einen Punkt ein.',
+   bad:[['small', 'Schützenpanzer an einer Scheune → die Scheune steht in einem Feld → das Feld liegt östlich eines Waldes.'],
+        ['ambig', 'Norden oben. Großer Wald im Westen → der Feldweg von Nord nach Süd → vom Baum am Feldweg nach Osten → dort die Feldscheune → an ihrer Südseite ein Schützenpanzer.', 'Am Feldweg stehen mehrere einzelne Bäume. „Der Baum am Feldweg“ ist deshalb nicht eindeutig.'],
+        ['lr', 'Großer Wald → an der Waldnase links → geradeaus bis zur Scheune → davor ein Schützenpanzer.'],
+        ['wrong', 'Norden oben. Großer Wald im Westen → die Waldnase in der Mitte seines Ostrands → von der Waldnase nach Südosten zum Teich → am Teich die Feldscheune → an ihrer Südseite ein Schützenpanzer.', 'Die Scheune liegt nordöstlich der Waldnase, nicht am Teich im Südosten.']]},
+  {id:'B2', sc:'wald', tgt:'b4', cand:['b1', 'b2', 'b3', 'b4'],
+   ok:'Norden oben. Großer Wald im Westen → die Stromleitung, die in einer Schneise aus dem Wald nach Osten führt → südlich der Stromleitung das Stoppelfeld mit dem einzigen Teich → am Westufer des Teichs ein Kampfpanzer.',
+   why:'Die Leitung selbst ist dünn, aber die Schneise im Wald und die Masten mit ihren Schatten sind von oben gut zu sehen. Der einzige Teich ist ein eindeutiger Bezugspunkt direkt am Ziel.',
+   bad:[['small', 'Kampfpanzer an einem Teich → der Teich liegt in einem Feld → das Feld liegt südlich einer Stromleitung.'],
+        ['hidden', 'Norden oben. Großer Wald im Westen → die Stromleitung nach Osten → am Mast mit dem gelben Warnschild nach Süden → am Westufer des Teichs ein Kampfpanzer.', 'Ein Warnschild am Mast sieht der Pilot nicht. Die Masten sehen von oben alle gleich aus.'],
+        ['wrong', 'Norden oben. Großer Wald im Westen → die Stromleitung, die aus dem Wald nach Osten führt → nördlich der Stromleitung der einzige Teich → an seinem Westufer ein Kampfpanzer.', 'Der Teich liegt südlich der Stromleitung.'],
+        ['lr', 'Wald → Stromleitung → rechts davon der Teich → links am Teich ein Kampfpanzer.']]},
+  {id:'C1', sc:'ort', tgt:'c4', cand:['c1', 'c3', 'c4', 'c5'],
+   ok:'Norden oben. Die Hauptstraße, die von West nach Ost durch den Ort führt → am Westrand an ihrer Südseite die Tankstelle mit dem großen hellen Dach → der Straße nach Osten folgen bis zur einzigen Abzweigung nach Süden → östlich davon die große Halle mit hellem Flachdach → auf dem Parkplatz südlich der Halle ein Schützenpanzer.',
+   why:'Hauptstraße, Tankstellendach und Halle sind groß und einmalig. „Die einzige Abzweigung nach Süden“ ist eindeutig, weil es nach Norden mehrere gibt.',
+   bad:[['ambig', 'Norden oben. Die Hauptstraße von West nach Ost → an der Abzweigung → östlich davon die große Halle mit hellem Flachdach → auf dem Parkplatz südlich der Halle ein Schützenpanzer.', 'Von der Hauptstraße zweigen mehrere Straßen ab – drei nach Norden, eine nach Süden. „An der Abzweigung“ ist deshalb nicht eindeutig.'],
+        ['lr', 'Hauptstraße → an der Tankstelle vorbei → an der letzten Abzweigung rechts → links die große Halle → dahinter auf dem Parkplatz ein Schützenpanzer.'],
+        ['hidden', 'Norden oben. Die Hauptstraße von West nach Ost → am Schild „Gewerbegebiet“ nach Süden → die große Halle → auf dem Parkplatz südlich der Halle ein Schützenpanzer.', 'Ein Straßenschild ist aus der Luft nicht zu lesen.'],
+        ['small', 'Schützenpanzer auf einem Parkplatz → der Parkplatz gehört zu einer Halle → die Halle liegt an einer Hauptstraße.']]},
+  {id:'C2', sc:'ort', tgt:'c1', cand:['c1', 'c3', 'c4', 'c5'],
+   ok:'Norden oben. Die Hauptstraße, die von West nach Ost durch den Ort führt → am Westrand an ihrer Südseite die Tankstelle mit dem großen hellen Dach über den Zapfsäulen → unter dem Dach ein Militär-Lkw.',
+   why:'Kurz und eindeutig: Die Hauptstraße ist die größte Linie im Bild, das Tankstellendach ist von oben auffällig und einmalig.',
+   bad:[['wrong', 'Norden oben. Die Hauptstraße von West nach Ost → am Westrand an ihrer Nordseite die Tankstelle → unter dem Dach ein Militär-Lkw.', 'Die Tankstelle liegt an der Südseite der Hauptstraße.'],
+        ['ambig', 'Norden oben. Die Hauptstraße von West nach Ost → das weiße Auto an der Straße → südlich davon ein Militär-Lkw.', 'Autos gibt es mehrere, und sie bewegen sich. Ein Bezugspunkt muss einmalig sein und an seinem Platz bleiben.'],
+        ['small', 'Militär-Lkw an einer Tankstelle → die Tankstelle liegt an einer Hauptstraße.'],
+        ['hidden', 'Norden oben. Die Hauptstraße von West nach Ost → die Tankstelle mit dem roten Markenschild → an Zapfsäule 3 ein Militär-Lkw.', 'Markenschild und Nummer der Zapfsäule sind von oben nicht zu erkennen.']]},
+  {id:'D1', sc:'kreuz', tgt:'d3', cand:['d2', 'd3', 'd4', 'd5'],
+   ok:'Norden oben. Die Straßenkreuzung in der Bildmitte → nordöstlich davon das Windrad → von der Kreuzung nach Südosten das Gehöft mit zwei runden Silos → östlich der Silos ein Schützenpanzer.',
+   why:'Drei Gehöfte sehen fast gleich aus. Erst die Silos machen das richtige eindeutig – genau solche Unterscheidungsmerkmale braucht ein Talk-on.',
+   bad:[['ambig', 'Norden oben. Die Straßenkreuzung in der Bildmitte → das Gehöft → östlich davon ein Schützenpanzer.', 'Es gibt drei fast gleiche Gehöfte. Welches gemeint ist, bleibt offen – erst die Silos machen es eindeutig.'],
+        ['lr', 'Kreuzung → rechts runter zum Gehöft mit den Silos → hinter den Silos ein Schützenpanzer.'],
+        ['wrong', 'Norden oben. Die Straßenkreuzung in der Bildmitte → nach Südwesten das Gehöft mit zwei runden Silos → östlich der Silos ein Schützenpanzer.', 'Das Gehöft mit den Silos liegt südöstlich der Kreuzung. Das Gehöft im Südwesten hat keine Silos.'],
+        ['small', 'Schützenpanzer an zwei Silos → die Silos stehen an einem Gehöft → das Gehöft liegt an einer Kreuzung.']]},
+  {id:'D2', sc:'kreuz', tgt:'d4', cand:['d2', 'd3', 'd4', 'd5'],
+   ok:'Norden oben. Die Straßenkreuzung in der Bildmitte → der Feldweg, der von der Kreuzung nach Nordosten führt → am Feldweg das einzige Windrad mit seinem langen Schatten → auf dem Schotterplatz am Windrad ein Kampfpanzer.',
+   why:'Ein Windrad ist von oben vor allem an seinem langen Schatten zu erkennen und meist weithin einmalig. Der Feldweg führt den Blick von der Kreuzung direkt hin.',
+   bad:[['hidden', 'Norden oben. Die Straßenkreuzung in der Bildmitte → den Feldweg entlang bis zum Schild „Windpark – Betreten verboten“ → dort ein Kampfpanzer.', 'Ein Schild sieht der Pilot nicht. Das Windrad selbst wäre der richtige Bezugspunkt.'],
+        ['small', 'Kampfpanzer auf einem Schotterplatz → der Platz liegt an einem Windrad → das Windrad steht an einem Feldweg.'],
+        ['lr', 'Kreuzung → den Feldweg nach rechts oben → am Windrad links ein Kampfpanzer.', '„Rechts oben“ bezieht sich auf dein Bild. Der Pilot sieht das Gelände aus seiner Flugrichtung, für ihn ist „rechts oben“ woanders. Nimm Himmelsrichtungen.'],
+        ['wrong', 'Norden oben. Die Straßenkreuzung in der Bildmitte → der Feldweg, der von der Kreuzung nach Nordwesten führt → am Feldweg das einzige Windrad → auf dem Schotterplatz ein Kampfpanzer.', 'Der Feldweg und das Windrad liegen nordöstlich der Kreuzung. Im Nordwesten liegt ein Gehöft.']]},
+  {id:'E1', sc:'bahn', tgt:'e3', cand:['e1', 'e2', 'e3', 'e4'],
+   ok:'Norden oben. Die Bahnlinie, die von Südwest nach Nordost durchs Bild läuft → die einzige Straße, die von Nord nach Süd unter der Bahn hindurchführt → direkt nördlich der Unterführung auf der Straße ein Schützenpanzer.',
+   why:'Eine Bahnlinie ist eine lange, gerade Linie und leicht zu finden. Die Stelle, an der die Straße sie kreuzt, ist ein eindeutiger Punkt.',
+   bad:[['wrong', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → die einzige Straße, die unter der Bahn hindurchführt → direkt südlich der Unterführung ein Schützenpanzer.', 'Der Schützenpanzer steht nördlich der Unterführung.'],
+        ['hidden', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → die Straße mit dem Schild „Durchfahrtshöhe 3,8 m“ → nördlich davon ein Schützenpanzer.', 'Ein Verkehrsschild ist aus der Luft nicht zu lesen. Die Unterführung selbst ist der richtige Bezugspunkt.'],
+        ['ambig', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → an der großen Halle mit Flachdach nach Westen zur Straße → nördlich der Bahn ein Schützenpanzer.', 'Es gibt mehrere große Gebäude mit Flachdach: zwei Hallen und das Krankenhaus. Welches gemeint ist, bleibt offen.'],
+        ['small', 'Schützenpanzer auf einer Straße → die Straße führt unter einer Bahnlinie hindurch.']]},
+  {id:'E2', sc:'bahn', tgt:'e1', cand:['e1', 'e2', 'e3', 'e4'],
+   ok:'Norden oben. Die Bahnlinie von Südwest nach Nordost → nordwestlich davon die helle Kiesgrube mit dem See → am Südostufer des Sees, auf dem hellen Kies, ein Kampfpanzer.',
+   why:'Bahnlinie und Kiesgrube mit See sind groß, hell und einmalig. Das Ufer des Sees grenzt den Bereich auf wenige Meter ein.',
+   bad:[['ambig', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → die große helle Fläche nördlich der Bahn → an ihrem Südostrand ein Kampfpanzer.', 'Nördlich der Bahn gibt es zwei große helle Flächen: die Kiesgrube und das Gewerbegebiet. Der See macht die Kiesgrube eindeutig.'],
+        ['wrong', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → südöstlich davon die helle Kiesgrube mit dem See → am Südostufer ein Kampfpanzer.', 'Die Kiesgrube liegt nordwestlich der Bahnlinie.'],
+        ['lr', 'Bahnlinie → links oben die Kiesgrube → unten rechts am See ein Kampfpanzer.', '„Links oben“ und „unten rechts“ beziehen sich auf dein Bild. Der Pilot sieht das Gelände aus seiner Flugrichtung. Nimm Himmelsrichtungen.'],
+        ['small', 'Kampfpanzer an einem See → der See liegt in einer Kiesgrube → die Kiesgrube liegt an einer Bahnlinie.']]}
+];
+
+/* ---------- Begleitschaden-Lagen ---------- */
+const CDE = [
+  {id:'k1', sc:'dorf', show:['v6'], boxes:[[167, 151]],
+   lage:'Ein feindlicher Kampfpanzer steht in der Dorfstraße direkt neben einem Wohnhaus. PID ist bestätigt, die Freigabe liegt vor. Ob das Haus bewohnt ist, weißt du nicht. Über dir: F-16 mit GBU-12 und GBU-31, AH-64 Apache mit Hellfire und 30-mm-Kanone.',
+   q:'Welches Wirkmittel schlägst du vor?',
+   opts:['Hellfire vom Apache', 'GBU-31', 'GBU-12', '30-mm-Kanone des Apache'],
+   ex:'Grundsatz: das kleinste Wirkmittel, das das Ziel sicher bekämpft. Die Hellfire ist für Panzer gebaut, sehr präzise und hat einen kleinen Gefechtskopf. Auch die lasergelenkte GBU-12 ist präzise, bleibt aber eine 500-lb-Bombe: Druck und Splitter erreichen die Häuser ringsum. Die GBU-31 (2000 lb) wäre viel zu groß. Die 30-mm-Kanone wirkt gegen einen Kampfpanzer kaum, Abpraller und Streuung gefährden das Haus.'},
+  {id:'k2', sc:'dorf', show:['v3'], veh:[[18, 122, 90, 'lkw'], [72, 122, 90, 'spz']], boxes:[[18, 122, 9], [45, 122, 9], [72, 122, 9]],
+   lage:'Eine feindliche Kolonne (zwei Lkw, ein Schützenpanzer) fährt auf der Straße von Westen auf das Dorf zu. In etwa einer Minute ist sie zwischen den Häusern. PID und Freigabe liegen vor.',
+   q:'Wann bekämpfst du die Kolonne?',
+   opts:['Jetzt, solange sie noch im freien Gelände ist', 'Wenn sie im Dorf anhält – stehende Ziele trifft man leichter', 'Während sie durch das Dorf fährt – dann kann sie nicht ausweichen', 'Gar nicht – Fahrzeuge auf einer Straße könnten immer zivil sein'],
+   ex:'Der Zeitpunkt ist eines deiner wichtigsten Mittel gegen Begleitschaden. Im freien Gelände gefährdet der Angriff keine Häuser und Bewohner – sobald die Kolonne im Dorf ist, ändert sich das. PID ist hier bestätigt; das Argument „könnte zivil sein“ trifft deshalb nicht zu.'},
+  {id:'k3', sc:'dorf', show:[], mortar:[[250, 72]], people:[[250, 72, 4, 'mil']], boxes:[[250, 72, 13]],
+   lage:'Eine feindliche Mörserstellung steht im Kirchhof, direkt nördlich der Kirche, und beschießt eigene Truppen. Über dir: F-16 mit GBU-12 und GBU-31, AH-64 Apache mit Hellfire und 30-mm-Kanone.',
+   q:'Was schlägst du vor?',
+   opts:['Hellfire oder 30-mm-Kanone auf die Stellung – kleinste Wirkung, die Kirche nicht treffen', 'GBU-31 – die Stellung muss sicher ausgeschaltet werden', 'Die Kirche mitbekämpfen – der Gegner nutzt sie als Deckung', 'Gar nicht – neben einer Kirche ist jeder Angriff verboten'],
+   ex:'Eine Kirche ist ein geschütztes Objekt (religiöse Stätte, oft Kulturgut). Eine Stellung daneben darfst du trotzdem bekämpfen, wenn die übrigen Voraussetzungen erfüllt sind – aber mit besonderer Vorsicht: kleinste ausreichende Wirkung, präzise, Anflug so, dass Fehler nicht in die Kirche gehen. Ob die Kirche selbst ihren Schutz verliert, entscheidest nicht du, sondern die Führung nach den Einsatzregeln (ROE).'},
+  {id:'k4', sc:'ort', show:[], boxes:[[136, 176, 12]],
+   lage:'Eine feindliche Infanteriegruppe hat sich im markierten Haus südlich der Hauptstraße festgesetzt und beschießt eigene Truppen. Die Nachbarhäuser sind bewohnt. Verfügbar: GBU-39 (SDB), GBU-12, GBU-31 und CBU-87.',
+   q:'Welches Wirkmittel und welchen Zünder schlägst du vor?',
+   opts:['GBU-39 (SDB) mit Verzögerungszünder', 'GBU-12 mit Annäherungszünder (Detonation über dem Dach)', 'GBU-31 mit Verzögerungszünder', 'CBU-87 auf das Haus'],
+   ex:'Die SDB ist klein und sehr genau. Mit Verzögerungszünder dringt sie ins Gebäude ein und detoniert dort – die Wirkung bleibt weitgehend im Haus. Eine Detonation über dem Dach verteilt Splitter über die Nachbarhäuser. Die GBU-31 ist mit 2000 lb viel zu groß. Streumunition (CBU-87) verteilt Sprengkörper über eine große Fläche und hinterlässt Blindgänger; Deutschland setzt sie nicht ein.'},
+  {id:'k5', sc:'wald', show:[], people:[[330, 168, 4, 'mil'], [352, 184, 4, 'mil'], [372, 164, 4, 'mil']], boxes:[[330, 168, 10], [352, 184, 10], [372, 164, 10]],
+   lage:'Feindliche Infanterie liegt verteilt in Schützenmulden im Rapsfeld und beschießt eigene Truppen. Weit und breit keine Häuser und keine Zivilpersonen. Das Lfz greift mit Bomben an, der Zünder ist einstellbar.',
+   q:'Welchen Zünder wählst du?',
+   opts:['Annäherungszünder – Detonation einige Meter über dem Boden', 'Verzögerungszünder – die Bombe dringt erst in den Boden ein', 'Gar keinen – Bomben gegen Infanterie sind verboten', 'Egal – der Zünder ändert an der Wirkung nichts'],
+   ex:'Gegen Soldaten im Freien oder in offenen Mulden wirkt eine Detonation über dem Boden am besten: Die Splitter treffen von oben in die Deckung. Mit Verzögerung verpufft viel Wirkung im Erdreich. Weil keine Zivilisten in der Nähe sind, spricht hier nichts gegen die große Splitterwirkung – neben Wohnhäusern wäre genau dieser Zünder die schlechteste Wahl.'},
+  {id:'k6', sc:'wald', show:[], veh:[[220, 56, 270, 'kpz']], boxes:[[220, 56]],
+   friends:['168,8 164,60 170,104 194,124 214,152 182,172 168,200 156,252 162,294'], friendLabel:[84, 150],
+   lage:'Eigene Truppen liegen am Ostrand des Waldes (blaue Linie). Ein feindlicher Kampfpanzer steht östlich davon im Feld. Die F-16 greift mit einer lasergelenkten GBU-12 an.',
+   q:'Welche Angriffsrichtung legst du fest?',
+   opts:['Von Nord nach Süd – parallel zu den eigenen Truppen', 'Von West nach Ost – über die eigenen Truppen hinweg', 'Von Ost nach West – auf die eigenen Truppen zu', 'Egal – lasergelenkte Bomben treffen immer'],
+   ex:'Bei vielen Waffen streuen Fehler vor allem in Flugrichtung: Die Bombe fällt eher zu kurz oder zu weit als zur Seite. Fliegt das Lfz parallel zu den eigenen Truppen, landet ein Fehlwurf vor oder hinter dem Ziel – nicht bei euch. Über euch hinweg (zu kurz) oder auf euch zu (zu weit) gefährdet euch. Auch Laserbomben können danebengehen, etwa wenn der Laserpunkt verloren geht.'},
+  {id:'k7', sc:'kreuz', show:['d4'], people:[[262, 116, 4]], boxes:[[312, 76]],
+   lage:'Die F-16 ist im Zielanflug auf den Kampfpanzer am Windrad, die Bombe ist noch nicht ausgelöst. Da kommen auf dem Feldweg Zivilpersonen auf das Ziel zu.',
+   q:'Was tust du?',
+   opts:['„ABORT“ funken – Angriff abbrechen und neu bewerten', '„CLEARED HOT“ bestätigen – die Bombe ist präzise', 'Nichts – der Pilot entscheidet selbst', 'Den Piloten drängen, schneller auszulösen, bevor sie näher kommen'],
+   ex:'ABORT bricht den Angriff ab. Das ist der richtige Ruf, sobald etwas nicht mehr stimmt – hier sind Zivilpersonen auf dem Weg ins Wirkungsgebiet. Danach bewertest du neu: abwarten, bis sie weg sind, oder einen anderen Zeitpunkt wählen. Wirksam ist ABORT nur bis zum Auslösen.'},
+  {id:'k8', sc:'bahn', show:['e2'], veh:[[284, 88, 0, 'pkw', '#c0392b']], boxes:[[270, 80]],
+   lage:'Die GBU-12 ist ausgelöst und fliegt auf den feindlichen Lkw im Gewerbegebiet zu. Du beleuchtest das Ziel mit deinem Laser. Plötzlich hält ein ziviler Pkw direkt daneben.',
+   q:'Was tust du?',
+   opts:['Den Laserpunkt sofort auf eine freie Fläche ohne Menschen verlegen', '„ABORT“ funken – damit bricht die Bombe ab', 'Den Laser ausschalten – dann fällt die Bombe harmlos zu Boden', 'Weiter lasern – der Angriff ist schon freigegeben'],
+   ex:'Nach dem Auslösen hilft ABORT nicht mehr – eine Bombe lässt sich nicht zurückrufen. Eine lasergelenkte Bombe folgt aber dem Laserpunkt. Verlegst du ihn rechtzeitig auf eine freie Fläche, schlägt sie dort ein. Schaltest du den Laser nur ab, fliegt sie ungelenkt weiter und schlägt irgendwo in der Nähe des Ziels ein. Lege dir so eine freie Fläche schon vor dem Angriff fest.'},
+  {id:'k9', sc:'kreuz', show:['d1'], veh:[[300, 154, 90, 'pkw', '#ddd'], [60, 145, 270, 'pkw', '#2f5fa8']], boxes:[[214, 134]],
+   lage:'An der Kreuzung hält ein Lkw. Er ist olivgrün, aber du kannst nicht erkennen, ob er militärisch ist. Auf der Straße fahren zivile Autos. Ein Lfz mit Bomben ist über dir.',
+   q:'Was tust du?',
+   opts:['Nicht bekämpfen – weiter beobachten, bis die Identität sicher ist (PID)', 'Bekämpfen – olivgrün heißt militärisch', 'Bekämpfen, sobald keine anderen Autos in der Nähe sind', 'Mit der Bordkanone in die Nähe schießen und die Reaktion abwarten'],
+   ex:'Ohne sichere Identifizierung (PID) wird nicht angegriffen – das ist der Grundsatz der Unterscheidung. Farbe allein beweist nichts; auch zivile Lkw sind olivgrün. Beobachte weiter, nutze das Pod-Bild des Lfz und frage nach, bis feststeht, was der Lkw ist.'},
+  {id:'k10', sc:'ort', show:['c2'], people:[[170, 58, 6], [200, 64, 5], [240, 56, 6]], boxes:[[214, 106]],
+   lage:'Ein feindliches Flugabwehrsystem SA-8 steht auf dem Sportplatz der Schule. Es ist Vormittag, auf dem Schulhof sind Kinder.',
+   q:'Was tust du?',
+   opts:['Lage melden: Schule direkt daneben. Wirkmittel mit kleinster Wirkung, Zeitpunkt und Anflugrichtung vorschlagen – die Führung entscheidet', 'Sofort mit GBU-31 angreifen – die Fla bedroht eure Lfz', 'Nie bekämpfen – neben einer Schule ist jeder Angriff verboten', 'Mit Streumunition angreifen, damit das Fahrzeug sicher getroffen wird'],
+   ex:'Das SA-8 ist ein militärisches Ziel, aber die Kinder auf dem Schulhof wiegen schwer. Verhältnismäßigkeit und Vorsicht verlangen, Schaden an Zivilpersonen so weit wie möglich zu vermeiden: kleinste ausreichende Wirkung, geeigneter Zeitpunkt (z. B. wenn die Schule leer ist), passende Anflugrichtung. Ob und wann angegriffen wird, entscheidet die Führung nach den Einsatzregeln – du lieferst ihr ein klares Lagebild und einen Vorschlag.'},
+  {id:'k11', sc:'ort', show:['c1'], boxes:[[58, 176]],
+   lage:'Ein feindlicher Lkw mit Funkantennen (vermutlich ein Gefechtsstand) tankt an der Tankstelle. Er wird gleich weiterfahren. Über dir: AH-64 Apache mit Hellfire.',
+   q:'Was schlägst du vor?',
+   opts:['Abwarten, bis er die Tankstelle verlassen hat – dann bekämpfen', 'Sofort Hellfire – kleiner Gefechtskopf, also kaum Begleitschaden', 'Sofort eine GBU-12 – der Gefechtsstand ist wichtig', 'Gar nicht – Gefechtsstände sind keine Ziele'],
+   ex:'An der Tankstelle können Kraftstoff und Gas explodieren und brennen. Diese Folgewirkung reicht weit über den Gefechtskopf hinaus – auch bei einer kleinen Hellfire. Der Lkw fährt gleich weiter; ein paar Minuten Geduld verringern den Begleitschaden erheblich.'},
+  {id:'k12', sc:'kreuz', show:[], veh:[[150, 70, 90, 'kpz']], boxes:[[150, 70]],
+   lage:'Ein feindlicher Kampfpanzer steht im Feld, westlich davon liegt ein bewohntes Gehöft. Die F-16 greift mit einer GBU-12 an.',
+   q:'Welche Angriffsrichtung legst du fest?',
+   opts:['Von Süd nach Nord', 'Von Ost nach West', 'Von West nach Ost', 'Egal – die Bombe ist gelenkt'],
+   ex:'Fehler streuen vor allem in Flugrichtung. Von Ost nach West liegt das Gehöft hinter dem Ziel – ein Fehlwurf „zu weit“ trifft es. Von West nach Ost fliegt das Lfz über das Gehöft an – ein Fehlwurf „zu kurz“ trifft es. Von Süd nach Nord liegt das Gehöft seitlich der Flugrichtung, und vor und hinter dem Ziel ist freies Feld.'},
+  {id:'k13', sc:'bahn', show:['e4'], boxes:[[340, 262]],
+   lage:'Ein feindlicher Kampfpanzer steht abgestellt auf dem Parkplatz des Krankenhauses. Die Besatzung ist ausgestiegen, es gibt keine Gefechtshandlung. Eigene Truppen sind nicht bedroht.',
+   q:'Was schlägst du vor?',
+   opts:['Melden, beobachten und abwarten, bis der Panzer das Krankenhausgelände verlässt', 'Sofort Hellfire – präzise genug für den Parkplatz', 'Das Krankenhaus mitbekämpfen – es wird militärisch genutzt', 'GBU-12 mit Anflugrichtung vom Krankenhaus weg'],
+   ex:'Ein Krankenhaus ist besonders geschützt. Der Panzer ist zwar ein militärisches Ziel, aber es eilt nicht: Er bedroht niemanden. Vorsicht heißt hier, einen Zeitpunkt zu wählen, an dem Patienten und Personal nicht gefährdet sind. Ob das Krankenhaus seinen Schutz verliert, entscheidet nicht der JTAC – das wäre nur bei Missbrauch für schädigende militärische Handlungen möglich und ist eine Frage für die Führung.'},
+  {id:'k14', sc:'dorf', ir:true, show:['v2'], boxes:[[341, 72]],
+   lage:'Nacht. Im Hof des Gehöfts steht ein feindlicher Schützenpanzer. Im Wärmebild siehst du ihn deutlich – ob im Wohnhaus daneben Menschen sind, siehst du nicht.',
+   q:'Was tust du?',
+   opts:['Vor dem Angriff länger beobachten: Wer kommt und geht, wo halten sich Menschen auf?', 'Das Wärmebild zeigt keine Menschen – also ist niemand im Haus', 'Sofort GBU-31 auf das Gehöft – nachts sind die Straßen leer', 'Streumunition, damit auch versteckte Fahrzeuge getroffen werden'],
+   ex:'Wände und Dächer schirmen Wärme ab: Menschen im Haus siehst du im Wärmebild nicht. Wer das Ziel länger beobachtet (Pattern of Life), erkennt, wer dort lebt und wann der Hof leer ist. Erst dann lässt sich der Begleitschaden ehrlich abschätzen.'}
+];
+
+/* ---------- Grundlagenfragen: [id, Bereich, Frage, [richtig, falsch, falsch, falsch], Erklärung] ---------- */
+const CUR = [
+  ['kgr1', 'kgr', 'Wofür steht „NB“ in 32U NB 4567 7234?', ['Für das 100-km-Quadrat', 'Für die Gitterzone', 'Für das Kartenblatt', 'Für Nord und Breite'], 'MGRS baut sich von groß nach klein auf: 32U ist die Gitterzone, NB bezeichnet darin ein Quadrat von 100 × 100 km. Die Ziffern geben die Lage innerhalb dieses Quadrats an.'],
+  ['kgr2', 'kgr', 'Was bezeichnet „32U“ in 32U NB 4567 7234?', ['Die Gitterzone: Längenstreifen 32 und Breitenband U', 'Das 100-km-Quadrat', 'Die Höhe über dem Meer', 'Die Nummer des Kartenblatts'], 'Die Erde ist in 60 Längenstreifen zu je 6° geteilt; Deutschland liegt fast ganz in den Streifen 32 und 33. Der Buchstabe nennt das Breitenband (je 8°), für den größten Teil Deutschlands U.'],
+  ['kgr3', 'kgr', 'Welcher Wert steht bei MGRS zuerst?', ['Der Ostwert (Rechtswert), dann der Nordwert (Hochwert)', 'Der Nordwert, dann der Ostwert', 'Der größere der beiden Werte', 'Das ist egal, solange beide dabei sind'], 'Merksatz: „Erst nach rechts, dann nach oben.“ Erst liest du an der unteren Kartenkante ab, wie weit der Punkt nach Osten liegt, dann an der linken Kante, wie weit nach Norden. Wer die Reihenfolge vertauscht, landet an einem ganz anderen Ort.'],
+  ['kgr4', 'kgr', 'Welche Stelle eines Gitterquadrats bezeichnet eine MGRS-Koordinate?', ['Die linke untere (südwestliche) Ecke', 'Die Mitte des Quadrats', 'Die rechte obere Ecke', 'Die linke obere Ecke'], 'Eine Koordinate steht für das Quadrat, dessen linke untere Ecke sie angibt. 32U NB 457 723 meint das 100-m-Quadrat, das bei 457/723 beginnt. Deshalb wird beim Kürzen abgeschnitten und nicht gerundet.'],
+  ['kgr5', 'kgr', 'Du kürzt eine Koordinate von 10 auf 8 Stellen. Wie gehst du vor?', ['Bei Ost- und Nordwert jeweils die letzte Ziffer streichen', 'Beide Werte runden', 'Die letzten zwei Ziffern der ganzen Zahlenreihe streichen', 'Nur beim Nordwert zwei Ziffern streichen'], 'Ost- und Nordwert werden getrennt gekürzt, immer um gleich viele Stellen, und abgeschnitten – nicht gerundet. 45678 72345 wird zu 4567 7234.'],
+  ['kgr6', 'kgr', 'Eine Zielkoordinate hat 10 Stellen. Ist das Ziel damit auf 1 m genau bestimmt?', ['Nein – die Stellenzahl sagt nur, wie fein geschrieben wurde, nicht wie genau gemessen wurde', 'Ja – 10 Stellen bedeuten immer 1 m Genauigkeit', 'Ja, aber nur bei Tag', 'Nein – 10 Stellen bedeuten 10 m'], 'Eine Koordinate kann 10 Stellen haben und trotzdem weit danebenliegen, etwa wenn sie grob aus der Karte geschätzt und mit Nullen aufgefüllt wurde. Wie genau sie wirklich ist, hängt davon ab, wie sie bestimmt wurde: Karte, GPS, Laser-Entfernungsmesser oder Zielerfassungsgerät. Für GPS-Waffen zählt diese echte Genauigkeit (TLE), nicht die Stellenzahl.'],
+  ['kgr7', 'kgr', 'Was ist UTMREF?', ['Die deutsche Bezeichnung für MGRS', 'Ein eigenes Gitter nur für Deutschland', 'Die Höhenangabe zur Koordinate', 'Ein Funkverfahren für Koordinaten'], 'UTMREF (UTM-Referenzsystem) ist der deutsche Name für MGRS. Auf Bundeswehr-Karten steht deshalb oft UTMREF – gemeint ist dasselbe Gitter, das auch die Lfz nutzen.'],
+  ['kgr8', 'kgr', 'Deine Karte nutzt ein anderes Bezugssystem als das GPS des Lfz (WGS 84). Was droht?', ['Dieselbe Koordinate liegt im Gelände an einer anderen Stelle – Versatz von über hundert Metern möglich', 'Nichts – MGRS ist überall gleich', 'Nur die Höhe stimmt nicht', 'Die Koordinate wird automatisch umgerechnet'], 'Eine Koordinate gilt nur zusammen mit ihrem Bezugssystem (Kartendatum). Ältere Karten nutzen teils andere Systeme als WGS 84; dann zeigt dieselbe Zahlenfolge auf einen anderen Punkt. Kartenbezug prüfen und abstimmen – sonst trifft die GPS-Waffe präzise die falsche Stelle.'],
+  ['kgr9', 'kgr', 'Die Gitterlinien deiner Karte haben 1 km Abstand. Wie viel ist ein Zehntel davon?', ['100 m', '10 m', '1 m', '1 km'], 'Gitterlinien auf Militärkarten haben meist 1 km Abstand. Ein Zehntel davon sind 100 m – das ist die dritte Ziffer von Ost- und Nordwert bei einer 6-stelligen Koordinate.'],
+  ['dc1', 'dir', 'Wie viele Strich hat der Vollkreis bei der Bundeswehr und in der NATO?', ['6400', '6000', '360', '1000'], 'NATO-Strich: Der Vollkreis hat 6400 Strich. 90° = 1600 Strich, 180° = 3200 Strich, 1° ≈ 17,8 Strich.'],
+  ['dc2', 'dir', 'Du hast ein erbeutetes russisches Fernglas. In wie viele Teile ist dort der Vollkreis geteilt?', ['6000', '6400', '360', '400'], 'Russland und früher der Warschauer Pakt teilen den Vollkreis in 6000 Teile („Tausendstel“, geschrieben z. B. 15-00 für 90°). Das sind rund 6 % weniger als beim NATO-Strich – bei Richtungen ein spürbarer Unterschied.'],
+  ['dc3', 'dir', 'Wie bildest du die Gegenrichtung in Strich?', ['± 3200 Strich', '± 1600 Strich', '6400 minus Richtung', '± 6400 Strich'], 'Die Gegenrichtung liegt einen halben Kreis weiter: plus oder minus 3200 Strich (in Grad ± 180°). Beispiel: Richtung 1000 → Gegenrichtung 4200.'],
+  ['dc4', 'dir', 'Dein Kompass zeigt nach Magnetisch Nord, die Karte ist nach Gitternord ausgerichtet. Wo findest du den Unterschied?', ['Am Kartenrand (Angabe zur Nadelabweichung)', 'Nirgends – er ist immer null', 'In Zeile 8 der 9-Line', 'Auf dem Kompassdeckel'], 'Gitternord (Karte) und Magnetisch Nord (Kompass) weichen voneinander ab. Den Winkel dazwischen nennt die Karte am Rand als Nadelabweichung. In Deutschland ist er klein, in anderen Regionen kann er groß sein – vor dem Messen immer nachsehen.'],
+  ['dc5', 'card', 'In welcher Form gibst du Zeile 8 der 9-Line an?', ['Himmelsrichtung und Entfernung der eigenen Truppen vom Ziel aus, z. B. „Süd 800“', 'Koordinate der eigenen Truppen', 'Richtung vom eigenen Standort zum Ziel in Strich', 'Entfernung vom Lfz zum Ziel'], 'Zeile 8 sagt dem Piloten, wo ihr steht – vom Ziel aus gesehen: Himmelsrichtung und Entfernung in Metern. „Süd 800“ heißt: eigene Truppen 800 m südlich des Ziels.'],
+  ['dc6', 'card', 'Deine Truppe steht 600 m südlich des Ziels. Was meldest du in Zeile 8?', ['Süd 600', 'Nord 600', 'Süd 6000', 'Nord 6'], 'Zeile 8 wird vom Ziel aus angegeben: Ihr steht südlich des Ziels, also „Süd 600“. Häufiger Fehler ist die Richtung vom eigenen Standort zum Ziel – das wäre „Nord“ und schickt den Piloten gedanklich auf die falsche Seite.'],
+  ['tg1', 'tgr', 'Womit beginnt ein Talk-on?', ['Mit gemeinsamer Orientierung und einem großen, eindeutigen Bezugspunkt', 'Mit der genauen Beschreibung des Ziels', 'Mit der Koordinate der eigenen Truppen', 'Mit dem kleinsten Detail in Zielnähe'], 'Erst klärt ihr, wie ihr euch orientiert (z. B. Himmelsrichtungen, „Norden oben“). Dann kommt ein großer Bezugspunkt, den der Pilot sicher findet: Fluss, Ortschaft, große Kreuzung. Von dort geht es Schritt für Schritt zum Ziel.'],
+  ['tg2', 'tgr', 'Warum Himmelsrichtungen statt „links“ und „rechts“?', ['Links und rechts hängen von der Blickrichtung ab – der Pilot fliegt aus einer anderen Richtung an', 'Himmelsrichtungen sind kürzer', 'Links und rechts sind im Funk verboten', 'Der Pilot hat keinen Kompass'], 'Du schaust vom Boden aus einer Richtung, der Pilot kreist oder fliegt aus einer anderen an. Für ihn ist „rechts von der Kirche“ etwas anderes als für dich. Norden ist für beide gleich.'],
+  ['tg3', 'tgr', 'Was ist eine „Einheit“ (Maßstab) im Talk-on?', ['Eine Strecke, die ihr beide seht – z. B. Kreuzung bis Kirche –, mit der ihr weitere Entfernungen beschreibt', 'Die Entfernung zwischen dir und dem Ziel', 'Immer genau 100 m', 'Die Flughöhe des Lfz'], 'Entfernungen schätzt jeder anders, besonders aus der Luft. Legt ihr eine sichtbare Strecke als „eine Einheit“ fest, versteht ihr beide unter „zwei Einheiten östlich“ dasselbe.'],
+  ['tg4', 'tgr', 'Der Pilot meldet bei einem Bezugspunkt „CONTACT“. Was bedeutet das?', ['Er hat den Bezugspunkt gefunden – du gehst zum nächsten Schritt', 'Er hat das Ziel gefunden', 'Er wird beschossen', 'Er hat den Funkkontakt verloren'], 'CONTACT bestätigt einen Bezugspunkt oder ein Merkmal. Erst wenn der Pilot das Ziel selbst gefunden hat, meldet er TALLY.'],
+  ['tg5', 'tgr', 'Der Pilot meldet „LOOKING“. Was tust du?', ['Die Beschreibung vereinfachen oder einen größeren Bezugspunkt wählen', 'Sofort zum nächsten Schritt gehen', 'Den Angriff freigeben', 'Die Zielkoordinate wiederholen und abwarten'], 'LOOKING heißt: Der Pilot sucht noch. Dann hilft kein weiterer Schritt, sondern eine einfachere Beschreibung oder ein größerer, auffälligerer Bezugspunkt.'],
+  ['tg6', 'tgr', 'Welcher Bezugspunkt eignet sich am besten?', ['Eine große Straßenkreuzung', 'Ein parkendes Auto', 'Ein Verkehrsschild', 'Ein Mensch am Straßenrand'], 'Gute Bezugspunkte sind groß, einmalig, aus der Luft gut sichtbar und bleiben, wo sie sind: Kreuzungen, Brücken, Waldränder, Gewässer, auffällige Gebäude. Fahrzeuge und Menschen bewegen sich, Schilder sind von oben nicht zu sehen.'],
+  ['tg7', 'tgr', 'Nachts sieht der Pilot das Gelände nur im Wärmebild. Was ändert sich für deinen Talk-on?', ['Es gibt keine Farben mehr – beschreibe Formen, Linien und warme Objekte', 'Nichts', 'Ein Talk-on ist nachts nicht möglich', 'Du darfst nur noch Koordinaten verwenden'], 'Das Wärmebild zeigt Temperaturunterschiede, keine Farben. „Rotes Dach“ oder „gelbes Feld“ helfen nicht. Straßen, Gebäudeformen, Gewässer und warme Fahrzeuge dagegen schon.'],
+  ['tg8', 'tgr', 'Wie verkürzt du einen langen Talk-on am besten?', ['Mit einer Markierung: IR-Pointer, Laser oder Rauch am Ziel oder nahe dabei', 'Indem du schneller sprichst', 'Indem du alle Schritte in einem Funkspruch sagst', 'Indem du auf Bezugspunkte verzichtest'], 'Eine Markierung gibt dem Piloten sofort einen Punkt im Gelände. Von dort brauchst du nur noch wenige Schritte, etwa „vom Rauch 100 m nach Norden“.'],
+  ['tg9', 'tgr', 'Der Pilot meldet „TALLY“. Wie stellst du sicher, dass er das richtige Ziel hat?', ['Er beschreibt dir das Ziel und seine Umgebung – du vergleichst mit deinem Bild', 'Gar nicht – TALLY reicht immer', 'Du fragst nach seiner Flughöhe', 'Du wiederholst deinen Talk-on'], 'TALLY heißt nur: Der Pilot glaubt, das Ziel zu sehen. Lass ihn beschreiben, was er sieht (Fahrzeugart, Ausrichtung, Umgebung). Passt alles zu deinem Bild, habt ihr dasselbe Ziel. Mit ROVER seht ihr sogar dasselbe Pod-Bild.'],
+  ['tg10', 'tgr', 'Warum funkst du den Talk-on in kurzen Schritten mit Bestätigung?', ['Damit der Pilot jeden Bezugspunkt gefunden hat, bevor der nächste kommt', 'Weil Funkgeräte nur kurze Sprüche übertragen', 'Damit der Gegner nicht mithört', 'Weil das Lfz sonst zu schnell ist'], 'Jeder Schritt baut auf dem vorigen auf. Hat der Pilot einen Bezugspunkt verpasst, ist alles danach wertlos. Deshalb: ein Schritt, CONTACT abwarten, nächster Schritt.'],
+  ['cg1', 'cgr', 'Welche drei Grundsätze des humanitären Völkerrechts stehen hinter jeder Wirkmittelwahl?', ['Unterscheidung, Verhältnismäßigkeit, Vorsicht', 'Schnelligkeit, Überraschung, Masse', 'Aufklärung, Führung, Wirkung', 'Tarnung, Täuschung, Deckung'], 'Unterscheidung: nur militärische Ziele angreifen. Verhältnismäßigkeit: Die erwarteten Schäden an Zivilpersonen und zivilen Objekten dürfen nicht außer Verhältnis zum militärischen Vorteil stehen. Vorsicht: alles praktisch Mögliche tun, um solche Schäden zu vermeiden – durch Wahl von Wirkmittel, Zeitpunkt und Anflugrichtung. Festgeschrieben im I. Zusatzprotokoll zu den Genfer Abkommen.'],
+  ['cg2', 'cgr', 'Eine GBU-31 ist GPS-gelenkt und sehr genau. Bedeutet das wenig Begleitschaden?', ['Nein – sie trifft genau, wirkt aber mit 2000 lb sehr weit um den Einschlagpunkt', 'Ja – präzise Waffen verursachen keinen Begleitschaden', 'Ja, wenn das Wetter gut ist', 'Nein – GPS-Waffen sind ungenau'], 'Die Präzision bestimmt, wo die Waffe einschlägt. Die Größe des Gefechtskopfs bestimmt, wie weit Druck und Splitter reichen. Für Ziele nahe Zivilisten zählt beides: genau treffen und möglichst kleine Wirkung.'],
+  ['cg3', 'cgr', 'Was bewirkt ein Verzögerungszünder?', ['Die Bombe dringt erst ein und detoniert im Gebäude oder im Boden – weniger Splitter nach außen', 'Die Bombe detoniert einige Meter über dem Boden', 'Die Bombe detoniert erst Stunden später', 'Die Bombe detoniert nicht, wenn Zivilisten in der Nähe sind'], 'Mit Verzögerung detoniert die Bombe kurz nach dem Eindringen. Die Wirkung bleibt stärker im Gebäude oder im Erdreich. Nachteil: Das Gebäude kann einstürzen.'],
+  ['cg4', 'cgr', 'Wann ist ein Annäherungszünder (Detonation über dem Boden) sinnvoll?', ['Gegen ungeschützte Kräfte im freien Gelände, fern von Zivilisten', 'Gegen Ziele in Gebäuden neben Wohnhäusern', 'Gegen Bunker', 'Immer, wenn Zivilisten in der Nähe sind'], 'Die Detonation über dem Boden verteilt Splitter über eine große Fläche – wirksam gegen Infanterie im Freien. Genau deshalb ist sie neben Wohnhäusern die schlechteste Wahl.'],
+  ['cg5', 'cgr', 'In welche Richtung weichen Bomben bei Fehlern meist am stärksten ab?', ['In Flugrichtung – sie fallen eher zu kurz oder zu weit als zur Seite', 'Quer zur Flugrichtung', 'Immer mit dem Wind, egal wie das Lfz fliegt', 'Gar nicht – gelenkte Bomben treffen immer'], 'Bei vielen Waffen wirken sich Fehler bei Abwurf, Wind oder Lenkung vor allem als „zu kurz“ oder „zu weit“ aus. Darum legst du die Anflugrichtung so, dass weder vor noch hinter dem Ziel Zivilisten oder eigene Truppen liegen.'],
+  ['cg6', 'cgr', 'Warum ist ein Ziel an einer Tankstelle besonders heikel?', ['Kraftstoff und Gas können explodieren und brennen – die Wirkung reicht weit über den Gefechtskopf hinaus', 'Tankstellen sind geschützte Objekte', 'Weil Laser an Tankstellen nicht funktionieren', 'Weil das Ziel dort schneller wird'], 'Folgeexplosionen und Brände (Kraftstoff, Gas, Munition) vergrößern den Schaden weit über die eigentliche Waffenwirkung hinaus. Solche Folgewirkungen gehören in deine Abwägung.'],
+  ['cg7', 'cgr', 'Wann rufst du „ABORT“?', ['Sobald der Angriff Zivilisten oder eigene Truppen gefährdet oder etwas nicht stimmt – vor dem Auslösen', 'Nur wenn der Pilot es verlangt', 'Erst nach dem Einschlag', 'Nie – ein begonnener Angriff wird zu Ende geflogen'], 'ABORT bricht den Angriff ab. Du nutzt es, wenn etwas nicht stimmt: falsches Ziel, falscher Anflug, Zivilisten oder eigene Truppen in Gefahr. Wirksam ist es nur bis zum Auslösen – eine abgeworfene Bombe lässt sich nicht zurückholen.'],
+  ['cg8', 'cgr', 'Darf die Bundeswehr Streumunition wie CBU-87 einsetzen?', ['Nein – Deutschland ist dem Übereinkommen über Streumunition (Oslo) beigetreten', 'Ja, ohne Einschränkung', 'Ja, aber nur nachts', 'Nur gegen Panzer'], 'Streumunition verteilt viele kleine Sprengkörper über eine große Fläche; Blindgänger gefährden noch Jahre später Zivilisten. Deutschland ist dem Oslo-Übereinkommen 2009 beigetreten und setzt solche Munition nicht ein. Verbündete, die nicht beigetreten sind, haben sie teils noch.'],
+  ['cg9', 'cgr', 'Was bedeutet „Pattern of Life“?', ['Vor dem Angriff beobachten, wer sich wann am und um das Ziel aufhält', 'Die Lebensdauer einer Waffe', 'Der Tagesablauf des Piloten', 'Ein Funkverfahren'], 'Wer ein Ziel länger beobachtet, erkennt Muster: Wann kommen Familien, Händler, Kinder? Wann ist der Ort leer? So wählst du einen Zeitpunkt mit möglichst wenig Gefahr für Unbeteiligte.'],
+  ['cg10', 'cgr', 'Wer trägt die Verantwortung für die Freigabe eines CAS-Angriffs?', ['Der Truppenführer am Boden – du handelst in seinem Auftrag und nach den Einsatzregeln', 'Der Pilot allein', 'Der JTAC ganz allein, ohne Auftrag', 'Die Flugsicherung'], 'Die Verantwortung liegt beim Truppenführer am Boden (Ground Commander). Du als JTAC berätst ihn, schlägst Wirkmittel, Anflug und Zeitpunkt vor und gibst die Freigabe in seinem Auftrag – im Rahmen der Einsatzregeln (ROE).'],
+  ['cg11', 'cgr', 'Was zeigt ein rotes Kreuz auf weißem Grund auf einem Dach?', ['Eine Sanitätseinrichtung, z. B. ein Krankenhaus – besonders geschützt', 'Eine Tankstelle', 'Einen Gefechtsstand', 'Einen Landeplatz für Hubschrauber'], 'Das Rote Kreuz (und der Rote Halbmond) kennzeichnet Sanitätseinrichtungen und Sanitätspersonal. Sie sind besonders geschützt und dürfen nicht angegriffen werden, solange sie nicht für schädigende militärische Handlungen missbraucht werden.'],
+  ['cg12', 'cgr', 'Was kennzeichnet das blau-weiße Schutzzeichen der Haager Konvention an einem Gebäude?', ['Kulturgut unter Schutz', 'Ein Krankenhaus', 'Eine Schule', 'Ein Munitionslager'], 'Das blau-weiße Schutzzeichen (Haager Konvention von 1954) kennzeichnet Kulturgut wie Kirchen, Museen oder Denkmäler. Von oben ist es meist nicht zu sehen – solche Objekte stehen deshalb in Listen und Karten (No-Strike-Liste).']
+];
+/* ---------- Karten-Zeichner (Militärkarte mit Gitter) ---------- */
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const p2 = n => String(n).padStart(2, '0');
+const fmtNum = (n, d = 0) => n.toLocaleString('de-DE', {minimumFractionDigits:d, maximumFractionDigits:d, useGrouping:false});
+const SQS = [['32U', 'NB'], ['32U', 'MA'], ['32U', 'PV'], ['32U', 'NC'], ['33U', 'UU'], ['33U', 'US']];
+function mapBack(W, H, seed){
+  const R = mulberry(seed); let s = `<rect width="${W}" height="${H}" fill="#f3efe0"/>`;
+  for (let i = 0; i < 3; i++){ const cx = R() * W, cy = R() * H, n = 9, r0 = 25 + R() * 35; let d = '';
+    for (let k = 0; k < n; k++){ const a = k / n * Math.PI * 2, r = r0 * (.7 + R() * .5); d += (k ? 'L' : 'M') + (cx + Math.cos(a) * r).toFixed(1) + ' ' + (cy + Math.sin(a) * r * .8).toFixed(1); }
+    s += `<path d="${d}Z" fill="#c9dfb2" stroke="#9fc184" stroke-width=".6"/>`; }
+  const y0 = R() * H, y1 = R() * H; s += `<path d="M0 ${y0.toFixed(1)} C ${W * .3} ${(y0 + 60 * (R() - .5)).toFixed(1)}, ${W * .6} ${(y1 + 60 * (R() - .5)).toFixed(1)}, ${W} ${y1.toFixed(1)}" fill="none" stroke="#7fb6dc" stroke-width="3"/>`;
+  const x0 = R() * W, x1 = R() * W; s += `<path d="M${x0.toFixed(1)} 0 L${x1.toFixed(1)} ${H}" fill="none" stroke="#7a5a3a" stroke-width="3.2"/><path d="M${x0.toFixed(1)} 0 L${x1.toFixed(1)} ${H}" fill="none" stroke="#f0b94a" stroke-width="2"/>`;
+  for (let v = 0; v < 2; v++){ const vx = R() * W * .8 + W * .1, vy = R() * H * .8 + H * .1; for (let k = 0; k < 7; k++) s += `<rect x="${(vx + (R() - .5) * 26).toFixed(1)}" y="${(vy + (R() - .5) * 20).toFixed(1)}" width="4" height="3.4" fill="#6b6b6b"/>`; }
+  return s;
+}
+const MK = {
+  ziel:(x, y) => `<g transform="translate(${x} ${y})"><circle r="6.5" fill="none" stroke="#d32f2f" stroke-width="2.2"/><path d="M-10 0H-4M4 0H10M0 -10V-4M0 4V10" stroke="#d32f2f" stroke-width="2"/></g>`,
+  eigen:(x, y) => `<g transform="translate(${x} ${y})"><rect x="-8" y="-5.5" width="16" height="11" fill="#9cc3f5" stroke="#1e4fa8" stroke-width="1.6"/></g>`
+};
+/* Gitterkarte: cols × rows Quadrate, Beschriftung der Gitterlinien (km) unten und links */
+function gridMap({E0, N0, cols = 4, rows = 3, pts = [], zone, sq, sub = 0, seed = 1, unit = 'km'}){
+  const L = 30, B = 24, T = 20, Rm = 8, W = 400, H = 300, k = Math.min((W - L - Rm) / cols, (H - T - B) / rows);
+  const mw = cols * k, mh = rows * k, ox = L, oy = T;
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kartenausschnitt mit Gitter"><rect width="${W}" height="${H}" fill="#fbf8ee"/>`;
+  s += `<g transform="translate(${ox} ${oy})"><svg width="${mw}" height="${mh}" overflow="hidden">${mapBack(mw, mh, seed)}</svg>`;
+  if (sub) for (let i = 0; i <= cols * sub; i++) s += `<line x1="${i * k / sub}" y1="0" x2="${i * k / sub}" y2="${mh}" stroke="#2a6db0" stroke-width=".35" opacity=".55"/>`;
+  if (sub) for (let j = 0; j <= rows * sub; j++) s += `<line x1="0" y1="${j * k / sub}" x2="${mw}" y2="${j * k / sub}" stroke="#2a6db0" stroke-width=".35" opacity=".55"/>`;
+  for (let i = 0; i <= cols; i++) s += `<line x1="${i * k}" y1="0" x2="${i * k}" y2="${mh}" stroke="#2a6db0" stroke-width="1"/>`;
+  for (let j = 0; j <= rows; j++) s += `<line x1="0" y1="${j * k}" x2="${mw}" y2="${j * k}" stroke="#2a6db0" stroke-width="1"/>`;
+  for (const p of pts) s += MK[p.kind](p.x * k, mh - p.y * k);
+  s += `</g>`;
+  const lab = (x, y, t, a = 'middle') => `<text x="${x}" y="${y}" text-anchor="${a}" font-size="11" font-weight="600" fill="#1d4f8a" font-family="Barlow, sans-serif">${t}</text>`;
+  if (E0 != null) for (let i = 0; i <= cols; i++) s += lab(ox + i * k, oy + mh + 15, p2((E0 + i) % 100));
+  if (N0 != null) for (let j = 0; j <= rows; j++) s += lab(ox - 5, oy + mh - j * k + 4, p2((N0 + j) % 100), 'end');
+  if (zone) s += `<text x="${ox}" y="14" font-size="11" font-weight="700" fill="#333" font-family="Barlow, sans-serif">${zone} ${sq} · Gitterlinien alle 1 km</text>`;
+  if (unit === '100m') s += `<text x="${ox}" y="14" font-size="11" font-weight="700" fill="#333" font-family="Barlow, sans-serif">1 Kästchen = 100 m · Gitternord oben</text>`;
+  s += `<g transform="translate(${W - 22} ${oy + 16})"><path d="M0 -10L5 4L0 1L-5 4Z" fill="#333"/><text y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#333" font-family="Barlow, sans-serif">N</text></g>`;
+  return s + `</svg>`;
+}
+/* 8-stellig: links das Kilometerquadrat mit 100-m-Teilung, rechts das 100-m-Quadrat vergrößert mit 10-m-Teilung (wie ein Planzeiger) */
+function zoomMap({E0, N0, e100, n100, fe, fn, zone, sq, seed}){
+  const W = 400, H = 222, a = 150, ox = 30, oy = 34, k = a / 10, b = 150, bx = 232, by = 34, kb = b / 10;
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kilometerquadrat und vergrößertes 100-m-Quadrat"><rect width="${W}" height="${H}" fill="#fbf8ee"/>`;
+  s += `<text x="${ox}" y="16" font-size="11" font-weight="700" fill="#333" font-family="Barlow, sans-serif">${zone} ${sq} · 1 km-Quadrat</text>`;
+  s += `<g transform="translate(${ox} ${oy})"><svg width="${a}" height="${a}" overflow="hidden">${mapBack(a, a, seed)}</svg>`;
+  for (let i = 0; i <= 10; i++){ const w = i % 10 ? .45 : 1.2, o = i % 10 ? .6 : 1;
+    s += `<line x1="${i * k}" y1="0" x2="${i * k}" y2="${a}" stroke="#2a6db0" stroke-width="${w}" opacity="${o}"/><line x1="0" y1="${i * k}" x2="${a}" y2="${i * k}" stroke="#2a6db0" stroke-width="${w}" opacity="${o}"/>`; }
+  for (let i = 1; i < 10; i++) s += `<text x="${i * k}" y="${a + 10}" text-anchor="middle" font-size="7.5" fill="#1d4f8a" font-family="Barlow, sans-serif">${i}</text><text x="-3" y="${a - i * k + 2.5}" text-anchor="end" font-size="7.5" fill="#1d4f8a" font-family="Barlow, sans-serif">${i}</text>`;
+  const cx = e100 * k, cy = a - (n100 + 1) * k;
+  s += `<rect x="${cx}" y="${cy}" width="${k}" height="${k}" fill="none" stroke="#e0a526" stroke-width="2"/>`;
+  s += `<circle cx="${(e100 + fe / 10) * k}" cy="${a - (n100 + fn / 10) * k}" r="2.4" fill="#d32f2f"/></g>`;
+  const lab = (x, y, t, an = 'middle', sz = 11) => `<text x="${x}" y="${y}" text-anchor="${an}" font-size="${sz}" font-weight="600" fill="#1d4f8a" font-family="Barlow, sans-serif">${t}</text>`;
+  s += lab(ox, oy + a + 22, p2(E0)) + lab(ox + a, oy + a + 22, p2((E0 + 1) % 100)) + lab(ox - 6, oy + a + 4, p2(N0), 'end') + lab(ox - 6, oy + 4, p2((N0 + 1) % 100), 'end');
+  // Lupe
+  s += `<path d="M${ox + cx + k} ${oy + cy} L${bx} ${by} M${ox + cx + k} ${oy + cy + k} L${bx} ${by + b}" stroke="#e0a526" stroke-width="1" opacity=".8"/>`;
+  s += `<text x="${bx}" y="16" font-size="11" font-weight="700" fill="#333" font-family="Barlow, sans-serif">Lupe: 100 m, Teilung 10 m</text>`;
+  s += `<g transform="translate(${bx} ${by})"><rect width="${b}" height="${b}" fill="#f6f1df" stroke="#e0a526" stroke-width="2"/>`;
+  for (let i = 1; i < 10; i++) s += `<line x1="${i * kb}" y1="0" x2="${i * kb}" y2="${b}" stroke="#2a6db0" stroke-width=".35" opacity=".5"/><line x1="0" y1="${i * kb}" x2="${b}" y2="${i * kb}" stroke="#2a6db0" stroke-width=".35" opacity=".5"/>`;
+  for (let i = 0; i <= 10; i++) s += `<line x1="${i * kb}" y1="${b}" x2="${i * kb}" y2="${b + 5}" stroke="#333" stroke-width="1"/><line x1="0" y1="${b - i * kb}" x2="-5" y2="${b - i * kb}" stroke="#333" stroke-width="1"/>`;
+  for (let i = 0; i < 10; i++) s += `<text x="${i * kb}" y="${b + 15}" text-anchor="middle" font-size="9" fill="#333" font-family="Barlow, sans-serif">${i}</text><text x="-8" y="${b - i * kb + 3}" text-anchor="end" font-size="9" fill="#333" font-family="Barlow, sans-serif">${i}</text>`;
+  const px = fe * kb, py = b - fn * kb;
+  s += `<path d="M${px} ${b}V${py}H0" fill="none" stroke="#d32f2f" stroke-width=".8" stroke-dasharray="3 2"/><circle cx="${px}" cy="${py}" r="4" fill="#d32f2f"/></g>`;
+  return s + `</svg>`;
+}
+
+/* ---------- Generatoren: jede Frage neu gewürfelt ---------- */
+const HR = ['Nord', 'Nordost', 'Ost', 'Südost', 'Süd', 'Südwest', 'West', 'Nordwest'];
+const uniq4 = a => new Set(a).size === a.length;
+function cell(n){ return Math.floor(n); }
+const GEN = {
+  read6:{area:'mgrs', n:3, make(){
+    const [zone, sq] = rnd(SQS), E0 = ri(10, 84), N0 = ri(10, 85);
+    const ke = ri(0, 3), te = ri(1, 8), kn = ri(0, 2), tn = ri(1, 8);
+    const E = `${p2(E0 + ke)}${te}`, N = `${p2(N0 + kn)}${tn}`;
+    const correct = `${zone} ${sq} ${E} ${N}`;
+    const wrong = [`${zone} ${sq} ${N} ${E}`, `${zone} ${sq} ${E} ${p2(N0 + kn)}${9 - tn}`, `${zone} ${sq} ${p2(E0 + ke + 1)}${te} ${N}`];
+    if (!uniq4([correct, ...wrong])) return GEN.read6.make();
+    const fig = gridMap({E0, N0, zone, sq, seed:ri(1, 9999), pts:[{kind:'ziel', x:ke + te / 10 + .05, y:kn + tn / 10 + .05}]});
+    return {prompt:'Lies die Koordinate des Ziels ab (6-stellig, auf 100 m).', fig, correct, wrong,
+      ex:`Erst nach rechts, dann nach oben. Die Gitterlinie links vom Ziel ist ${p2(E0 + ke)}, das Ziel liegt etwa ${te} Zehntel weiter östlich: ${E}. Die Linie unter dem Ziel ist ${p2(N0 + kn)}, das Ziel liegt etwa ${tn} Zehntel darüber: ${N}. Ergebnis: ${correct}. Ein Zehntel Gitterquadrat sind 100 m. Typische Fehler: Ost- und Nordwert vertauscht, von der oberen Linie nach unten gezählt, die falsche Gitterlinie genommen.`};
+  }},
+  read8:{area:'mgrs', n:3, make(){
+    const [zone, sq] = rnd(SQS), E0 = ri(10, 89), N0 = ri(10, 89);
+    const e100 = ri(0, 9), n100 = ri(0, 9), e10 = ri(0, 9), n10 = ri(0, 9);
+    const up = Math.random() < .5;
+    const fe = e10 + (up ? .6 + Math.random() * .25 : .2 + Math.random() * .2), fn = n10 + (!up ? .6 + Math.random() * .25 : .2 + Math.random() * .2);
+    const E = `${p2(E0)}${e100}${e10}`, N = `${p2(N0)}${n100}${n10}`;
+    const rE = Math.round(E0 * 100 + e100 * 10 + fe), rN = Math.round(N0 * 100 + n100 * 10 + fn);
+    const correct = `${zone} ${sq} ${E} ${N}`;
+    const rounded = `${zone} ${sq} ${String(rE).padStart(4, '0').slice(-4)} ${String(rN).padStart(4, '0').slice(-4)}`;
+    const wrong = [`${zone} ${sq} ${N} ${E}`, rounded, `${zone} ${sq} ${E} ${p2(N0)}${9 - n100}${n10}`];
+    if (!uniq4([correct, ...wrong])) return GEN.read8.make();
+    const fig = zoomMap({E0, N0, e100, n100, fe, fn, zone, sq, seed:ri(1, 9999)});
+    return {prompt:'Lies die Koordinate des Ziels ab (8-stellig, auf 10 m).', fig, correct, wrong,
+      ex:`Links findest du das 100-m-Quadrat: Gitterlinie ${p2(E0)}, dann ${e100} Kästchen nach Osten; Gitterlinie ${p2(N0)}, dann ${n100} Kästchen nach Norden. Rechts liest du in diesem Quadrat die 10-m-Stellen ab: Ost ${e10}, Nord ${n10}. Ergebnis: ${correct}. Abgelesen wird immer der Teilstrich links bzw. unter dem Punkt – nicht gerundet. Gerundet ergäbe sich ${rounded.split(' ').slice(2).join(' ')}, und das ist ein anderes 10-m-Quadrat.`};
+  }},
+  trunc:{area:'prec', n:3, make(){
+    const [zone, sq] = rnd(SQS), to8 = Math.random() < .6;
+    const e = ri(0, 9999) * 10 + ri(5, 9), n = ri(0, 9999) * 10 + ri(0, 9), E = String(e).padStart(5, '0'), N = String(n).padStart(5, '0');
+    const cut = to8 ? 4 : 3, src = `${zone} ${sq} ${E} ${N}`;
+    const correct = `${zone} ${sq} ${E.slice(0, cut)} ${N.slice(0, cut)}`;
+    const rd = v => String(Math.round(v / 10 ** (5 - cut))).padStart(cut, '0').slice(-cut);
+    const all = E + N;
+    const wrong = [`${zone} ${sq} ${rd(e)} ${rd(n)}`, `${zone} ${sq} ${all.slice(0, cut)} ${all.slice(cut, 2 * cut)}`, to8 ? `${zone} ${sq} ${E.slice(0, 3)} ${N.slice(0, 3)}` : `${zone} ${sq} ${E.slice(0, 4)} ${N.slice(0, 4)}`];
+    if (!uniq4([correct, ...wrong])) return GEN.trunc.make();
+    return {prompt:`Kürze ${src} auf ${to8 ? '8 Stellen (10 m)' : '6 Stellen (100 m)'}.`, correct, wrong,
+      ex:`Ost- und Nordwert werden getrennt gekürzt: ${E} → ${E.slice(0, cut)}, ${N} → ${N.slice(0, cut)}. Es wird abgeschnitten, nicht gerundet – die Koordinate bezeichnet immer die linke untere Ecke ihres Quadrats, und der Punkt liegt in diesem Quadrat. Falsch wäre auch, einfach die Zahlenreihe ${all} hinten zu kürzen.`};
+  }},
+  prec:{area:'prec', n:2, make(){
+    const [zone, sq] = rnd(SQS), d = rnd([4, 6, 8, 10]), h = d / 2;
+    const E = String(ri(0, 99999)).padStart(5, '0').slice(0, h), N = String(ri(0, 99999)).padStart(5, '0').slice(0, h);
+    const M = {4:'1 km', 6:'100 m', 8:'10 m', 10:'1 m'};
+    return {prompt:`Auf wie viel genau bezeichnet ${zone} ${sq} ${E} ${N} einen Ort?`, correct:M[d], wrong:Object.values(M).filter(x => x !== M[d]),
+      ex:`${d} Ziffern, also ${h} je Ost- und Nordwert: ${M[d]}. Merke: 4 Stellen = 1 km, 6 Stellen = 100 m, 8 Stellen = 10 m, 10 Stellen = 1 m. Die Koordinate meint ein Quadrat dieser Größe, dessen linke untere Ecke sie angibt.`};
+  }},
+  dist:{area:'dist', n:3, make(){
+    const [zone, sq] = rnd(SQS), [a, b, c] = rnd([[3, 4, 5], [4, 3, 5], [6, 8, 10], [8, 6, 10], [5, 12, 13], [12, 5, 13]]), big = Math.random() < .5;
+    const f = big ? 10 : 1, sx = rnd([1, -1]), sy = rnd([1, -1]);
+    const e1 = ri(150, 850), n1 = ri(150, 850), e2 = e1 + sx * a * f, n2 = n1 + sy * b * f;
+    if (e2 < 0 || e2 > 999 || n2 < 0 || n2 > 999) return GEN.dist.make();
+    const m = v => v * f * 100, fm = v => v >= 1000 ? `${fmtNum(v / 1000, v % 1000 ? 1 : 0)} km` : `${v} m`;
+    const P = (e, n) => `${zone} ${sq} ${String(e).padStart(3, '0')} ${String(n).padStart(3, '0')}`;
+    const correct = fm(m(c)), wrong = [fm(m(a + b)), fm(m(Math.max(a, b))), fm(big ? m(c) / 10 : m(c) * 10)];
+    return {prompt:`Wie weit liegen ${P(e1, n1)} und ${P(e2, n2)} auseinander?`, correct, wrong,
+      ex:`6-stellig heißt: die letzte Ziffer von Ost- und Nordwert zählt 100 m. Unterschied Ost: ${Math.abs(e2 - e1)} × 100 m = ${fm(m(a))}, Unterschied Nord: ${Math.abs(n2 - n1)} × 100 m = ${fm(m(b))}. Die Entfernung ist die Diagonale (Pythagoras): √(${a}² + ${b}²) = ${c}, also ${correct}. Einfach addieren (${fm(m(a + b))}) ist der häufigste Fehler.`};
+  }},
+  d2m:{area:'dir', n:2, make(){
+    const d = rnd([10, 15, 20, 30, 40, 45, 60, 75, 90, 100, 120, 135, 150, 160, 200, 210, 225, 240, 270, 300, 315, 330, 350]);
+    const m = d * 6400 / 360, f = v => (Number.isInteger(v) ? '' : '≈ ') + fmtNum(Math.round(v)) + ' Strich';
+    const correct = f(m), wrong = [f(d * 6000 / 360), f(d * 10), f((360 - d) * 6400 / 360)];
+    if (!uniq4([correct, ...wrong])) return GEN.d2m.make();
+    return {prompt:`Wie viel Strich (NATO, 6400) sind ${d}°?`, correct, wrong,
+      ex:`1° = 6400 / 360 ≈ 17,8 Strich. ${d}° × 17,78 ${f(m).startsWith('≈') ? '≈' : '='} ${fmtNum(Math.round(m))} Strich. Merkwerte: 45° = 800, 90° = 1600, 180° = 3200, 270° = 4800 Strich. Mit 6000 rechnet die russische Teilung – die gilt für NATO-Geräte nicht.`};
+  }},
+  m2d:{area:'dir', n:2, make(){
+    const m = rnd([100, 200, 300, 400, 500, 800, 1000, 1200, 1500, 2000, 2400, 2800, 3000, 3600, 4000, 4400, 4800, 5200, 5600, 6000]);
+    const d = m * 360 / 6400, f = v => (Math.abs(v - Math.round(v * 10) / 10) > 1e-9 ? '≈ ' : '') + fmtNum(Math.round(v * 10) / 10, Number.isInteger(Math.round(v * 10) / 10) ? 0 : 1) + '°';
+    const correct = f(d), wrong = [f(m * 360 / 6000), f(m / 10), f(m * 360 / 6400 + 90)];
+    if (!uniq4([correct, ...wrong])) return GEN.m2d.make();
+    return {prompt:`Wie viel Grad sind ${fmtNum(m)} Strich (NATO)?`, correct, wrong,
+      ex:`1600 Strich = 90°, also 1 Strich ≈ 0,056°. ${fmtNum(m)} Strich: ${fmtNum(m)} / 6400 × 360° ${correct.startsWith('≈') ? correct : '= ' + correct}. Wer mit 6000 (russische Teilung) oder einfach durch 10 rechnet, liegt daneben.`};
+  }},
+  back:{area:'dir', n:2, make(){
+    if (Math.random() < .6){
+      const a = ri(1, 127) * 50; if (a === 3200 || a === 1600 || a === 4800) return GEN.back.make();
+      const c = (a + 3200) % 6400, w = [(a + 1600) % 6400, (6400 - a) % 6400, (a + 4800) % 6400];
+      if (!uniq4([c, ...w])) return GEN.back.make();
+      const f = v => `${fmtNum(v)} Strich`;
+      return {prompt:`Das Ziel liegt von dir aus in Richtung ${fmtNum(a)} Strich. In welcher Richtung liegst du vom Ziel aus?`, correct:f(c), wrong:w.map(f),
+        ex:`Die Gegenrichtung ist ein halber Kreis weiter: ${fmtNum(a)} ${a < 3200 ? '+' : '−'} 3200 = ${fmtNum(c)} Strich. Liegt das Ergebnis über 6400, ziehst du 6400 ab.`};
+    }
+    const a = ri(1, 71) * 5; if (a % 90 === 0) return GEN.back.make();
+    const c = (a + 180) % 360, w = [(a + 90) % 360, (360 - a) % 360, (a + 270) % 360];
+    if (!uniq4([c, ...w])) return GEN.back.make();
+    return {prompt:`Das Ziel liegt von dir aus in Richtung ${a}°. In welcher Richtung liegst du vom Ziel aus?`, correct:`${c}°`, wrong:w.map(v => `${v}°`),
+      ex:`Gegenrichtung: ${a}° ${a < 180 ? '+' : '−'} 180° = ${c}°.`};
+  }},
+  card:{area:'card', n:2, make(){
+    const k = ri(0, 7), m = ((k * 800 + ri(-6, 6) * 50) + 6400) % 6400;
+    const correct = HR[k], wrong = [HR[(k + 1) % 8], HR[(k + 7) % 8], HR[(k + 4) % 8]];
+    return {prompt:`Welche Himmelsrichtung entspricht ${fmtNum(m)} Strich?`, correct, wrong,
+      ex:`Nord = 0, Nordost = 800, Ost = 1600, Südost = 2400, Süd = 3200, Südwest = 4000, West = 4800, Nordwest = 5600 Strich. Jede Richtung deckt ± 400 Strich ab. ${fmtNum(m)} Strich liegt am nächsten an ${correct} (${fmtNum(k * 800)}).`};
+  }},
+  friend:{area:'card', n:3, make(){
+    const dirs = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]];
+    const k = ri(0, 7), [ux, uy] = dirs[k], diag = ux && uy, s = diag ? ri(2, 4) : ri(3, 7);
+    const dx = ux * s, dy = uy * s, cols = 10, rows = 7;
+    const tx = ux > 0 ? ri(1, cols - 1 - dx) : ux < 0 ? ri(1 - dx, cols - 1) : ri(2, cols - 2);
+    const ty = uy > 0 ? ri(1, rows - 1 - dy) : uy < 0 ? ri(1 - dy, rows - 1) : ri(2, rows - 2);
+    if (tx + dx < 1 || tx + dx > cols - 1 || ty + dy < 1 || ty + dy > rows - 1) return GEN.friend.make();
+    const dist = diag ? Math.round(s * Math.SQRT2) * 100 : s * 100;
+    const correct = `${HR[k]} ${dist}`, wrong = [`${HR[(k + 4) % 8]} ${dist}`, `${HR[(k + 1) % 8]} ${dist}`, diag ? `${HR[k]} ${2 * s * 100}` : `${HR[k]} ${s * 1000}`];
+    if (!uniq4([correct, ...wrong])) return GEN.friend.make();
+    const fig = gridMap({cols, rows, sub:0, seed:ri(1, 9999), unit:'100m', pts:[{kind:'ziel', x:tx, y:ty}, {kind:'eigen', x:tx + dx, y:ty + dy}]});
+    return {prompt:'Zeile 8: Wo stehen die eigenen Truppen (blau) – Richtung und Entfernung vom Ziel (rot)?', fig, correct, wrong,
+      ex:`Zeile 8 gibt die eigenen Truppen vom Ziel aus an. Vom roten Ziel zum blauen Rechteck geht es nach ${HR[k]}${diag ? `, ${s} Kästchen nach ${ux > 0 ? 'Osten' : 'Westen'} und ${s} nach ${uy > 0 ? 'Norden' : 'Süden'}. Die Diagonale ist rund 1,4-mal so lang: ${s} × 141 m ≈ ${dist} m` : `, ${s} Kästchen à 100 m = ${dist} m`}. Meldung: „${correct}“. Häufiger Fehler: die Gegenrichtung (vom eigenen Standort zum Ziel).`};
+  }},
+  mapdir:{area:'card', n:2, make(){
+    const ox = ri(0, 4) + .5, oy = ri(0, 3) + .5;
+    let tx, ty, az; for (let t = 0; t < 50; t++){ tx = ri(0, 4) + .5; ty = ri(0, 3) + .5; const dd = Math.hypot(tx - ox, ty - oy); if (dd < 1.8) continue;
+      az = Math.round(((Math.atan2(tx - ox, ty - oy) * 3200 / Math.PI) + 6400) % 6400 / 100) * 100 % 6400; break; }
+    if (az == null) return GEN.mapdir.make();
+    const cand = [(az + 3200) % 6400, (6400 - az) % 6400, (az + 1600) % 6400, (az + 4800) % 6400];
+    const cd = (a, b) => { const d = Math.abs(a - b) % 6400; return Math.min(d, 6400 - d); };
+    const wrong = []; for (const c of cand) if (wrong.length < 3 && cd(c, az) >= 600 && wrong.every(w => cd(w, c) >= 600)) wrong.push(c);
+    if (wrong.length < 3) return GEN.mapdir.make();
+    const [zone, sq] = rnd(SQS), E0 = ri(10, 84), N0 = ri(10, 85);
+    const fig = gridMap({E0, N0, cols:5, rows:4, zone, sq, seed:ri(1, 9999), pts:[{kind:'eigen', x:ox, y:oy}, {kind:'ziel', x:tx, y:ty}]});
+    const f = v => `${fmtNum(v)} Strich`;
+    return {prompt:'In welcher Richtung liegt das Ziel (rot) von deinem Standort (blau) aus? Gitternord ist oben.', fig, correct:f(az), wrong:wrong.map(f),
+      ex:`Richtungen zählen im Uhrzeigersinn ab Gitternord: Ost = 1600, Süd = 3200, West = 4800 Strich. Vom blauen Standort zum roten Ziel geht es um ${fmtNum(Math.abs(tx - ox))} km nach ${tx >= ox ? 'Osten' : 'Westen'} und ${fmtNum(Math.abs(ty - oy))} km nach ${ty >= oy ? 'Norden' : 'Süden'} – das ergibt rund ${f(az)}. Die Gegenrichtung (${f((az + 3200) % 6400)}) wäre die Richtung vom Ziel zu dir.`};
+  }}
+};
+/* ---------- Kurzlehre ---------- */
+function compassSvg(){
+  const R = 92, c = 120; let s = `<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kompassrose mit Strich- und Gradwerten"><circle cx="${c}" cy="${c}" r="${R}" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>`;
+  const H = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+  for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4, x = c + Math.sin(a) * R, y = c - Math.cos(a) * R, xi = c + Math.sin(a) * (R - 12), yi = c - Math.cos(a) * (R - 12);
+    s += `<line x1="${xi.toFixed(1)}" y1="${yi.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--ink)" stroke-width="${k % 2 ? 1.2 : 2.2}"/>`;
+    const xl = c + Math.sin(a) * (R - 28), yl = c - Math.cos(a) * (R - 28);
+    s += `<text x="${xl.toFixed(1)}" y="${(yl + 4).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)" font-family="Barlow Condensed, sans-serif">${H[k]}</text>`;
+    const xo = c + Math.sin(a) * (R + 16), yo = c - Math.cos(a) * (R + 16);
+    s += `<text x="${xo.toFixed(1)}" y="${(yo + 4).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--muted)" font-family="Barlow, sans-serif">${k * 800}</text>`; }
+  s += `<text x="${c}" y="${c - 4}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Barlow, sans-serif">Strich</text><text x="${c}" y="${c + 12}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Barlow, sans-serif">6400 = Vollkreis</text>`;
+  return s + `</svg>`;
+}
+function mgrsSvg(){
+  const parts = [['32U', 'Gitterzone', '#7a4fb3'], ['NB', '100-km-Quadrat', '#2a7848'], ['4567', 'Ostwert', '#1d4f8a'], ['7234', 'Nordwert', '#b0382b']];
+  let x = 10, s = '';
+  for (const [t, l, c] of parts){ const w = t.length * 17 + 16;
+    s += `<rect x="${x}" y="10" width="${w}" height="38" rx="6" fill="${c}"/><text x="${x + w / 2}" y="37" text-anchor="middle" font-size="22" font-weight="700" fill="#fff" font-family="JetBrains Mono, monospace">${t}</text>`;
+    s += `<text x="${x + w / 2}" y="66" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)" font-family="Barlow, sans-serif">${l}</text>`; x += w + 8; }
+  return `<svg viewBox="0 0 ${x + 2} 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aufbau einer MGRS-Koordinate">${s}</svg>`;
+}
+function renderLehre(){
+  $('#bar').style.display = '';
+  setBar('Kurzlehre', {back:'home'});
+  const talkSteps = scene(SC.dorf, {labels:[[110, 219, '1', 0, -16], [200, 226, '2', 16, 8], [200, 120, '3', -16, 14], [247, 94, '4', -6, -18], [343, 70, '5', -24, -16], [341, 72, '6', 4, 20]], boxes:[[341, 72]]});
+  $('#app').innerHTML = `
+  <article class="lehre">
+    <section><h2>1 · MGRS lesen</h2>
+      <figure class="lehre-fig">${mgrsSvg()}</figure>
+      <p>MGRS (deutsch: UTMREF) beschreibt jeden Ort mit einem Gitter. Die Angabe wird von groß nach klein gelesen: <b>Gitterzone</b> (z. B. 32U), <b>100-km-Quadrat</b> (zwei Buchstaben, z. B. NB), dann <b>Ostwert</b> und <b>Nordwert</b> mit gleich vielen Ziffern.</p>
+      <ul>
+        <li><b>Erst nach rechts, dann nach oben:</b> Ostwert (Rechtswert) an der unteren Kartenkante, dann Nordwert (Hochwert) an der linken.</li>
+        <li><b>Immer von der linken bzw. unteren Gitterlinie aus</b> zählen. Die Koordinate bezeichnet die linke untere Ecke ihres Quadrats.</li>
+        <li><b>Stellen = Genauigkeit der Schreibweise:</b> 4 Stellen 1 km · 6 Stellen 100 m · 8 Stellen 10 m · 10 Stellen 1 m.</li>
+        <li><b>Kürzen heißt abschneiden,</b> nie runden – und zwar bei Ost- und Nordwert getrennt.</li>
+        <li><b>Stellenzahl ist nicht Messgenauigkeit:</b> Eine aus der Karte geschätzte Koordinate wird durch mehr Ziffern nicht genauer.</li>
+        <li><b>Bezugssystem abstimmen:</b> Lfz und GPS nutzen WGS 84. Ältere Karten mit anderem Kartendatum verschieben denselben Punkt um bis über hundert Meter.</li>
+      </ul>
+      <p class="muted small">Entfernung zwischen zwei Koordinaten: Unterschied Ost und Unterschied Nord bilden, dann Pythagoras. Beispiel: 300 m Ost und 400 m Nord ergeben 500 m, nicht 700 m.</p>
+    </section>
+    <section><h2>2 · Strich und Grad</h2>
+      <figure class="lehre-fig compass">${compassSvg()}</figure>
+      <ul>
+        <li><b>NATO-Strich:</b> 6400 Strich = 360°. 1° ≈ 17,8 Strich, 1600 Strich = 90°.</li>
+        <li><b>Gegenrichtung:</b> ± 3200 Strich (± 180°).</li>
+        <li><b>Russische Geräte</b> teilen den Kreis in 6000 („Tausendstel“, 15-00 = 90°). Nicht mit NATO-Strich verwechseln.</li>
+        <li><b>Nordrichtungen:</b> Die Karte ist nach Gitternord ausgerichtet, der Kompass zeigt Magnetisch Nord. Den Unterschied (Nadelabweichung) nennt der Kartenrand.</li>
+      </ul>
+    </section>
+    <section><h2>3 · Zeile 8: eigene Truppen</h2>
+      <p>In Zeile 8 der 9-Line meldest du, wo die eigenen Truppen stehen – <b>vom Ziel aus gesehen</b>: Himmelsrichtung und Entfernung in Metern, z. B. „Süd 800“. Der häufigste Fehler ist die Gegenrichtung, also die Richtung vom eigenen Standort zum Ziel.</p>
+      <p>Auf der Karte: Ein 1-km-Gitterquadrat hat 1000 m, ein Zehntel 100 m. Diagonal ist eine Strecke rund 1,4-mal so lang wie ihre Seite.</p>
+    </section>
+    <section><h2>4 · Talk-on</h2>
+      <figure class="scene lehre-scene" data-zoom="1">${talkSteps}</figure>
+      <p class="small muted">Vom Großen zum Kleinen: 1 Fluss → 2 Brücke → 3 Kreuzung → 4 Kirche (Maßstab: Kreuzung bis Kirche = eine Einheit) → 5 Gehöft zwei Einheiten östlich → 6 Ziel im Hof.</p>
+      <ol>
+        <li><b>Orientierung festlegen:</b> Himmelsrichtungen; gegebenenfalls „Norden oben“, wenn ihr dasselbe Bild seht (ROVER).</li>
+        <li><b>Großer, eindeutiger Bezugspunkt:</b> Fluss, Ortschaft, große Kreuzung, Bahnlinie, Waldstück.</li>
+        <li><b>Maßstab festlegen:</b> eine Strecke, die ihr beide seht, als „eine Einheit“.</li>
+        <li><b>Schritt für Schritt</b> vom Großen zum Kleinen. Nach jedem Schritt auf CONTACT warten. Bei LOOKING vereinfachen oder größer ansetzen.</li>
+        <li><b>Ziel beschreiben</b> – erst wenn der Pilot TALLY meldet, lässt du ihn das Ziel zurückbeschreiben und vergleichst.</li>
+      </ol>
+      <p><b>Gute Bezugspunkte</b> sind groß, einmalig, von oben gut sichtbar und bleiben an ihrem Platz. <b>Schlecht</b> sind Fahrzeuge, Menschen, Schilder, Farben im Wärmebild sowie alles, was es mehrfach gibt („das rote Haus“). <b>Nie</b> links, rechts, vor oder hinter – der Pilot sieht das Gelände aus einer anderen Richtung. Eine Markierung (IR-Pointer, Laser, Rauch) verkürzt jeden Talk-on.</p>
+    </section>
+    <section><h2>5 · Begleitschaden vermeiden</h2>
+      <p>Grundlage ist das humanitäre Völkerrecht (I. Zusatzprotokoll zu den Genfer Abkommen): <b>Unterscheidung</b> (nur militärische Ziele, sichere Identifizierung), <b>Verhältnismäßigkeit</b> (erwarteter ziviler Schaden nicht außer Verhältnis zum militärischen Vorteil) und <b>Vorsicht</b> (alles praktisch Mögliche tun, um ihn zu vermeiden). Deine Stellschrauben als JTAC:</p>
+      <ul>
+        <li><b>Wirkmittel:</b> das kleinste, das das Ziel sicher bekämpft. Präzise ist nicht dasselbe wie klein – eine GBU-31 trifft genau, wirkt aber mit 2000 lb.</li>
+        <li><b>Zünder:</b> Verzögerung hält die Wirkung im Gebäude oder Boden; Detonation über dem Boden verteilt Splitter über eine große Fläche – gut im freien Gelände, schlecht neben Wohnhäusern.</li>
+        <li><b>Anflugrichtung:</b> Fehler streuen meist in Flugrichtung (zu kurz, zu weit). Nicht über Zivilisten oder eigene Truppen hinweg und nicht auf sie zu anfliegen lassen.</li>
+        <li><b>Zeitpunkt:</b> Ziel im freien Gelände bekämpfen, warten, bis es eine Tankstelle oder ein Krankenhaus verlassen hat, Pattern of Life beobachten.</li>
+        <li><b>Folgewirkungen:</b> Kraftstoff, Gas und Munition am Ziel vergrößern den Schaden weit über den Gefechtskopf hinaus.</li>
+        <li><b>Abbrechen:</b> ABORT bis zum Auslösen. Danach kann nur noch eine lasergelenkte Waffe umgelenkt werden – durch Verlegen des Laserpunkts auf eine freie Fläche.</li>
+        <li><b>Geschützte Objekte:</b> Krankenhäuser (rotes Kreuz), Schulen, religiöse Stätten und Kulturgut. Die Entscheidung über Grenzfälle trifft die Führung nach den Einsatzregeln (ROE) – du lieferst Lagebild und Vorschlag.</li>
+      </ul>
+      <p class="muted small">Nicht enthalten: Sicherheitsabstände für eigene Truppen (Danger Close, Risk-Estimate Distances) und Verfahren der Kollateralschadensschätzung aus eingestuften Vorschriften. Die lernst du in der Ausbildung aus den gültigen Unterlagen.</p>
+    </section>
+  </article>
+  <div class="row" style="margin-top:22px"><button class="btn main" data-start="mix">Gemischte Runde starten</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+}
+/* ---------- Bereiche und Modi ---------- */
+const AREAS = {
+  mgrs:{n:'MGRS ablesen', s:'MGRS'}, prec:{n:'Stellen und Kürzen', s:'Stellen'}, dist:{n:'Entfernung aus Koordinaten', s:'Entf.'}, kgr:{n:'Koordinaten-Grundlagen', s:'Gitter'},
+  dir:{n:'Strich und Grad', s:'Strich'}, card:{n:'Richtung und Zeile 8', s:'Zeile 8'},
+  talk:{n:'Talk-on wählen', s:'Wählen'}, follow:{n:'Talk-on folgen', s:'Folgen'}, tfail:{n:'Talk-on-Fehler finden', s:'Fehler'}, tgr:{n:'Talk-on-Grundsätze', s:'Talk'},
+  cde:{n:'Begleitschaden-Lagen', s:'Lagen'}, cgr:{n:'Begleitschaden-Grundsätze', s:'Recht'}
+};
+const AREA_ORDER = Object.keys(AREAS);
+const ROUND_LEN = 12, MIX_LEN = 24;
+const MODES = {
+  mix:  {name:'Gemischte Runde', areas:AREA_ORDER},
+  koord:{name:'Koordinaten (MGRS)', areas:['mgrs', 'prec', 'dist', 'kgr']},
+  richt:{name:'Richtung und Zeile 8', areas:['dir', 'card']},
+  talk: {name:'Talk-on', areas:['talk', 'follow', 'tfail', 'tgr']},
+  cde:  {name:'Begleitschaden', areas:['cde', 'cgr']}
+};
+
+/* ---------- Hilfen ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+
+/* ---------- Stand und Speichern ---------- */
+const KEY = 'handwerktrainer.v1';
+const blank = () => ({v:1, updated:0, fam:{}, q:{}, flags:{}, recent:[], answered:0, correct:0});
+function readLocal(){ try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blank(), JSON.parse(r)); } catch(e){} return blank(); }
+let S = readLocal();
+function save(){ S.updated = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+/* ---------- Fragenpool ---------- */
+function buildBank(){
+  const bank = [];
+  for (const [g, G] of Object.entries(GEN)) for (let k = 0; k < G.n; k++) bank.push({id:`gen:${g}:${k}`, kind:'gen', g, area:G.area});
+  for (const [id, area, q, opts, ex] of CUR) bank.push({id, kind:'cur', area, q, opts, ex});
+  for (const t of TALK){
+    bank.push({id:`talk:${t.id}`, kind:'talk', area:'talk', t});
+    bank.push({id:`tfail:${t.id}`, kind:'tfail', area:'tfail', t});
+    bank.push({id:`follow:${t.id}`, kind:'follow', area:'follow', t});
+  }
+  for (const c of CDE) bank.push({id:`cde:${c.id}`, kind:'cde', area:'cde', c});
+  return bank;
+}
+const BANK = buildBank();
+function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+function weight(q, prev){
+  const fa = famAcc(q.area), weak = fa === null ? 0.45 : 1 - fa, s = S.q[q.id];
+  let w = (1 + 2 * weak) * (s ? Math.max(0.25, 1 + 1.6 * (s.w / Math.max(1, s.c + s.w)) - 0.08 * Math.min(s.c, 6)) : 1.35);
+  if (S.recent.includes(q.id)) w *= 0.15;
+  if (q.area === prev) w *= 0.35;
+  return w;
+}
+function pickRound(mode){
+  const M = MODES[mode];
+  let pool = BANK.filter(q => M.areas.includes(q.area));
+  const out = [], usedScene = {}; let prev = null;
+  const n = Math.min(mode === 'mix' ? MIX_LEN : ROUND_LEN, pool.length);
+  while (out.length < n && pool.length){
+    const ws = pool.map(q => { const sc = q.t ? q.t.id : q.c ? q.c.id : null; return weight(q, prev) * (sc && usedScene[sc] ? 0.15 : 1); });
+    let r = Math.random() * ws.reduce((a, b) => a + b, 0), k = 0;
+    while (k < ws.length - 1 && (r -= ws[k]) > 0) k++;
+    const q = pool.splice(k, 1)[0];
+    if (q.t) usedScene[q.t.id] = true;
+    out.push(q); prev = q.area;
+  }
+  return out;
+}
+
+/* ---------- Bilder zu Szenen ---------- */
+const vehOf = (sc, id) => SC[sc].veh.find(v => v[5] === id);
+function sceneFig(scKey, o = {}){ return `<figure class="scene" data-zoom="1">${scene(SC[scKey], o)}</figure>`; }
+const mapFig = svg => `<figure class="scene map" data-zoom="1">${svg}</figure>`;
+
+/* ---------- Fragen erzeugen ---------- */
+function materialize(q){
+  if (q.kind === 'gen'){ const m = GEN[q.g].make(); if (m.fig) m.fig = mapFig(m.fig); return m; }
+  if (q.kind === 'cur') return {prompt:q.q, correct:q.opts[0], wrong:q.opts.slice(1), ex:q.ex};
+  if (q.kind === 'talk'){
+    const t = q.t, v = vehOf(t.sc, t.tgt);
+    const bad = shuffle(t.bad).slice(0, 3);
+    return {prompt:'Welche Einweisung führt den Piloten eindeutig zum markierten Ziel?', fig:sceneFig(t.sc, {ir:t.ir, boxes:[[v[0], v[1]]]}),
+      correct:t.ok, wrong:bad.map(b => b[1]), long:true,
+      ex:`Richtig: vom Großen zum Kleinen, nur eindeutige und von oben sichtbare Bezugspunkte, Himmelsrichtungen. ${t.why}`,
+      exWrong:bad.map(b => ({t:b[1], why:b[2] || FL_WHY[b[0]], cat:FL[b[0]]}))};
+  }
+  if (q.kind === 'tfail'){
+    const t = q.t, v = vehOf(t.sc, t.tgt), b = rnd(t.bad);
+    const others = shuffle(Object.keys(FL).filter(k => k !== b[0])).slice(0, 3);
+    return {prompt:'Was ist an dieser Einweisung falsch?', fig:sceneFig(t.sc, {ir:t.ir, boxes:[[v[0], v[1]]]}), say:b[1],
+      correct:FL[b[0]], wrong:others.map(k => FL[k]), ex:`${b[2] || FL_WHY[b[0]]} Besser: „${t.ok}“`};
+  }
+  if (q.kind === 'follow'){
+    const t = q.t, letters = shuffle(['A', 'B', 'C', 'D']);
+    const lab = t.cand.map((id, i) => { const v = vehOf(t.sc, id); return [v[0], v[1], letters[i]]; });
+    const ci = t.cand.indexOf(t.tgt), right = letters[ci], v = vehOf(t.sc, t.tgt);
+    return {prompt:'Du bist der Pilot. Welches Fahrzeug meint der JTAC?', fig:sceneFig(t.sc, {ir:t.ir, labels:lab}), say:t.ok,
+      figAfter:sceneFig(t.sc, {ir:t.ir, labels:lab, boxes:[[v[0], v[1]]]}),
+      correct:`Fahrzeug ${right}`, wrong:letters.filter(x => x !== right).map(x => `Fahrzeug ${x}`), sortOpts:true,
+      ex:`Gemeint ist Fahrzeug ${right}. ${t.why}`};
+  }
+  if (q.kind === 'cde'){
+    const c = q.c;
+    return {prompt:c.q, lage:c.lage, fig:sceneFig(c.sc, {ir:c.ir, show:c.show, veh:c.veh, people:c.people, mortar:c.mortar, friends:c.friends, friendLabel:c.friendLabel, boxes:c.boxes}),
+      correct:c.opts[0], wrong:c.opts.slice(1), long:true, ex:c.ex};
+  }
+}
+
+/* ---------- Ansichten ---------- */
+let view = 'home', R = null;
+function setBar(title, opts = {}){
+  $('#barin').innerHTML = (opts.back ? `<button class="iconbtn" data-act="${opts.back}" aria-label="Zurück">‹ Zurück</button>` : '') + `<div class="t">${esc(title)}</div>` + (opts.right || '');
+  const p = $('#prog');
+  if (opts.progress != null){ p.hidden = false; p.firstElementChild.style.width = (opts.progress * 100) + '%'; } else p.hidden = true;
+}
+function famState(id){ const a = famAcc(id); if (a === null) return 'none'; return a >= .8 ? 'ok' : a >= .5 ? 'mid' : 'bad'; }
+function pct(id){ const a = famAcc(id); return a === null ? '–' : Math.round(a * 100) + ' %'; }
+const countArea = areas => BANK.filter(q => areas.includes(q.area)).length;
+
+function renderHome(){
+  $('#bar').style.display = 'none';
+  const nFlags = Object.keys(S.flags).length;
+  $('#app').innerHTML = `
+  <section class="hero"><a class="hublink" href="../">‹ Alle Trainer</a>
+    <h1>JTAC-Handwerk</h1>
+    <p>Koordinaten lesen, Richtungen angeben, den Piloten per Talk-on zum Ziel führen und Begleitschaden vermeiden. Die Geländebilder sind Skizzen aus der Vogelperspektive, Norden ist immer oben.</p>
+  </section>
+  <section class="board" aria-label="Lagebild">
+    <div class="board-h"><h2>Lagebild</h2><span class="small muted">${S.answered ? `${S.answered} Antworten, ${Math.round(100 * S.correct / Math.max(1, S.answered))} % richtig` : 'Noch keine Antworten'}</span></div>
+    <div class="cells">${AREA_ORDER.map(a => `<div class="cell" data-s="${famState(a)}" title="${esc(AREAS[a].n)}: ${pct(a)}"><b>${esc(AREAS[a].s)}</b><span>${esc(AREAS[a].n)}</span><i style="width:${famAcc(a) === null ? 0 : Math.max(8, famAcc(a) * 100)}%"></i></div>`).join('')}</div>
+    <div class="legend"><em style="--c:var(--ok)">ab 80 %</em><em style="--c:var(--cta)">50–79 %</em><em style="--c:var(--bad)">unter 50 %</em><span>gestrichelt: noch nicht geübt</span></div>
+  </section>
+  <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${MIX_LEN} Fragen aus allen Bereichen – schwache Bereiche kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
+  <nav class="modes" aria-label="Trainingsarten">
+    <button class="mode" data-start="koord"><span class="mi"><strong>Koordinaten (MGRS)</strong><small>6- und 8-stellig von der Karte ablesen, kürzen, Genauigkeit, Entfernung zwischen zwei Koordinaten</small></span><span class="n">${countArea(MODES.koord.areas)} Fragen</span></button>
+    <button class="mode" data-start="richt"><span class="mi"><strong>Richtung und Zeile 8</strong><small>Strich und Grad, Gegenrichtung, Richtung von der Karte, eigene Truppen vom Ziel aus</small></span><span class="n">${countArea(MODES.richt.areas)} Fragen</span></button>
+    <button class="mode" data-start="talk"><span class="mi"><strong>Talk-on</strong><small>Die richtige Einweisung wählen, Fehler finden, als Pilot dem Talk-on folgen</small></span><span class="n">${countArea(MODES.talk.areas)} Fragen</span></button>
+    <button class="mode" data-start="cde"><span class="mi"><strong>Begleitschaden-Lagen</strong><small>Ziel neben Kirche, Schule, Wohnhaus oder eigenen Truppen: Wirkmittel, Zünder, Anflug, Zeitpunkt</small></span><span class="n">${countArea(MODES.cde.areas)} Fragen</span></button>
+    <button class="mode" data-go="lehre"><span class="mi"><strong>Kurzlehre</strong><small>MGRS, Strich, Zeile 8, Talk-on und Begleitschaden zum Nachlesen</small></span><span class="n">5 Kapitel</span></button>
+    <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Bereich, markierte Fragen zum Prüfen</small></span><span class="n">${nFlags ? nFlags + ' gemeldet' : ''}</span></button>
+  </nav>
+  <a class="guide-link" href="../drill/"><span class="mi"><strong>JTAC-Drill</strong><small>9-Line, Zeile 8 und Mini-Lagen mit freier Eingabe üben</small></span><span class="n">Trainer ›</span></a>
+  <a class="guide-link" href="../brevity/"><span class="mi"><strong>Brevity-Trainer</strong><small>CONTACT, TALLY, LOOKING, NO JOY, ABORT und die übrigen Codewörter</small></span><span class="n">Trainer ›</span></a>
+  <p class="foot">Grundlage: frei veröffentlichte Lehrinhalte zu MGRS und CAS sowie das humanitäre Völkerrecht (I. Zusatzprotokoll zu den Genfer Abkommen). Bewusst nicht enthalten: Sicherheitsabstände (Danger Close, Risk-Estimate Distances) und Verfahren aus eingestuften Vorschriften.</p>`;
+}
+function startRound(mode){ R = {mode, qs:pickRound(mode), i:0, score:0, missed:[], cur:null, answered:false}; view = 'quiz'; nextQ(true); }
+function nextQ(first){
+  if (!first) R.i++;
+  if (R.i >= R.qs.length){ view = 'end'; return render(); }
+  const q = R.qs[R.i], m = materialize(q);
+  let opts = shuffle([m.correct, ...m.wrong.slice(0, 3)]);
+  if (m.sortOpts) opts = opts.sort();
+  R.cur = {q, m, opts, ci:opts.indexOf(m.correct)}; R.answered = false;
+  render(); window.scrollTo(0, 0);
+}
+function renderQuiz(){
+  $('#bar').style.display = '';
+  const {m, opts} = R.cur;
+  setBar(MODES[R.mode].name, {back:'home', progress:R.i / R.qs.length, right:`<span class="muted small" style="white-space:nowrap">${R.i + 1} / ${R.qs.length}</span>`});
+  $('#app').innerHTML = `
+    <div id="figbox">${m.fig || ''}</div>
+    ${m.lage ? `<p class="lage"><b>Lage:</b> ${esc(m.lage)}</p>` : ''}
+    ${m.say ? `<blockquote class="say"><span class="say-h">JTAC funkt</span>${esc(m.say)}</blockquote>` : ''}
+    <h2 class="prompt">${esc(m.prompt)}</h2>
+    <div class="opts${m.long ? ' long' : ''}" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
+    <div id="fb"></div>`;
+}
+function answer(k){
+  if (R.answered) return;
+  R.answered = true;
+  const {q, m, opts, ci} = R.cur, ok = k === ci;
+  document.querySelectorAll('.opt').forEach((b, j) => { b.disabled = true; if (j === ci) b.classList.add('correct'); else if (j === k) b.classList.add('wrong'); else b.classList.add('dim'); });
+  const qs = S.q[q.id] || (S.q[q.id] = {c:0, w:0}); ok ? qs.c++ : qs.w++;
+  const fs = S.fam[q.area] || (S.fam[q.area] = {c:0, w:0}); ok ? fs.c++ : fs.w++;
+  S.answered++; if (ok) S.correct++;
+  S.recent = [q.id, ...S.recent.filter(x => x !== q.id)].slice(0, 40);
+  save();
+  if (ok) R.score++; else R.missed.push({area:q.area, prompt:m.prompt, correct:m.correct});
+  if (m.figAfter) $('#figbox').innerHTML = m.figAfter;
+  const wrongPick = !ok && m.exWrong ? m.exWrong.find(x => x.t === opts[k]) : null;
+  const flagged = !!S.flags[q.id];
+  $('#fb').innerHTML = `<section class="fb" style="--c:${ok ? 'var(--ok)' : 'var(--bad)'}">
+    <div class="v">${ok ? 'Richtig' : m.long ? 'Falsch – richtig ist die grün markierte Antwort' : 'Falsch – richtig ist: ' + esc(m.correct)}</div>
+    ${wrongPick ? `<p><b>Deine Wahl – ${esc(wrongPick.cat)}:</b> ${esc(wrongPick.why)}</p>` : ''}
+    <p>${esc(m.ex)}</p>
+    <div class="row">
+      <button class="btn main" data-act="next">${R.i + 1 < R.qs.length ? 'Nächste Frage' : 'Auswertung'}</button>
+      <button class="btn ${flagged ? 'flagged' : ''}" data-flag="${esc(q.id)}">${flagged ? 'Gemeldet' : 'Frage melden'}</button>
+    </div>
+  </section>`;
+  const nb = $('#fb .btn.main'); if (nb) nb.focus({preventScroll:true});
+  $('#fb').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function renderEnd(){
+  $('#bar').style.display = '';
+  setBar('Auswertung', {back:'home'});
+  const n = R.qs.length;
+  $('#app').innerHTML = `
+    <div class="score">${R.score}<span class="muted" style="font-size:.45em"> / ${n}</span></div>
+    <p class="muted">${MODES[R.mode].name} – ${Math.round(100 * R.score / n)} % richtig.</p>
+    ${R.missed.length ? `<h2 style="margin-top:22px">Nacharbeiten</h2><ul class="misslist">${R.missed.map(x => `<li><div>${esc(x.prompt)}</div><div class="small"><strong>${esc(x.correct)}</strong> <span class="muted">· ${esc(AREAS[x.area].n)}</span></div></li>`).join('')}</ul>` : '<p>Alles richtig.</p>'}
+    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button><button class="btn" data-go="lehre">Kurzlehre</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+}
+function renderStats(){
+  $('#bar').style.display = '';
+  setBar('Statistik', {back:'home'});
+  const rows = AREA_ORDER.map(a => ({a, acc:famAcc(a), s:S.fam[a] || {c:0, w:0}})).sort((x, y) => (x.acc ?? -1) - (y.acc ?? -1));
+  const flags = Object.entries(S.flags);
+  const flagText = flags.map(([id, v]) => `• [${id}] ${v.t}`).join('\n');
+  $('#app').innerHTML = `
+    <div class="stat-top"><div><b>${S.answered}</b><span class="muted small">Antworten</span></div><div><b>${S.answered ? Math.round(100 * S.correct / S.answered) + ' %' : '–'}</b><span class="muted small">richtig</span></div></div>
+    <h2 style="margin-top:18px">Je Bereich, schwächster zuerst</h2>
+    ${rows.map(({a, acc, s}) => `<div class="srow"><span>${esc(AREAS[a].n)}</span><div class="sbar"><i style="width:${acc === null ? 0 : acc * 100}%;background:${acc === null ? 'var(--line)' : acc >= .8 ? 'var(--ok)' : acc >= .5 ? 'var(--cta)' : 'var(--bad)'}"></i></div><span class="small muted" style="text-align:right">${acc === null ? '–' : Math.round(acc * 100) + ' %'}<br>${s.c + s.w}×</span></div>`).join('')}
+    <h2 style="margin-top:26px">Gemeldete Fragen</h2>
+    ${flags.length ? `<p class="small muted" style="margin:4px 0 8px">Kopiere die Liste und schick sie zur Prüfung.</p><textarea id="flagtxt" readonly>${esc(flagText)}</textarea><div class="row"><button class="btn" data-act="copyflags">Liste kopieren</button><button class="btn" data-act="clearflags">Liste leeren</button></div>` : '<p class="small muted">Keine gemeldeten Fragen. Mit „Frage melden“ markierst du Fragen, die falsch oder unklar sind.</p>'}
+    <h2 style="margin-top:26px">Zurücksetzen</h2>
+    <p class="small muted" style="margin:4px 0 8px">Löscht alle Antworten und Trefferquoten. Gemeldete Fragen bleiben erhalten.</p>
+    <button class="btn" data-act="reset">Statistik zurücksetzen</button>`;
+}
+function render(){
+  if (view === 'home') renderHome();
+  else if (view === 'quiz') renderQuiz();
+  else if (view === 'end') renderEnd();
+  else if (view === 'stats') renderStats();
+  else if (view === 'lehre') renderLehre();
+}
+
+/* ---------- Bedienung ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-zoom]');
+  if (!t) return;
+  if (t.dataset.zoom){
+    const svg = t.querySelector('svg'); if (!svg) return;
+    const lb = document.createElement('div'); lb.className = 'lightbox'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-label', 'Vergrößerte Ansicht');
+    lb.innerHTML = svg.outerHTML; lb.addEventListener('click', () => lb.remove()); document.body.appendChild(lb); return;
+  }
+  if (t.dataset.start){ startRound(t.dataset.start); return; }
+  if (t.dataset.go){ view = t.dataset.go; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.ans != null){ answer(Number(t.dataset.ans)); return; }
+  if (t.dataset.flag){
+    const id = t.dataset.flag;
+    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt + (R.cur.m.say ? ' – „' + R.cur.m.say.slice(0, 80) + '…“' : '') : id, ts:Date.now()};
+    save(); t.classList.toggle('flagged', !!S.flags[id]); t.textContent = S.flags[id] ? 'Gemeldet' : 'Frage melden'; return;
+  }
+  const act = t.dataset.act;
+  if (act === 'home'){ view = 'home'; R = null; render(); window.scrollTo(0, 0); }
+  else if (act === 'next') nextQ();
+  else if (act === 'copyflags'){
+    const ta = $('#flagtxt'); ta.select();
+    const done = () => { t.textContent = 'Kopiert'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, () => { try { document.execCommand('copy'); done(); } catch(_){} });
+    else { try { document.execCommand('copy'); done(); } catch(_){} }
+  }
+  else if (act === 'clearflags'){ S.flags = {}; save(); render(); }
+  else if (act === 'reset'){
+    if (t.dataset.confirm){ const fl = S.flags; S = blank(); S.flags = fl; save(); render(); }
+    else { t.dataset.confirm = '1'; t.textContent = 'Wirklich zurücksetzen? Erneut tippen'; t.classList.add('flagged'); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (document.querySelector('.lightbox')){ if (e.key === 'Escape') document.querySelector('.lightbox').remove(); return; }
+  if (view !== 'quiz' || !R) return;
+  if (!R.answered && /^[1-4]$/.test(e.key)){ const k = Number(e.key) - 1; if (k < R.cur.opts.length) answer(k); }
+  else if (R.answered && (e.key === 'Enter' || e.key === ' ') && !(e.target && e.target.dataset && e.target.dataset.flag)){ e.preventDefault(); nextQ(); }
+});
+render();
+</script>
+<script src="../assets/terms.js" defer></script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

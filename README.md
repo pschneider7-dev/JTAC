@@ -1,6 +1,6 @@
 # JTAC-Trainer
 
-Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem Home-Bildschirm, läuft nach dem ersten Aufruf vollständig offline.
+Web-App (PWA) mit zwölf Trainern für CAS aus JTAC-Sicht. Installierbar auf dem Home-Bildschirm, läuft nach dem ersten Aufruf vollständig offline.
 
 | Ordner | Trainer |
 |---|---|
@@ -11,6 +11,7 @@ Web-App (PWA) mit neun Trainern für CAS aus JTAC-Sicht. Installierbar auf dem H
 | `ziele/` | Zielpriorisierung (Lagen mit vier Zielen, Bilder aus Manöver-, Artillerie- und Flugabwehr-Trainer) |
 | `waffen/` | Waffen-Trainer |
 | `pods/` | Pod-Trainer |
+| `handwerk/` | JTAC-Handwerk: Koordinaten (MGRS ablesen, kürzen, Entfernung), Strich und Grad, Zeile 8, Talk-on und Begleitschaden-Lagen; die Geländebilder sind SVG-Skizzen, die im Code aus Szenendaten (`SC`) gezeichnet werden |
 | `drill/` | JTAC-Drill |
 | `brevity/` | Brevity-Trainer |
 | `funk/` | Funk-Trainer (Kurzlehre mit Skizzen, Behelfsantennen, Sprechfunk, Rechner, Funkgeräte) |
