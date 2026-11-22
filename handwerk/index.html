@@ -96,6 +96,12 @@ h2{font-size:1.45rem;font-weight:600;letter-spacing:.005em}
 /* Frage */
 .lage{margin:14px 0 0;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;line-height:1.45}
 .say{margin:14px 0 0;padding:10px 14px;background:var(--surface);border-left:4px solid var(--cta);border-radius:0 10px 10px 0;line-height:1.45}
+.dlg{margin:14px 0 0;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--cta);border-radius:0 10px 10px 0}
+.dlg p{margin:6px 0 0;display:flex;gap:10px;line-height:1.4}
+.dlg p b{flex:none;width:3.2em;font-family:var(--font-d);font-size:.85rem;letter-spacing:.04em;color:var(--muted);padding-top:1px}
+.dlg p.p span{font-family:var(--font-d);font-weight:700;letter-spacing:.04em}
+.dlg p.mark{background:var(--bad-bg);border-radius:6px;padding:4px 6px;margin-left:-6px;margin-right:-6px}
+.opts.radio .opt > span:last-child{font-size:.95rem}
 .say-h{display:block;font-family:var(--font-d);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .prompt{font-family:var(--font-d);font-size:1.55rem;font-weight:600;line-height:1.15;margin:14px 0 14px;text-wrap:balance}
 .opts{display:grid;gap:8px}
@@ -343,101 +349,141 @@ const SC = {
     veh:[[116,96,315,'kpz',0,'e1'], [270,80,90,'lkw',0,'e2'], [170,150,180,'spz',0,'e3'], [340,262,0,'kpz',0,'e4'],
          [282,262,0,'pkw','#e8e8e4'], [300,262,0,'pkw','#c0392b'], [318,262,0,'pkw','#2f5fa8'], [170,240,0,'pkw','#ddd']]}
 };
-/* ---------- Talk-on: Fehlerarten ---------- */
+/* ---------- Talk-on nach FIDO (JP 3-09.3): From a point – In a direction – Distance to travel – Object seen ----------
+   Funksprüche auf Englisch wie im Einsatz, Erklärungen auf Deutsch. Bezugspunkte bekommen nach CONTACT einen Namen (RED, BLUE),
+   der Maßstab („one unit“) wird festgelegt, und nach höchstens zwei Anweisungen folgt die Kontrollfrage (2 zu 1). */
 const FL = {
-  small:'Beginnt beim Ziel statt beim großen Bezugspunkt',
-  ambig:'Ein Bezugspunkt ist nicht eindeutig – es gibt ihn mehrfach',
-  lr:'Links, rechts, vor oder hinter statt Himmelsrichtungen',
-  hidden:'Ein Merkmal ist für den Piloten nicht zu erkennen',
-  wrong:'Eine Richtungsangabe passt nicht zum Gelände'
+  noF:'F fehlt – kein eindeutiger Startpunkt',
+  lr:'I falsch – links/rechts/oben/unten statt Himmelsrichtung',
+  noD:'D fehlt – keine Entfernung',
+  ambig:'Bezugspunkt oder Objekt nicht eindeutig – gibt es mehrfach',
+  hidden:'O nicht erkennbar – von oben oder im Wärmebild nicht zu sehen',
+  wrong:'Richtung oder Entfernung passt nicht zum Gelände'
 };
 const FL_WHY = {
-  small:'Die Einweisung beginnt beim kleinsten Detail. Der Pilot müsste das ganze Gebiet danach absuchen. Richtig ist die umgekehrte Reihenfolge: vom Großen zum Kleinen.',
-  lr:'„Links“, „rechts“, „vor“ und „hinter“ hängen von der Blickrichtung ab. Der Pilot fliegt aus einer anderen Richtung an oder kreist – für ihn ist „rechts“ etwas anderes als für dich. Nimm Himmelsrichtungen.'
+  noF:'„From a point“ fehlt: Ohne festen Startpunkt, den der Pilot schon bestätigt hat (CONTACT), muss er das ganze Gebiet absuchen.',
+  lr:'„In a direction“ heißt Himmelsrichtung. Links, rechts, oben oder unten hängen vom Blickwinkel ab – der Pilot fliegt aus einer anderen Richtung an oder kreist, sein Pod-Bild ist gedreht.',
+  noD:'„Distance to travel“ fehlt: Ohne Entfernung sucht der Pilot die ganze Linie in dieser Richtung ab. Gib sie in der vereinbarten Einheit oder in Metern an.',
+  ambig:'Das Objekt gibt es mehrfach. Bezugspunkte müssen einmalig sein, sonst landet der Pilot beim falschen.',
+  hidden:'Das sieht der Pilot nicht: Schilder, Farben im Wärmebild oder kleine Details sind aus der Luft nicht zu erkennen. Nimm große Formen, Linien und Gebäude.',
+  wrong:'Die Angabe passt nicht zum Gelände. Prüfe jede Richtung und Entfernung an deinem Bild, bevor du sie funkst.'
 };
-/* Talk-on-Aufgaben: Szene, Ziel (Kennung), Kandidaten für „Talk-on folgen“, richtige Einweisung, falsche Einweisungen [Fehlerart, Text, Erklärung] */
+/* steps: Funksprüche des JTAC; nach jedem antwortet der Pilot CONTACT, nach dem letzten TALLY.
+   key: der Schritt, zu dem „Welcher Funkspruch ist richtig?“ gefragt wird; bad: falsche Fassungen genau dieses Schritts. */
 const TALK = [
   {id:'A1', sc:'dorf', tgt:'v2', cand:['v1', 'v2', 'v3', 'v4'],
-   ok:'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung in der Ortsmitte → nordöstlich davon die Kirche, Turm am Westende. Kreuzung bis Kirche ist eine Einheit → zwei Einheiten östlich der Kirche ein Gehöft, drei Gebäude um einen Hof → im Hof ein Schützenpanzer.',
-   why:'Fluss und Brücke sind groß und einmalig, die Kreuzung liegt an der Straße, die Kirche ist das größte Gebäude im Ort. Die Strecke Kreuzung–Kirche dient als Maßstab („Einheit“): So versteht ihr beide unter „zwei Einheiten“ dasselbe.',
-   bad:[['small', 'Schützenpanzer in einem Hof → der Hof gehört zu einem Gehöft → das Gehöft liegt bei der Kirche → die Kirche steht im Dorf am Fluss.'],
-        ['ambig', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zum Haus mit dem roten Dach → östlich davon ein Gehöft → im Hof ein Schützenpanzer.', '„Das Haus mit dem roten Dach“ gibt es im Dorf dutzendfach. Ein Bezugspunkt muss einmalig sein – etwa die Kreuzung in der Ortsmitte oder die Kirche.'],
-        ['lr', 'Fluss → Brücke → der Straße folgen bis zur Kreuzung → dort rechts → hinter der Kirche das Gehöft → im Hof ein Schützenpanzer.'],
-        ['wrong', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung → nordöstlich davon die Kirche. Kreuzung bis Kirche ist eine Einheit → zwei Einheiten westlich der Kirche ein Gehöft → im Hof ein Schützenpanzer.', 'Das Gehöft liegt östlich der Kirche. Westlich der Kirche stehen nur Wohnhäuser an der Straße. Prüfe jede Richtung am Bild, bevor du sie funkst.'],
-        ['hidden', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Bushaltestelle → östlich davon das Gehöft mit dem grünen Hoftor → im Hof ein Schützenpanzer.', 'Eine Bushaltestelle und die Farbe eines Hoftors sieht der Pilot aus großer Höhe nicht. Nimm Merkmale, die von oben groß und deutlich sind: Straßen, Kreuzungen, Gebäudeformen, Waldränder, Gewässer.']]},
+   steps:['North is up. Large river running west to east, single bridge in the middle of the picture. Call contact.',
+          'That bridge is RED. From RED, north along the main road, X-ray junction in the middle of the village. RED to that junction is one unit, call contact.',
+          'That junction is BLUE. From BLUE, north-east, half a unit, large church with a tower on its west end. Call contact.',
+          'From the church, east, one unit, farm with three buildings around a courtyard. Your target: single IFV in the courtyard. Call tally.'],
+   key:3, why:'From the church (bestätigt) – east – one unit (Maßstab RED bis BLUE) – farm with three buildings (einmalig). Erst dann das Ziel.',
+   bad:[['noD', 'From the church, east, farm with three buildings around a courtyard. Your target: single IFV in the courtyard. Call tally.'],
+        ['wrong', 'From the church, west, one unit, farm with three buildings around a courtyard. Your target: single IFV in the courtyard. Call tally.', 'Das Gehöft liegt östlich der Kirche. Westlich stehen nur Wohnhäuser an der Straße.'],
+        ['ambig', 'From the church, east, one unit, house with a red roof. Your target: single IFV next to it. Call tally.', '„House with a red roof“ gibt es im Dorf dutzendfach. Das Gehöft mit drei Gebäuden um einen Hof ist dagegen einmalig.'],
+        ['lr', 'From the church, go right, one unit, farm with three buildings around a courtyard. Your target: single IFV in the courtyard. Call tally.'],
+        ['hidden', 'From the church, east, one unit, farm with a green gate. Your target: single IFV in the courtyard. Call tally.', 'Die Farbe eines Hoftors sieht der Pilot aus großer Höhe nicht. Beschreibe die Form: drei Gebäude um einen Hof.'],
+        ['noF', 'Look for a farm with three buildings around a courtyard. Your target: single IFV in the courtyard. Call tally.']]},
   {id:'A2', sc:'dorf', tgt:'v1', cand:['v1', 'v2', 'v3', 'v4'],
-   ok:'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung in der Ortsmitte → nordwestlich der Kreuzung der große Wald → an seinem Südostrand, zur Wiese hin, ein Kampfpanzer, Rohr nach Südosten.',
-   why:'Fluss, Brücke, Kreuzung und Wald sind große, eindeutige Bezugspunkte. „Südostrand“ grenzt den langen Waldrand auf ein kurzes Stück ein, die Rohrrichtung bestätigt das Fahrzeug.',
-   bad:[['small', 'Kampfpanzer am Waldrand → der Wald liegt beim Dorf → das Dorf liegt an einem Fluss.'],
-        ['ambig', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung → von dort zum Waldrand → am Waldrand ein Kampfpanzer.', 'Der Waldrand ist lang. Ohne Angabe, welcher Abschnitt gemeint ist („Südostrand“), muss der Pilot den ganzen Rand absuchen.'],
-        ['lr', 'Fluss → Brücke → der Straße folgen bis zur Kreuzung → dort links → vor dem Wald ein Kampfpanzer.'],
-        ['wrong', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zur Kreuzung → nordöstlich der Kreuzung der große Wald → an seinem Rand ein Kampfpanzer.', 'Der Wald liegt nordwestlich der Kreuzung. Nordöstlich liegen Kirche, Gehöft und Felder.'],
-        ['hidden', 'Norden oben. Fluss von West nach Ost → die einzige Brücke → der Straße nach Norden folgen bis zum Wegweiser „Waldweg“ → dort am Waldrand ein Kampfpanzer.', 'Einen Wegweiser sieht der Pilot von oben nicht. Außerdem bleibt offen, wo am Waldrand das Fahrzeug steht.']]},
+   steps:['North is up. Large river running west to east, single bridge in the middle of the picture. Call contact.',
+          'That bridge is RED. From RED, north along the main road, X-ray junction in the middle of the village. RED to that junction is one unit, call contact.',
+          'That junction is BLUE. From BLUE, north-west, one unit, south-east edge of the large forest. Call contact.',
+          'Your target: single tank on that forest edge, gun pointing south-east. Call tally.'],
+   key:2, why:'From BLUE – north-west – one unit – south-east edge of the forest. Der Waldrand ist lang; Richtung und Entfernung grenzen ihn auf ein kurzes Stück ein.',
+   bad:[['noD', 'That junction is BLUE. From BLUE, north-west, edge of the large forest. Call contact.', 'Ohne Entfernung bleibt offen, welcher Abschnitt des langen Waldrands gemeint ist.'],
+        ['wrong', 'That junction is BLUE. From BLUE, north-east, one unit, edge of the large forest. Call contact.', 'Der Wald liegt nordwestlich von BLUE. Nordöstlich liegen Kirche und Felder.'],
+        ['lr', 'That junction is BLUE. From BLUE, turn left, one unit, edge of the large forest. Call contact.'],
+        ['hidden', 'That junction is BLUE. From BLUE, north-west, one unit, the hiking signpost at the forest edge. Call contact.', 'Einen Wegweiser sieht der Pilot von oben nicht. Der Waldrand selbst ist der Bezugspunkt.'],
+        ['noF', 'Somewhere along the edge of the large forest, single tank. Call tally.']]},
   {id:'A3', sc:'dorf', ir:true, tgt:'v4', cand:['v1', 'v2', 'v3', 'v4'],
-   ok:'Norden oben, Wärmebild. Fluss von West nach Ost → die einzige Brücke → südlich der Brücke, östlich der Straße, auf dem Feld ein heller Punkt: ein Kampfpanzer, Rohr nach Norden.',
-   why:'Im Wärmebild gibt es keine Farben. Fluss, Brücke und Straße sind auch nachts gut zu erkennen; das Fahrzeug fällt als warmer, heller Punkt auf.',
-   bad:[['hidden', 'Norden oben, Wärmebild. Fluss von West nach Ost → die einzige Brücke → südlich davon das gelbe Stoppelfeld → darauf ein Kampfpanzer.', '„Gelb“ gibt es im Wärmebild nicht – es zeigt nur Wärmeunterschiede in Grautönen. Nachts beschreibst du Formen, Linien und warme Objekte, keine Farben.'],
-        ['ambig', 'Norden oben, Wärmebild. Fluss von West nach Ost → das helle Fahrzeug → südlich davon ein Kampfpanzer.', 'Im Wärmebild leuchten mehrere Fahrzeuge hell. Außerdem bewegen sich Fahrzeuge. Nimm feste, einmalige Bezugspunkte wie die Brücke.'],
-        ['wrong', 'Norden oben, Wärmebild. Fluss von West nach Ost → die einzige Brücke → südlich der Brücke, westlich der Straße, auf dem Feld ein Kampfpanzer.', 'Der Panzer steht östlich der Straße, nicht westlich.'],
-        ['lr', 'Wärmebild. Fluss → über die Brücke drüber → rechts auf dem Feld ein Kampfpanzer.']]},
+   steps:['Thermal. North is up. Large river running west to east, single bridge in the middle of the picture. Call contact.',
+          'That bridge is RED, the length of RED is one unit. From RED, south-east, two units, field east of the road. Call contact.',
+          'Your target: single hot spot in that field, tank, gun pointing north. Call tally.'],
+   key:1, why:'Maßstab ist hier die Länge der Brücke. From RED – south-east – two units – field east of the road. Im Wärmebild beschreibst du Formen und warme Objekte, keine Farben.',
+   bad:[['hidden', 'That bridge is RED, the length of RED is one unit. From RED, south-east, two units, the yellow stubble field. Call contact.', 'Im Wärmebild gibt es kein Gelb – es zeigt nur Wärmeunterschiede in Grautönen.'],
+        ['wrong', 'That bridge is RED, the length of RED is one unit. From RED, south-west, two units, field west of the road. Call contact.', 'Das Ziel steht südöstlich der Brücke, östlich der Straße.'],
+        ['noD', 'That bridge is RED. From RED, south-east, field east of the road. Call contact.'],
+        ['lr', 'That bridge is RED, the length of RED is one unit. Cross RED and go right, two units, into the field. Call contact.'],
+        ['ambig', 'From the hot vehicle on the road, south, two units, field east of the road. Call contact.', 'Im Wärmebild leuchten mehrere Fahrzeuge, und sie bewegen sich. Ein Startpunkt muss einmalig und fest sein – wie die Brücke.']]},
   {id:'B1', sc:'wald', tgt:'b2', cand:['b1', 'b2', 'b3', 'b4'],
-   ok:'Norden oben. Großer Wald im Westen → die Waldnase, die in der Mitte seines Ostrands ins Feld ragt → östlich davon der Feldweg von Nord nach Süd → dem Feldweg nach Norden folgen bis zur einzigen Feldscheune östlich des Wegs → an ihrer Südseite ein Schützenpanzer.',
-   why:'Wald, Waldnase, Feldweg, Scheune: Jeder Bezugspunkt ist einmalig und von oben deutlich. Die Waldnase grenzt den langen Waldrand auf einen Punkt ein.',
-   bad:[['small', 'Schützenpanzer an einer Scheune → die Scheune steht in einem Feld → das Feld liegt östlich eines Waldes.'],
-        ['ambig', 'Norden oben. Großer Wald im Westen → der Feldweg von Nord nach Süd → vom Baum am Feldweg nach Osten → dort die Feldscheune → an ihrer Südseite ein Schützenpanzer.', 'Am Feldweg stehen mehrere einzelne Bäume. „Der Baum am Feldweg“ ist deshalb nicht eindeutig.'],
-        ['lr', 'Großer Wald → an der Waldnase links → geradeaus bis zur Scheune → davor ein Schützenpanzer.'],
-        ['wrong', 'Norden oben. Großer Wald im Westen → die Waldnase in der Mitte seines Ostrands → von der Waldnase nach Südosten zum Teich → am Teich die Feldscheune → an ihrer Südseite ein Schützenpanzer.', 'Die Scheune liegt nordöstlich der Waldnase, nicht am Teich im Südosten.']]},
+   steps:['North is up. Large forest along the west side of the picture. Halfway down its east edge, a nose of trees sticking out east into the fields. Call contact.',
+          'That nose is RED. From RED, east, dirt road running north–south. RED to that road is one unit, call contact.',
+          'That road is BLUE. From where RED meets BLUE, north along BLUE, two units, single barn east of the road. Call contact.',
+          'Your target: single IFV on the south side of the barn. Call tally.'],
+   key:2, why:'From where RED meets BLUE – north – two units – single barn. Die benannten Bezugspunkte RED (Waldnase) und BLUE (Feldweg) machen den Startpunkt eindeutig.',
+   bad:[['ambig', 'That road is BLUE. From the tree on BLUE, east, half a unit, single barn. Call contact.', 'Am Feldweg stehen mehrere einzelne Bäume. „The tree on BLUE“ ist kein eindeutiger Startpunkt.'],
+        ['noD', 'That road is BLUE. From where RED meets BLUE, north along BLUE, single barn east of the road. Call contact.'],
+        ['wrong', 'That road is BLUE. From where RED meets BLUE, south along BLUE, two units, single barn east of the road. Call contact.', 'Die Scheune liegt nördlich, nicht südlich.'],
+        ['lr', 'That road is BLUE. From RED, go up the road, two units, single barn on the right. Call contact.'],
+        ['noF', 'Look for a single barn in the fields. Call contact.']]},
   {id:'B2', sc:'wald', tgt:'b4', cand:['b1', 'b2', 'b3', 'b4'],
-   ok:'Norden oben. Großer Wald im Westen → die Stromleitung, die in einer Schneise aus dem Wald nach Osten führt → südlich der Stromleitung das Stoppelfeld mit dem einzigen Teich → am Westufer des Teichs ein Kampfpanzer.',
-   why:'Die Leitung selbst ist dünn, aber die Schneise im Wald und die Masten mit ihren Schatten sind von oben gut zu sehen. Der einzige Teich ist ein eindeutiger Bezugspunkt direkt am Ziel.',
-   bad:[['small', 'Kampfpanzer an einem Teich → der Teich liegt in einem Feld → das Feld liegt südlich einer Stromleitung.'],
-        ['hidden', 'Norden oben. Großer Wald im Westen → die Stromleitung nach Osten → am Mast mit dem gelben Warnschild nach Süden → am Westufer des Teichs ein Kampfpanzer.', 'Ein Warnschild am Mast sieht der Pilot nicht. Die Masten sehen von oben alle gleich aus.'],
-        ['wrong', 'Norden oben. Großer Wald im Westen → die Stromleitung, die aus dem Wald nach Osten führt → nördlich der Stromleitung der einzige Teich → an seinem Westufer ein Kampfpanzer.', 'Der Teich liegt südlich der Stromleitung.'],
-        ['lr', 'Wald → Stromleitung → rechts davon der Teich → links am Teich ein Kampfpanzer.']]},
+   steps:['North is up. Large forest along the west side of the picture. A power line comes out of the forest in a cleared strip and runs east. Call contact.',
+          'That power line is RED, the distance between two pylons is one unit. From where RED crosses the dirt road, south-east, one unit, single pond. Call contact.',
+          'Your target: single tank on the west shore of the pond, gun pointing north-east. Call tally.'],
+   key:1, why:'Maßstab ist der Abstand zweier Masten. From where RED crosses the dirt road – south-east – one unit – single pond. Die Leitung selbst ist dünn, aber Schneise und Masten mit ihren Schatten sieht man gut.',
+   bad:[['wrong', 'That power line is RED, the distance between two pylons is one unit. From where RED crosses the dirt road, north-east, one unit, single pond. Call contact.', 'Der Teich liegt südöstlich der Kreuzung von Leitung und Feldweg.'],
+        ['hidden', 'That power line is RED. From the pylon with the yellow warning sign, south, one unit, single pond. Call contact.', 'Ein Warnschild am Mast sieht der Pilot nicht; von oben sehen alle Masten gleich aus.'],
+        ['noD', 'That power line is RED. From where RED crosses the dirt road, south-east, single pond. Call contact.'],
+        ['lr', 'That power line is RED, the distance between two pylons is one unit. From where RED crosses the dirt road, down and right, one unit, single pond. Call contact.'],
+        ['noF', 'Look for a single pond in the fields. Call contact.']]},
   {id:'C1', sc:'ort', tgt:'c4', cand:['c1', 'c3', 'c4', 'c5'],
-   ok:'Norden oben. Die Hauptstraße, die von West nach Ost durch den Ort führt → am Westrand an ihrer Südseite die Tankstelle mit dem großen hellen Dach → der Straße nach Osten folgen bis zur einzigen Abzweigung nach Süden → östlich davon die große Halle mit hellem Flachdach → auf dem Parkplatz südlich der Halle ein Schützenpanzer.',
-   why:'Hauptstraße, Tankstellendach und Halle sind groß und einmalig. „Die einzige Abzweigung nach Süden“ ist eindeutig, weil es nach Norden mehrere gibt.',
-   bad:[['ambig', 'Norden oben. Die Hauptstraße von West nach Ost → an der Abzweigung → östlich davon die große Halle mit hellem Flachdach → auf dem Parkplatz südlich der Halle ein Schützenpanzer.', 'Von der Hauptstraße zweigen mehrere Straßen ab – drei nach Norden, eine nach Süden. „An der Abzweigung“ ist deshalb nicht eindeutig.'],
-        ['lr', 'Hauptstraße → an der Tankstelle vorbei → an der letzten Abzweigung rechts → links die große Halle → dahinter auf dem Parkplatz ein Schützenpanzer.'],
-        ['hidden', 'Norden oben. Die Hauptstraße von West nach Ost → am Schild „Gewerbegebiet“ nach Süden → die große Halle → auf dem Parkplatz südlich der Halle ein Schützenpanzer.', 'Ein Straßenschild ist aus der Luft nicht zu lesen.'],
-        ['small', 'Schützenpanzer auf einem Parkplatz → der Parkplatz gehört zu einer Halle → die Halle liegt an einer Hauptstraße.']]},
+   steps:['North is up. Main road running west to east through the town. At its west end, on the south side, gas station with a large white roof. Call contact.',
+          'That gas station is RED, the length of its roof is one unit. From RED, east along the main road, six units, the only T-junction going south. Call contact.',
+          'That junction is BLUE. From BLUE, south-east, two units, large hall with a flat light-grey roof. Call contact.',
+          'Your target: single IFV in the parking lot south of the hall. Call tally.'],
+   key:2, why:'From BLUE – south-east – two units – large hall with a flat roof. BLUE ist eindeutig, weil es nur eine Abzweigung nach Süden gibt.',
+   bad:[['ambig', 'From the junction, south-east, two units, large hall with a flat light-grey roof. Call contact.', 'Von der Hauptstraße zweigen vier Straßen ab. „The junction“ ist nicht eindeutig – dafür hast du sie BLUE genannt.'],
+        ['wrong', 'That junction is BLUE. From BLUE, north-east, two units, large hall with a flat light-grey roof. Call contact.', 'Nordöstlich von BLUE liegt ein Acker. Die Halle liegt südöstlich.'],
+        ['noD', 'That junction is BLUE. From BLUE, south-east, large hall with a flat light-grey roof. Call contact.'],
+        ['lr', 'That junction is BLUE. At BLUE turn right, two units, large hall on your left. Call contact.'],
+        ['hidden', 'That junction is BLUE. From BLUE, follow the sign to the industrial park, two units, large hall. Call contact.', 'Ein Straßenschild ist aus der Luft nicht zu lesen.']]},
   {id:'C2', sc:'ort', tgt:'c1', cand:['c1', 'c3', 'c4', 'c5'],
-   ok:'Norden oben. Die Hauptstraße, die von West nach Ost durch den Ort führt → am Westrand an ihrer Südseite die Tankstelle mit dem großen hellen Dach über den Zapfsäulen → unter dem Dach ein Militär-Lkw.',
-   why:'Kurz und eindeutig: Die Hauptstraße ist die größte Linie im Bild, das Tankstellendach ist von oben auffällig und einmalig.',
-   bad:[['wrong', 'Norden oben. Die Hauptstraße von West nach Ost → am Westrand an ihrer Nordseite die Tankstelle → unter dem Dach ein Militär-Lkw.', 'Die Tankstelle liegt an der Südseite der Hauptstraße.'],
-        ['ambig', 'Norden oben. Die Hauptstraße von West nach Ost → das weiße Auto an der Straße → südlich davon ein Militär-Lkw.', 'Autos gibt es mehrere, und sie bewegen sich. Ein Bezugspunkt muss einmalig sein und an seinem Platz bleiben.'],
-        ['small', 'Militär-Lkw an einer Tankstelle → die Tankstelle liegt an einer Hauptstraße.'],
-        ['hidden', 'Norden oben. Die Hauptstraße von West nach Ost → die Tankstelle mit dem roten Markenschild → an Zapfsäule 3 ein Militär-Lkw.', 'Markenschild und Nummer der Zapfsäule sind von oben nicht zu erkennen.']]},
+   steps:['North is up. Main road running west to east through the town. That road is RED. Call contact.',
+          'From the west end of RED, east, the first two junctions going north. The distance between them is one unit, call contact.',
+          'From the first junction, south-east, half a unit, gas station with a large white roof. Your target: single military truck under that roof. Call tally.'],
+   key:2, why:'From the first junction – south-east – half a unit – gas station with a large white roof. Das Tankstellendach ist von oben auffällig und einmalig.',
+   bad:[['wrong', 'From the first junction, north-east, half a unit, gas station with a large white roof. Your target: single military truck under that roof. Call tally.', 'Die Tankstelle liegt südlich der Hauptstraße.'],
+        ['ambig', 'From the white car on RED, south, half a unit. Your target: single military truck. Call tally.', 'Autos gibt es mehrere, und sie fahren weg. Ein Startpunkt muss einmalig sein und bleiben, wo er ist.'],
+        ['hidden', 'From the first junction, south-east, half a unit, gas station with the red brand sign. Your target: single military truck at pump three. Call tally.', 'Markenschild und Nummer der Zapfsäule erkennt der Pilot nicht.'],
+        ['noD', 'From the first junction, south-east, gas station with a large white roof. Your target: single military truck under that roof. Call tally.'],
+        ['noF', 'Find the gas station. Your target: single military truck under its roof. Call tally.']]},
   {id:'D1', sc:'kreuz', tgt:'d3', cand:['d2', 'd3', 'd4', 'd5'],
-   ok:'Norden oben. Die Straßenkreuzung in der Bildmitte → nordöstlich davon das Windrad → von der Kreuzung nach Südosten das Gehöft mit zwei runden Silos → östlich der Silos ein Schützenpanzer.',
-   why:'Drei Gehöfte sehen fast gleich aus. Erst die Silos machen das richtige eindeutig – genau solche Unterscheidungsmerkmale braucht ein Talk-on.',
-   bad:[['ambig', 'Norden oben. Die Straßenkreuzung in der Bildmitte → das Gehöft → östlich davon ein Schützenpanzer.', 'Es gibt drei fast gleiche Gehöfte. Welches gemeint ist, bleibt offen – erst die Silos machen es eindeutig.'],
-        ['lr', 'Kreuzung → rechts runter zum Gehöft mit den Silos → hinter den Silos ein Schützenpanzer.'],
-        ['wrong', 'Norden oben. Die Straßenkreuzung in der Bildmitte → nach Südwesten das Gehöft mit zwei runden Silos → östlich der Silos ein Schützenpanzer.', 'Das Gehöft mit den Silos liegt südöstlich der Kreuzung. Das Gehöft im Südwesten hat keine Silos.'],
-        ['small', 'Schützenpanzer an zwei Silos → die Silos stehen an einem Gehöft → das Gehöft liegt an einer Kreuzung.']]},
+   steps:['North is up. Road crossing in the middle of the picture, X-ray junction. Call contact.',
+          'That junction is BLUE. From BLUE, north-east along the dirt road, single wind turbine with a long shadow. BLUE to the turbine is one unit, call contact.',
+          'From BLUE, south-east, one unit, farm with two round silos. Call contact.',
+          'Your target: single IFV just east of the silos. Call tally.'],
+   key:2, why:'From BLUE – south-east – one unit – farm with two round silos. Es gibt drei fast gleiche Gehöfte; erst die Silos machen das richtige eindeutig.',
+   bad:[['ambig', 'From BLUE, south-east, one unit, the farm. Call contact.', 'Es gibt drei fast gleiche Gehöfte. „The farm“ reicht nicht – die Silos unterscheiden es.'],
+        ['wrong', 'From BLUE, south-west, one unit, farm with two round silos. Call contact.', 'Das Gehöft mit den Silos liegt südöstlich von BLUE. Im Südwesten steht ein Gehöft ohne Silos.'],
+        ['lr', 'From BLUE, down to the right, one unit, farm with two round silos. Call contact.'],
+        ['noD', 'From BLUE, south-east, farm with two round silos. Call contact.']]},
   {id:'D2', sc:'kreuz', tgt:'d4', cand:['d2', 'd3', 'd4', 'd5'],
-   ok:'Norden oben. Die Straßenkreuzung in der Bildmitte → der Feldweg, der von der Kreuzung nach Nordosten führt → am Feldweg das einzige Windrad mit seinem langen Schatten → auf dem Schotterplatz am Windrad ein Kampfpanzer.',
-   why:'Ein Windrad ist von oben vor allem an seinem langen Schatten zu erkennen und meist weithin einmalig. Der Feldweg führt den Blick von der Kreuzung direkt hin.',
-   bad:[['hidden', 'Norden oben. Die Straßenkreuzung in der Bildmitte → den Feldweg entlang bis zum Schild „Windpark – Betreten verboten“ → dort ein Kampfpanzer.', 'Ein Schild sieht der Pilot nicht. Das Windrad selbst wäre der richtige Bezugspunkt.'],
-        ['small', 'Kampfpanzer auf einem Schotterplatz → der Platz liegt an einem Windrad → das Windrad steht an einem Feldweg.'],
-        ['lr', 'Kreuzung → den Feldweg nach rechts oben → am Windrad links ein Kampfpanzer.', '„Rechts oben“ bezieht sich auf dein Bild. Der Pilot sieht das Gelände aus seiner Flugrichtung, für ihn ist „rechts oben“ woanders. Nimm Himmelsrichtungen.'],
-        ['wrong', 'Norden oben. Die Straßenkreuzung in der Bildmitte → der Feldweg, der von der Kreuzung nach Nordwesten führt → am Feldweg das einzige Windrad → auf dem Schotterplatz ein Kampfpanzer.', 'Der Feldweg und das Windrad liegen nordöstlich der Kreuzung. Im Nordwesten liegt ein Gehöft.']]},
+   steps:['North is up. Road crossing in the middle of the picture, X-ray junction. Call contact.',
+          'That junction is BLUE. From BLUE, north-east along the dirt road, single wind turbine with a long shadow. BLUE to the turbine is one unit, call contact.',
+          'Your target: single tank on the gravel pad at the base of the turbine. Call tally.'],
+   key:1, why:'From BLUE – north-east – along the dirt road (Strecke = eine Einheit) – single wind turbine. Ein Windrad erkennt man von oben vor allem an seinem langen Schatten.',
+   bad:[['wrong', 'That junction is BLUE. From BLUE, north-west along the dirt road, single wind turbine with a long shadow. BLUE to the turbine is one unit, call contact.', 'Feldweg und Windrad liegen nordöstlich von BLUE.'],
+        ['hidden', 'That junction is BLUE. From BLUE, along the dirt road to the sign “wind farm – no entry”. Call contact.', 'Ein Schild sieht der Pilot nicht. Das Windrad selbst ist der Bezugspunkt.'],
+        ['lr', 'That junction is BLUE. From BLUE, up and to the right along the dirt road, single wind turbine. Call contact.'],
+        ['noF', 'Find the wind turbine. Call contact.', 'Ohne Startpunkt sucht der Pilot das ganze Gebiet ab. Führe ihn von BLUE aus hin.']]},
   {id:'E1', sc:'bahn', tgt:'e3', cand:['e1', 'e2', 'e3', 'e4'],
-   ok:'Norden oben. Die Bahnlinie, die von Südwest nach Nordost durchs Bild läuft → die einzige Straße, die von Nord nach Süd unter der Bahn hindurchführt → direkt nördlich der Unterführung auf der Straße ein Schützenpanzer.',
-   why:'Eine Bahnlinie ist eine lange, gerade Linie und leicht zu finden. Die Stelle, an der die Straße sie kreuzt, ist ein eindeutiger Punkt.',
-   bad:[['wrong', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → die einzige Straße, die unter der Bahn hindurchführt → direkt südlich der Unterführung ein Schützenpanzer.', 'Der Schützenpanzer steht nördlich der Unterführung.'],
-        ['hidden', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → die Straße mit dem Schild „Durchfahrtshöhe 3,8 m“ → nördlich davon ein Schützenpanzer.', 'Ein Verkehrsschild ist aus der Luft nicht zu lesen. Die Unterführung selbst ist der richtige Bezugspunkt.'],
-        ['ambig', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → an der großen Halle mit Flachdach nach Westen zur Straße → nördlich der Bahn ein Schützenpanzer.', 'Es gibt mehrere große Gebäude mit Flachdach: zwei Hallen und das Krankenhaus. Welches gemeint ist, bleibt offen.'],
-        ['small', 'Schützenpanzer auf einer Straße → die Straße führt unter einer Bahnlinie hindurch.']]},
+   steps:['North is up. Railway line running south-west to north-east across the picture. That railway is RED. Call contact.',
+          'From where RED enters the picture in the south-west, north-east along RED, 150 meters, the only road passing under it. That underpass is BLUE, call contact.',
+          'From BLUE, north, 20 meters, on the road. Your target: single IFV. Call tally.'],
+   key:1, why:'Hier ist die Entfernung in Metern angegeben – auch das ist nach FIDO zulässig. From where RED enters the picture – north-east along RED – 150 meters – the only road passing under it.',
+   bad:[['wrong', 'From where RED leaves the picture in the north-east, south-west along RED, 150 meters, the only road passing under it. That underpass is BLUE, call contact.', 'Vom Nordostrand aus sind es bis zur Unterführung über 200 m, nicht 150 m.'],
+        ['hidden', 'From RED, find the road with the sign “clearance 3.8 meters”. That is BLUE, call contact.', 'Ein Verkehrsschild ist aus der Luft nicht zu lesen.'],
+        ['ambig', 'From the large building with a flat roof, west, 150 meters, the road. That is BLUE, call contact.', 'Es gibt mehrere große Gebäude mit Flachdach: zwei Hallen und das Krankenhaus.'],
+        ['noD', 'From where RED enters the picture in the south-west, north-east along RED, a road passing under it. That underpass is BLUE, call contact.']]},
   {id:'E2', sc:'bahn', tgt:'e1', cand:['e1', 'e2', 'e3', 'e4'],
-   ok:'Norden oben. Die Bahnlinie von Südwest nach Nordost → nordwestlich davon die helle Kiesgrube mit dem See → am Südostufer des Sees, auf dem hellen Kies, ein Kampfpanzer.',
-   why:'Bahnlinie und Kiesgrube mit See sind groß, hell und einmalig. Das Ufer des Sees grenzt den Bereich auf wenige Meter ein.',
-   bad:[['ambig', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → die große helle Fläche nördlich der Bahn → an ihrem Südostrand ein Kampfpanzer.', 'Nördlich der Bahn gibt es zwei große helle Flächen: die Kiesgrube und das Gewerbegebiet. Der See macht die Kiesgrube eindeutig.'],
-        ['wrong', 'Norden oben. Die Bahnlinie von Südwest nach Nordost → südöstlich davon die helle Kiesgrube mit dem See → am Südostufer ein Kampfpanzer.', 'Die Kiesgrube liegt nordwestlich der Bahnlinie.'],
-        ['lr', 'Bahnlinie → links oben die Kiesgrube → unten rechts am See ein Kampfpanzer.', '„Links oben“ und „unten rechts“ beziehen sich auf dein Bild. Der Pilot sieht das Gelände aus seiner Flugrichtung. Nimm Himmelsrichtungen.'],
-        ['small', 'Kampfpanzer an einem See → der See liegt in einer Kiesgrube → die Kiesgrube liegt an einer Bahnlinie.']]}
+   steps:['North is up. Railway line running south-west to north-east across the picture. That railway is RED. Call contact.',
+          'From the only road passing under RED, north-west, 100 meters, bright gravel pit with a lake. Call contact.',
+          'Your target: single tank on the gravel at the south-east shore of the lake, gun pointing north-west. Call tally.'],
+   key:1, why:'From the only road passing under RED – north-west – 100 meters – bright gravel pit with a lake. Der See macht die Kiesgrube eindeutig.',
+   bad:[['ambig', 'From RED, north, 100 meters, the large bright area. Call contact.', 'Nördlich der Bahn gibt es zwei große helle Flächen: Kiesgrube und Gewerbegebiet.'],
+        ['wrong', 'From the only road passing under RED, south-east, 100 meters, bright gravel pit with a lake. Call contact.', 'Die Kiesgrube liegt nordwestlich der Unterführung.'],
+        ['lr', 'From the only road passing under RED, up and to the left, 100 meters, bright gravel pit with a lake. Call contact.'],
+        ['noF', 'Look for a gravel pit with a lake. Call contact.']]}
 ];
-
 /* ---------- Begleitschaden-Lagen ---------- */
 const CDE = [
   {id:'k1', sc:'dorf', show:['v6'], boxes:[[167, 151]],
@@ -530,16 +576,19 @@ const CUR = [
   ['dc4', 'dir', 'Dein Kompass zeigt nach Magnetisch Nord, die Karte ist nach Gitternord ausgerichtet. Wo findest du den Unterschied?', ['Am Kartenrand (Angabe zur Nadelabweichung)', 'Nirgends – er ist immer null', 'In Zeile 8 der 9-Line', 'Auf dem Kompassdeckel'], 'Gitternord (Karte) und Magnetisch Nord (Kompass) weichen voneinander ab. Den Winkel dazwischen nennt die Karte am Rand als Nadelabweichung. In Deutschland ist er klein, in anderen Regionen kann er groß sein – vor dem Messen immer nachsehen.'],
   ['dc5', 'card', 'In welcher Form gibst du Zeile 8 der 9-Line an?', ['Himmelsrichtung und Entfernung der eigenen Truppen vom Ziel aus, z. B. „Süd 800“', 'Koordinate der eigenen Truppen', 'Richtung vom eigenen Standort zum Ziel in Strich', 'Entfernung vom Lfz zum Ziel'], 'Zeile 8 sagt dem Piloten, wo ihr steht – vom Ziel aus gesehen: Himmelsrichtung und Entfernung in Metern. „Süd 800“ heißt: eigene Truppen 800 m südlich des Ziels.'],
   ['dc6', 'card', 'Deine Truppe steht 600 m südlich des Ziels. Was meldest du in Zeile 8?', ['Süd 600', 'Nord 600', 'Süd 6000', 'Nord 6'], 'Zeile 8 wird vom Ziel aus angegeben: Ihr steht südlich des Ziels, also „Süd 600“. Häufiger Fehler ist die Richtung vom eigenen Standort zum Ziel – das wäre „Nord“ und schickt den Piloten gedanklich auf die falsche Seite.'],
-  ['tg1', 'tgr', 'Womit beginnt ein Talk-on?', ['Mit gemeinsamer Orientierung und einem großen, eindeutigen Bezugspunkt', 'Mit der genauen Beschreibung des Ziels', 'Mit der Koordinate der eigenen Truppen', 'Mit dem kleinsten Detail in Zielnähe'], 'Erst klärt ihr, wie ihr euch orientiert (z. B. Himmelsrichtungen, „Norden oben“). Dann kommt ein großer Bezugspunkt, den der Pilot sicher findet: Fluss, Ortschaft, große Kreuzung. Von dort geht es Schritt für Schritt zum Ziel.'],
+  ['tg1', 'tgr', 'Wofür steht FIDO beim Talk-on?', ['From a point – In a direction – Distance to travel – Object seen', 'Find – Identify – Designate – Observe', 'Friendly – Intent – Direction – Objective', 'Feature – Initial point – Direction – Offset'], 'FIDO ist das Merkwort aus JP 3-09.3 für jeden Schritt eines Talk-ons: von einem Punkt (From a point), in eine Himmelsrichtung (In a direction), eine Entfernung in der vereinbarten Einheit oder in Metern (Distance to travel), zu einem Objekt, das der Pilot sehen soll (Object seen). Beispiel: „From BLUE, north-east, half a unit, large church.“'],
+  ['tg1b', 'tgr', 'Womit beginnt ein Talk-on?', ['Mit gemeinsamer Orientierung und einem großen, eindeutigen Bezugspunkt', 'Mit der genauen Beschreibung des Ziels', 'Mit der Koordinate der eigenen Truppen', 'Mit dem kleinsten Detail in Zielnähe'], 'Erst klärt ihr die Orientierung (Himmelsrichtungen, z. B. „North is up“, wenn ihr dasselbe Bild seht). Dann kommt ein großer Bezugspunkt, den der Pilot sicher findet: Fluss, Ortschaft, große Kreuzung. Er ist das erste „From a point“.'],
   ['tg2', 'tgr', 'Warum Himmelsrichtungen statt „links“ und „rechts“?', ['Links und rechts hängen von der Blickrichtung ab – der Pilot fliegt aus einer anderen Richtung an', 'Himmelsrichtungen sind kürzer', 'Links und rechts sind im Funk verboten', 'Der Pilot hat keinen Kompass'], 'Du schaust vom Boden aus einer Richtung, der Pilot kreist oder fliegt aus einer anderen an. Für ihn ist „rechts von der Kirche“ etwas anderes als für dich. Norden ist für beide gleich.'],
-  ['tg3', 'tgr', 'Was ist eine „Einheit“ (Maßstab) im Talk-on?', ['Eine Strecke, die ihr beide seht – z. B. Kreuzung bis Kirche –, mit der ihr weitere Entfernungen beschreibt', 'Die Entfernung zwischen dir und dem Ziel', 'Immer genau 100 m', 'Die Flughöhe des Lfz'], 'Entfernungen schätzt jeder anders, besonders aus der Luft. Legt ihr eine sichtbare Strecke als „eine Einheit“ fest, versteht ihr beide unter „zwei Einheiten östlich“ dasselbe.'],
+  ['tg3', 'tgr', 'Was ist die „unit of measure“ im Talk-on?', ['Eine Strecke oder ein Objekt, das ihr beide seht – z. B. Brücke bis Kreuzung oder die Länge der Brücke –, mit dem ihr Entfernungen angebt', 'Die Entfernung zwischen dir und dem Ziel', 'Immer genau 100 m', 'Die Flughöhe des Lfz'], 'Entfernungen schätzt jeder anders, besonders aus der Luft und durch den Pod. Legt ihr eine sichtbare Strecke als „one unit“ fest („RED to that junction is one unit“), versteht ihr beide unter „two units east“ dasselbe. Das ist das D in FIDO; alternativ gehen Meter.'],
+  ['tg3b', 'tgr', 'Warum gibst du bestätigten Bezugspunkten Namen wie RED oder BLUE?', ['Damit du später kurz darauf zurückverweisen kannst – z. B. „Go back to BLUE, call contact“, wenn der Pilot den Faden verliert', 'Weil Farben im Pod besser zu sehen sind', 'Weil die Vorschrift Farben für Ziele verlangt', 'Damit der Gegner die Bezugspunkte nicht kennt'], 'Ein Name spart Worte und vermeidet Verwechslungen: „From BLUE, north-east …“ statt „from the junction in the middle of the village …“. Verliert der Pilot unterwegs den Faden, schickst du ihn mit „Go back to BLUE“ zum letzten sicheren Punkt zurück, statt den ganzen Talk-on neu zu beginnen.'],
+  ['tg3c', 'tgr', 'Du hast die Kreuzung im Dorf BLUE genannt. Zwei Schritte später meldet der Pilot „LOOKING“. Was funkst du?', ['„Go back to BLUE, call contact.“', '„Start over from the river.“', '„It is right there, next to the church, left of you.“', '„Target is at grid 32U NB 4567 7234, cleared hot.“'], 'Zurück zum letzten Punkt, den der Pilot sicher hatte – deshalb hat er einen Namen. Von BLUE aus beschreibst du den nächsten Schritt einfacher oder mit einem größeren Bezugspunkt. Den ganzen Talk-on neu zu beginnen kostet Zeit; links/rechts und eine Freigabe ohne gefundenes Ziel sind falsch.'],
   ['tg4', 'tgr', 'Der Pilot meldet bei einem Bezugspunkt „CONTACT“. Was bedeutet das?', ['Er hat den Bezugspunkt gefunden – du gehst zum nächsten Schritt', 'Er hat das Ziel gefunden', 'Er wird beschossen', 'Er hat den Funkkontakt verloren'], 'CONTACT bestätigt einen Bezugspunkt oder ein Merkmal. Erst wenn der Pilot das Ziel selbst gefunden hat, meldet er TALLY.'],
   ['tg5', 'tgr', 'Der Pilot meldet „LOOKING“. Was tust du?', ['Die Beschreibung vereinfachen oder einen größeren Bezugspunkt wählen', 'Sofort zum nächsten Schritt gehen', 'Den Angriff freigeben', 'Die Zielkoordinate wiederholen und abwarten'], 'LOOKING heißt: Der Pilot sucht noch. Dann hilft kein weiterer Schritt, sondern eine einfachere Beschreibung oder ein größerer, auffälligerer Bezugspunkt.'],
   ['tg6', 'tgr', 'Welcher Bezugspunkt eignet sich am besten?', ['Eine große Straßenkreuzung', 'Ein parkendes Auto', 'Ein Verkehrsschild', 'Ein Mensch am Straßenrand'], 'Gute Bezugspunkte sind groß, einmalig, aus der Luft gut sichtbar und bleiben, wo sie sind: Kreuzungen, Brücken, Waldränder, Gewässer, auffällige Gebäude. Fahrzeuge und Menschen bewegen sich, Schilder sind von oben nicht zu sehen.'],
   ['tg7', 'tgr', 'Nachts sieht der Pilot das Gelände nur im Wärmebild. Was ändert sich für deinen Talk-on?', ['Es gibt keine Farben mehr – beschreibe Formen, Linien und warme Objekte', 'Nichts', 'Ein Talk-on ist nachts nicht möglich', 'Du darfst nur noch Koordinaten verwenden'], 'Das Wärmebild zeigt Temperaturunterschiede, keine Farben. „Rotes Dach“ oder „gelbes Feld“ helfen nicht. Straßen, Gebäudeformen, Gewässer und warme Fahrzeuge dagegen schon.'],
   ['tg8', 'tgr', 'Wie verkürzt du einen langen Talk-on am besten?', ['Mit einer Markierung: IR-Pointer, Laser oder Rauch am Ziel oder nahe dabei', 'Indem du schneller sprichst', 'Indem du alle Schritte in einem Funkspruch sagst', 'Indem du auf Bezugspunkte verzichtest'], 'Eine Markierung gibt dem Piloten sofort einen Punkt im Gelände. Von dort brauchst du nur noch wenige Schritte, etwa „vom Rauch 100 m nach Norden“.'],
   ['tg9', 'tgr', 'Der Pilot meldet „TALLY“. Wie stellst du sicher, dass er das richtige Ziel hat?', ['Er beschreibt dir das Ziel und seine Umgebung – du vergleichst mit deinem Bild', 'Gar nicht – TALLY reicht immer', 'Du fragst nach seiner Flughöhe', 'Du wiederholst deinen Talk-on'], 'TALLY heißt nur: Der Pilot glaubt, das Ziel zu sehen. Lass ihn beschreiben, was er sieht (Fahrzeugart, Ausrichtung, Umgebung). Passt alles zu deinem Bild, habt ihr dasselbe Ziel. Mit ROVER seht ihr sogar dasselbe Pod-Bild.'],
-  ['tg10', 'tgr', 'Warum funkst du den Talk-on in kurzen Schritten mit Bestätigung?', ['Damit der Pilot jeden Bezugspunkt gefunden hat, bevor der nächste kommt', 'Weil Funkgeräte nur kurze Sprüche übertragen', 'Damit der Gegner nicht mithört', 'Weil das Lfz sonst zu schnell ist'], 'Jeder Schritt baut auf dem vorigen auf. Hat der Pilot einen Bezugspunkt verpasst, ist alles danach wertlos. Deshalb: ein Schritt, CONTACT abwarten, nächster Schritt.'],
+  ['tg10', 'tgr', 'Was besagt die 2-zu-1-Regel beim Talk-on?', ['Zwei Anweisungen, dann eine Kontrollfrage an den Piloten (z. B. „call contact“)', 'Zwei Bezugspunkte pro Ziel', 'Zwei Talk-ons pro Angriff', 'Zwei Minuten Talk-on, dann eine Minute Pause'], 'JP 3-09.3 empfiehlt beim Talk-on ein Verhältnis von 2 zu 1: zwei Anweisungen, dann eine Frage, mit der der Pilot bestätigt. Jeder Schritt baut auf dem vorigen auf – hat der Pilot einen Bezugspunkt verpasst, ist alles danach wertlos.'],
   ['cg1', 'cgr', 'Welche drei Grundsätze des humanitären Völkerrechts stehen hinter jeder Wirkmittelwahl?', ['Unterscheidung, Verhältnismäßigkeit, Vorsicht', 'Schnelligkeit, Überraschung, Masse', 'Aufklärung, Führung, Wirkung', 'Tarnung, Täuschung, Deckung'], 'Unterscheidung: nur militärische Ziele angreifen. Verhältnismäßigkeit: Die erwarteten Schäden an Zivilpersonen und zivilen Objekten dürfen nicht außer Verhältnis zum militärischen Vorteil stehen. Vorsicht: alles praktisch Mögliche tun, um solche Schäden zu vermeiden – durch Wahl von Wirkmittel, Zeitpunkt und Anflugrichtung. Festgeschrieben im I. Zusatzprotokoll zu den Genfer Abkommen.'],
   ['cg2', 'cgr', 'Eine GBU-31 ist GPS-gelenkt und sehr genau. Bedeutet das wenig Begleitschaden?', ['Nein – sie trifft genau, wirkt aber mit 2000 lb sehr weit um den Einschlagpunkt', 'Ja – präzise Waffen verursachen keinen Begleitschaden', 'Ja, wenn das Wetter gut ist', 'Nein – GPS-Waffen sind ungenau'], 'Die Präzision bestimmt, wo die Waffe einschlägt. Die Größe des Gefechtskopfs bestimmt, wie weit Druck und Splitter reichen. Für Ziele nahe Zivilisten zählt beides: genau treffen und möglichst kleine Wirkung.'],
   ['cg3', 'cgr', 'Was bewirkt ein Verzögerungszünder?', ['Die Bombe dringt erst ein und detoniert im Gebäude oder im Boden – weniger Splitter nach außen', 'Die Bombe detoniert einige Meter über dem Boden', 'Die Bombe detoniert erst Stunden später', 'Die Bombe detoniert nicht, wenn Zivilisten in der Nähe sind'], 'Mit Verzögerung detoniert die Bombe kurz nach dem Eindringen. Die Wirkung bleibt stärker im Gebäude oder im Erdreich. Nachteil: Das Gebäude kann einstürzen.'],
@@ -770,7 +819,7 @@ function mgrsSvg(){
 function renderLehre(){
   $('#bar').style.display = '';
   setBar('Kurzlehre', {back:'home'});
-  const talkSteps = scene(SC.dorf, {labels:[[110, 219, '1', 0, -16], [200, 226, '2', 16, 8], [200, 120, '3', -16, 14], [247, 94, '4', -6, -18], [343, 70, '5', -24, -16], [341, 72, '6', 4, 20]], boxes:[[341, 72]]});
+  const talkSteps = scene(SC.dorf, {labels:[[200, 226, '1', 16, 8], [200, 120, '2', -16, 14], [247, 94, '3', -6, -18], [341, 72, '4', 4, 20]], boxes:[[341, 72]]});
   $('#app').innerHTML = `
   <article class="lehre">
     <section><h2>1 · MGRS lesen</h2>
@@ -799,17 +848,25 @@ function renderLehre(){
       <p>In Zeile 8 der 9-Line meldest du, wo die eigenen Truppen stehen – <b>vom Ziel aus gesehen</b>: Himmelsrichtung und Entfernung in Metern, z. B. „Süd 800“. Der häufigste Fehler ist die Gegenrichtung, also die Richtung vom eigenen Standort zum Ziel.</p>
       <p>Auf der Karte: Ein 1-km-Gitterquadrat hat 1000 m, ein Zehntel 100 m. Diagonal ist eine Strecke rund 1,4-mal so lang wie ihre Seite.</p>
     </section>
-    <section><h2>4 · Talk-on</h2>
+    <section><h2>4 · Talk-on nach FIDO</h2>
+      <p>Jeder Schritt eines Talk-ons folgt dem Merkwort <b>FIDO</b> aus JP 3-09.3:</p>
+      <ul>
+        <li><b>F – From a point:</b> ein leicht erkennbarer Startpunkt, den der Pilot schon bestätigt hat.</li>
+        <li><b>I – In a direction:</b> Himmelsrichtung (north, north-east …) – nie links, rechts, oben oder unten.</li>
+        <li><b>D – Distance to travel:</b> in der vereinbarten Einheit („one unit“) oder in Metern.</li>
+        <li><b>O – Object seen:</b> das Objekt, das der Pilot jetzt sehen soll – einmalig und von oben erkennbar.</li>
+      </ul>
       <figure class="scene lehre-scene" data-zoom="1">${talkSteps}</figure>
-      <p class="small muted">Vom Großen zum Kleinen: 1 Fluss → 2 Brücke → 3 Kreuzung → 4 Kirche (Maßstab: Kreuzung bis Kirche = eine Einheit) → 5 Gehöft zwei Einheiten östlich → 6 Ziel im Hof.</p>
+      ${dlgHtml(dialog(TALK[0].steps, true), 'Beispiel')}
       <ol>
-        <li><b>Orientierung festlegen:</b> Himmelsrichtungen; gegebenenfalls „Norden oben“, wenn ihr dasselbe Bild seht (ROVER).</li>
-        <li><b>Großer, eindeutiger Bezugspunkt:</b> Fluss, Ortschaft, große Kreuzung, Bahnlinie, Waldstück.</li>
-        <li><b>Maßstab festlegen:</b> eine Strecke, die ihr beide seht, als „eine Einheit“.</li>
-        <li><b>Schritt für Schritt</b> vom Großen zum Kleinen. Nach jedem Schritt auf CONTACT warten. Bei LOOKING vereinfachen oder größer ansetzen.</li>
-        <li><b>Ziel beschreiben</b> – erst wenn der Pilot TALLY meldet, lässt du ihn das Ziel zurückbeschreiben und vergleichst.</li>
+        <li><b>Orientierung und erster Bezugspunkt:</b> „North is up“, wenn ihr dasselbe Bild seht (ROVER); dann ein großer, einmaliger Punkt wie Fluss und Brücke.</li>
+        <li><b>Maßstab festlegen (unit of measure):</b> eine Strecke oder Länge, die ihr beide seht – „RED to that junction is one unit“ oder „the length of the bridge is one unit“.</li>
+        <li><b>Bestätigte Punkte benennen:</b> „That bridge is RED“, „That junction is BLUE“. Danach reicht „From BLUE, north-east …“.</li>
+        <li><b>2 zu 1:</b> zwei Anweisungen, dann eine Kontrollfrage („call contact“). Erst nach CONTACT der nächste Schritt.</li>
+        <li><b>Pilot meldet LOOKING:</b> „Go back to BLUE, call contact.“ Dann den Schritt einfacher oder mit größerem Bezugspunkt wiederholen.</li>
+        <li><b>Ziel:</b> „Your target: … call tally.“ Nach TALLY lässt du den Piloten das Ziel beschreiben und vergleichst.</li>
       </ol>
-      <p><b>Gute Bezugspunkte</b> sind groß, einmalig, von oben gut sichtbar und bleiben an ihrem Platz. <b>Schlecht</b> sind Fahrzeuge, Menschen, Schilder, Farben im Wärmebild sowie alles, was es mehrfach gibt („das rote Haus“). <b>Nie</b> links, rechts, vor oder hinter – der Pilot sieht das Gelände aus einer anderen Richtung. Eine Markierung (IR-Pointer, Laser, Rauch) verkürzt jeden Talk-on.</p>
+      <p><b>Gute Bezugspunkte</b> sind groß, einmalig, von oben sichtbar und bleiben an ihrem Platz. <b>Schlecht</b> sind Fahrzeuge, Menschen, Schilder, Farben im Wärmebild und alles, was es mehrfach gibt („house with a red roof“). Eine Markierung (IR-Pointer, Laser, Rauch) verkürzt jeden Talk-on.</p>
     </section>
     <section><h2>5 · Begleitschaden vermeiden</h2>
       <p>Grundlage ist das humanitäre Völkerrecht (I. Zusatzprotokoll zu den Genfer Abkommen): <b>Unterscheidung</b> (nur militärische Ziele, sichere Identifizierung), <b>Verhältnismäßigkeit</b> (erwarteter ziviler Schaden nicht außer Verhältnis zum militärischen Vorteil) und <b>Vorsicht</b> (alles praktisch Mögliche tun, um ihn zu vermeiden). Deine Stellschrauben als JTAC:</p>
@@ -900,32 +957,42 @@ const vehOf = (sc, id) => SC[sc].veh.find(v => v[5] === id);
 function sceneFig(scKey, o = {}){ return `<figure class="scene" data-zoom="1">${scene(SC[scKey], o)}</figure>`; }
 const mapFig = svg => `<figure class="scene map" data-zoom="1">${svg}</figure>`;
 
+/* ---------- Funkverkehr ---------- */
+function dialog(steps, answered){
+  const out = [];
+  steps.forEach((st, i) => { out.push({who:'JTAC', t:st}); if (answered || i < steps.length - 1) out.push({who:'Pilot', t:/call tally/i.test(st) ? 'TALLY' : 'CONTACT'}); });
+  return out;
+}
+const dlgHtml = (d, head) => `<div class="dlg"><span class="say-h">${esc(head)}</span>${d.map(x => `<p class="${x.who === 'JTAC' ? 'j' : 'p'}${x.mark ? ' mark' : ''}"><b>${x.who}</b><span lang="en">${esc(x.t)}</span></p>`).join('')}</div>`;
+
 /* ---------- Fragen erzeugen ---------- */
 function materialize(q){
   if (q.kind === 'gen'){ const m = GEN[q.g].make(); if (m.fig) m.fig = mapFig(m.fig); return m; }
   if (q.kind === 'cur') return {prompt:q.q, correct:q.opts[0], wrong:q.opts.slice(1), ex:q.ex};
   if (q.kind === 'talk'){
-    const t = q.t, v = vehOf(t.sc, t.tgt);
-    const bad = shuffle(t.bad).slice(0, 3);
-    return {prompt:'Welche Einweisung führt den Piloten eindeutig zum markierten Ziel?', fig:sceneFig(t.sc, {ir:t.ir, boxes:[[v[0], v[1]]]}),
-      correct:t.ok, wrong:bad.map(b => b[1]), long:true,
-      ex:`Richtig: vom Großen zum Kleinen, nur eindeutige und von oben sichtbare Bezugspunkte, Himmelsrichtungen. ${t.why}`,
+    const t = q.t, v = vehOf(t.sc, t.tgt), bad = shuffle(t.bad).slice(0, 3);
+    return {prompt:'Welcher nächste Funkspruch ist richtig?', fig:sceneFig(t.sc, {ir:t.ir, boxes:[[v[0], v[1]]]}),
+      dlg:dialog(t.steps.slice(0, t.key), true), dlgHead:t.key ? 'Bisher' : 'Erster Funkspruch',
+      correct:t.steps[t.key], wrong:bad.map(b => b[1]), long:true, mono:true,
+      ex:`Richtig nach FIDO: ${t.why}`,
       exWrong:bad.map(b => ({t:b[1], why:b[2] || FL_WHY[b[0]], cat:FL[b[0]]}))};
   }
   if (q.kind === 'tfail'){
     const t = q.t, v = vehOf(t.sc, t.tgt), b = rnd(t.bad);
     const others = shuffle(Object.keys(FL).filter(k => k !== b[0])).slice(0, 3);
-    return {prompt:'Was ist an dieser Einweisung falsch?', fig:sceneFig(t.sc, {ir:t.ir, boxes:[[v[0], v[1]]]}), say:b[1],
-      correct:FL[b[0]], wrong:others.map(k => FL[k]), ex:`${b[2] || FL_WHY[b[0]]} Besser: „${t.ok}“`};
+    return {prompt:'Was ist am markierten Funkspruch falsch?', fig:sceneFig(t.sc, {ir:t.ir, boxes:[[v[0], v[1]]]}),
+      dlg:[...dialog(t.steps.slice(0, t.key), true), {who:'JTAC', t:b[1], mark:true}], dlgHead:'Funkverkehr',
+      correct:FL[b[0]], wrong:others.map(k => FL[k]), ex:`${b[2] || FL_WHY[b[0]]} Richtig wäre: „${t.steps[t.key]}“`};
   }
   if (q.kind === 'follow'){
     const t = q.t, letters = shuffle(['A', 'B', 'C', 'D']);
     const lab = t.cand.map((id, i) => { const v = vehOf(t.sc, id); return [v[0], v[1], letters[i]]; });
-    const ci = t.cand.indexOf(t.tgt), right = letters[ci], v = vehOf(t.sc, t.tgt);
-    return {prompt:'Du bist der Pilot. Welches Fahrzeug meint der JTAC?', fig:sceneFig(t.sc, {ir:t.ir, labels:lab}), say:t.ok,
+    const right = letters[t.cand.indexOf(t.tgt)], v = vehOf(t.sc, t.tgt);
+    return {prompt:'Du bist der Pilot. Welches Fahrzeug meint der JTAC?', fig:sceneFig(t.sc, {ir:t.ir, labels:lab}),
+      dlg:dialog(t.steps, false), dlgHead:'Funkverkehr',
       figAfter:sceneFig(t.sc, {ir:t.ir, labels:lab, boxes:[[v[0], v[1]]]}),
       correct:`Fahrzeug ${right}`, wrong:letters.filter(x => x !== right).map(x => `Fahrzeug ${x}`), sortOpts:true,
-      ex:`Gemeint ist Fahrzeug ${right}. ${t.why}`};
+      ex:`Gemeint ist Fahrzeug ${right}. Jeder Schritt folgt FIDO: von einem bestätigten Punkt, in eine Himmelsrichtung, über eine Entfernung, zu einem eindeutigen Objekt.`};
   }
   if (q.kind === 'cde'){
     const c = q.c;
@@ -962,7 +1029,7 @@ function renderHome(){
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="koord"><span class="mi"><strong>Koordinaten (MGRS)</strong><small>6- und 8-stellig von der Karte ablesen, kürzen, Genauigkeit, Entfernung zwischen zwei Koordinaten</small></span><span class="n">${countArea(MODES.koord.areas)} Fragen</span></button>
     <button class="mode" data-start="richt"><span class="mi"><strong>Richtung und Zeile 8</strong><small>Strich und Grad, Gegenrichtung, Richtung von der Karte, eigene Truppen vom Ziel aus</small></span><span class="n">${countArea(MODES.richt.areas)} Fragen</span></button>
-    <button class="mode" data-start="talk"><span class="mi"><strong>Talk-on</strong><small>Die richtige Einweisung wählen, Fehler finden, als Pilot dem Talk-on folgen</small></span><span class="n">${countArea(MODES.talk.areas)} Fragen</span></button>
+    <button class="mode" data-start="talk"><span class="mi"><strong>Talk-on</strong><small>Nach FIDO, auf Englisch: richtigen Funkspruch wählen, Fehler finden, als Pilot folgen</small></span><span class="n">${countArea(MODES.talk.areas)} Fragen</span></button>
     <button class="mode" data-start="cde"><span class="mi"><strong>Begleitschaden-Lagen</strong><small>Ziel neben Kirche, Schule, Wohnhaus oder eigenen Truppen: Wirkmittel, Zünder, Anflug, Zeitpunkt</small></span><span class="n">${countArea(MODES.cde.areas)} Fragen</span></button>
     <button class="mode" data-go="lehre"><span class="mi"><strong>Kurzlehre</strong><small>MGRS, Strich, Zeile 8, Talk-on und Begleitschaden zum Nachlesen</small></span><span class="n">5 Kapitel</span></button>
     <button class="mode" data-go="stats"><span class="mi"><strong>Statistik und gemeldete Fragen</strong><small>Trefferquote je Bereich, markierte Fragen zum Prüfen</small></span><span class="n">${nFlags ? nFlags + ' gemeldet' : ''}</span></button>
@@ -988,9 +1055,9 @@ function renderQuiz(){
   $('#app').innerHTML = `
     <div id="figbox">${m.fig || ''}</div>
     ${m.lage ? `<p class="lage"><b>Lage:</b> ${esc(m.lage)}</p>` : ''}
-    ${m.say ? `<blockquote class="say"><span class="say-h">JTAC funkt</span>${esc(m.say)}</blockquote>` : ''}
+    ${m.dlg && m.dlg.length ? dlgHtml(m.dlg, m.dlgHead) : ''}
     <h2 class="prompt">${esc(m.prompt)}</h2>
-    <div class="opts${m.long ? ' long' : ''}" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
+    <div class="opts${m.long ? ' long' : ''}${m.mono ? ' radio' : ''}" role="group" aria-label="Antworten">${opts.map((o, k) => `<button class="opt" data-ans="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join('')}</div>
     <div id="fb"></div>`;
 }
 function answer(k){
@@ -1067,7 +1134,7 @@ document.addEventListener('click', e => {
   if (t.dataset.ans != null){ answer(Number(t.dataset.ans)); return; }
   if (t.dataset.flag){
     const id = t.dataset.flag;
-    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt + (R.cur.m.say ? ' – „' + R.cur.m.say.slice(0, 80) + '…“' : '') : id, ts:Date.now()};
+    if (S.flags[id]) delete S.flags[id]; else S.flags[id] = {t:R && R.cur ? R.cur.m.prompt + (R.cur.m.dlg && R.cur.m.dlg.length ? ' – „' + R.cur.m.dlg[R.cur.m.dlg.length - 1].t.slice(0, 80) + '…“' : '') : id, ts:Date.now()};
     save(); t.classList.toggle('flagged', !!S.flags[id]); t.textContent = S.flags[id] ? 'Gemeldet' : 'Frage melden'; return;
   }
   const act = t.dataset.act;

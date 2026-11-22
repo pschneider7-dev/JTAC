@@ -11,7 +11,7 @@ Web-App (PWA) mit zwölf Trainern für CAS aus JTAC-Sicht. Installierbar auf dem
 | `ziele/` | Zielpriorisierung (Lagen mit vier Zielen, Bilder aus Manöver-, Artillerie- und Flugabwehr-Trainer) |
 | `waffen/` | Waffen-Trainer |
 | `pods/` | Pod-Trainer |
-| `handwerk/` | JTAC-Handwerk: Koordinaten (MGRS ablesen, kürzen, Entfernung), Strich und Grad, Zeile 8, Talk-on und Begleitschaden-Lagen; die Geländebilder sind SVG-Skizzen, die im Code aus Szenendaten (`SC`) gezeichnet werden |
+| `handwerk/` | JTAC-Handwerk: Koordinaten (MGRS ablesen, kürzen, Entfernung), Strich und Grad, Zeile 8, Talk-on nach FIDO (Funkverkehr auf Englisch, benannte Bezugspunkte, unit of measure, 2-zu-1-Regel) und Begleitschaden-Lagen; die Geländebilder sind SVG-Skizzen, die im Code aus Szenendaten (`SC`) gezeichnet werden |
 | `drill/` | JTAC-Drill |
 | `brevity/` | Brevity-Trainer |
 | `funk/` | Funk-Trainer (Kurzlehre mit Skizzen, Behelfsantennen, Sprechfunk, Rechner, Funkgeräte) |
