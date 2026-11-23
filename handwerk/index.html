@@ -136,6 +136,7 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:.85rem;background:va
 .lehre section{margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
 .lehre section:first-child{margin-top:10px;border-top:0;padding-top:0}
 .lehre h2{margin-bottom:10px}
+.lehre h3{font-family:var(--font-d);font-size:1.2rem;font-weight:600;margin:18px 0 6px}
 .lehre p,.lehre li{max-width:40em}
 .lehre ul,.lehre ol{padding-left:1.2em;margin:8px 0 0}
 .lehre li{margin:5px 0}
@@ -629,14 +630,16 @@ const CUR = [
   ['nb1', 'nbas', 'Zeile 2 der 9-Line: Auf welchen Norden bezieht sich das Heading vom IP zum Ziel?', ['Auf Magnetisch Nord – „degrees magnetic“', 'Auf Gitternord, wie auf der Karte', 'Auf geografisch Nord', 'Egal, solange es in Grad ist'], 'JP 3-09.3: „The heading is given in degrees magnetic from the IP to the target or from the center of the BP to the target.“ Lfz fliegen nach magnetischem Kurs. Misst du die Richtung auf der Karte, hast du einen Gitterwert und musst ihn mit der Nadelabweichung umrechnen.'],
   ['nb2', 'nbas', 'Du misst auf der Karte mit dem Winkelmesser eine Richtung. Worauf bezieht sie sich?', ['Auf Gitternord', 'Auf Magnetisch Nord', 'Auf geografisch Nord', 'Auf den Kompass'], 'Den Winkelmesser legst du an die senkrechten Gitterlinien an – das Ergebnis ist eine Gitterrichtung. Für den Kompass oder für Zeile 2 rechnest du sie mit der Nadelabweichung in magnetisch um.'],
   ['nb3', 'nbas', 'Worauf zeigt die Kompassnadel?', ['Auf Magnetisch Nord', 'Auf geografisch Nord (den Nordpol)', 'Auf Gitternord', 'Auf den Polarstern'], 'Die Nadel richtet sich nach dem Magnetfeld der Erde aus und zeigt auf Magnetisch Nord. Der magnetische Pol liegt nicht am geografischen Nordpol und wandert. Deshalb gibt es die Missweisung.'],
-  ['nb4', 'nbas', 'Was ist die Missweisung (Deklination)?', ['Der Winkel zwischen geografisch Nord und Magnetisch Nord', 'Der Winkel zwischen Gitternord und Magnetisch Nord', 'Der Winkel zwischen geografisch Nord und Gitternord', 'Die Ablenkung der Nadel durch Metall in der Nähe'], 'Missweisung: geografisch → magnetisch. Nadelabweichung: Gitter → magnetisch. Meridiankonvergenz: geografisch → Gitter. Metall in der Nähe (Fahrzeug, Waffe, Funkgerät) lenkt die Nadel zusätzlich ab – das ist eine Störung, keine Missweisung.'],
+  ['nb4', 'nmag', 'Was ist die Missweisung (Deklination)?', ['Der Winkel zwischen geografisch Nord und Magnetisch Nord', 'Der Winkel zwischen Gitternord und Magnetisch Nord', 'Der Winkel zwischen geografisch Nord und Gitternord', 'Die Ablenkung der Nadel durch Metall in der Nähe'], 'Missweisung: geografisch → magnetisch. Nadelabweichung: Gitter → magnetisch. Meridiankonvergenz: geografisch → Gitter. Metall in der Nähe (Fahrzeug, Waffe, Funkgerät) lenkt die Nadel zusätzlich ab – das ist eine Störung, keine Missweisung.'],
   ['nb5', 'nbas', 'Was ist die Nadelabweichung?', ['Der Winkel zwischen Gitternord und Magnetisch Nord', 'Der Winkel zwischen geografisch Nord und Magnetisch Nord', 'Der Winkel zwischen geografisch Nord und Gitternord', 'Die Ablesegenauigkeit des Kompasses'], 'Die Nadelabweichung (englisch G-M angle) verbindet Karte und Kompass. Sie steht im Nadeldiagramm am Kartenrand, zusammen mit dem Bezugsjahr und der jährlichen Änderung.'],
-  ['nb6', 'nbas', 'Missweisung 7° Ost. Welcher Wert ist für dieselbe Richtung größer?', ['Rechtweisend – magnetisch ist um 7° kleiner', 'Magnetisch – rechtweisend ist um 7° kleiner', 'Beide sind gleich', 'Das hängt von der Richtung zum Ziel ab'], 'Magnetisch Nord liegt östlich, also rechts von geografisch Nord. Von dort ist der Weg im Uhrzeigersinn zum Ziel kürzer – der magnetische Wert ist kleiner. Merksatz: „East is least, West is best“.'],
-  ['nb7', 'nbas', 'Was bedeutet „East is least, West is best“?', ['Von rechtweisend nach magnetisch: Ost-Missweisung abziehen, West-Missweisung addieren', 'Von magnetisch nach rechtweisend: Ost abziehen, West addieren', 'Nach Osten fliegt man niedriger, nach Westen höher', 'Ost-Missweisung ist immer kleiner als West-Missweisung'], 'Der Merksatz gilt für den Weg von rechtweisend (oder Gitter) nach magnetisch: Bei Ost ist magnetisch der kleinere Wert („least“), bei West der größere („best“). In die andere Richtung, von magnetisch nach rechtweisend, wird Ost addiert und West abgezogen.'],
+  ['nb6', 'nmag', 'Missweisung 7° Ost. Welcher Wert ist für dieselbe Richtung größer?', ['Rechtweisend – magnetisch ist um 7° kleiner', 'Magnetisch – rechtweisend ist um 7° kleiner', 'Beide sind gleich', 'Das hängt von der Richtung zum Ziel ab'], 'Magnetisch Nord liegt östlich, also rechts von geografisch Nord. Von dort ist der Weg im Uhrzeigersinn zum Ziel kürzer – der magnetische Wert ist kleiner. Merksatz: „East is least, West is best“.'],
+  ['nb7', 'nmag', 'Was bedeutet „East is least, West is best“?', ['Von rechtweisend nach magnetisch: Ost-Missweisung abziehen, West-Missweisung addieren', 'Von magnetisch nach rechtweisend: Ost abziehen, West addieren', 'Nach Osten fliegt man niedriger, nach Westen höher', 'Ost-Missweisung ist immer kleiner als West-Missweisung'], 'Der Merksatz gilt für den Weg von rechtweisend (oder Gitter) nach magnetisch: Bei Ost ist magnetisch der kleinere Wert („least“), bei West der größere („best“). In die andere Richtung, von magnetisch nach rechtweisend, wird Ost addiert und West abgezogen.'],
   ['nb8', 'nbas', 'Warum nennt der Kartenrand eine jährliche Änderung der Missweisung?', ['Der magnetische Pol wandert – die Missweisung ändert sich von Jahr zu Jahr', 'Weil sich die Gitterlinien verschieben', 'Weil sich die Erde schneller dreht', 'Weil die Karte jedes Jahr neu gedruckt wird'], 'Das Magnetfeld der Erde ändert sich langsam, der magnetische Pol wandert. Deshalb steht die Missweisung für ein Bezugsjahr am Kartenrand, dazu die jährliche Änderung. Für heute rechnest du hoch: Wert + Jahre × Änderung.'],
   ['nb9', 'nbas', 'Dein GPS-Gerät zeigt die Richtung zum Ziel. Was prüfst du, bevor du sie weitergibst?', ['Auf welchen Norden das Gerät eingestellt ist – rechtweisend, magnetisch oder Gitter', 'Nur den Akkustand', 'Nichts – GPS-Richtungen sind immer magnetisch', 'Nur ob es Strich oder Grad anzeigt'], 'GPS-Geräte, Laser-Entfernungsmesser und Zielgeräte lassen sich auf verschiedene Nordrichtungen und Einheiten einstellen. Ein falsch eingestellter Norden verschiebt jede Richtung um die Missweisung oder Nadelabweichung. Norden und Einheit (Grad oder Strich) gehören beide zur Prüfung.'],
-  ['nb10', 'nbas', 'Wo stimmen Gitternord und geografisch Nord genau überein?', ['Auf dem Mittelmeridian der UTM-Zone', 'Am Äquator', 'Überall in Deutschland', 'Nirgends'], 'Die Gitterlinien einer UTM-Zone laufen parallel zu ihrem Mittelmeridian (Zone 32: 9° Ost, Zone 33: 15° Ost). Nur dort zeigt Gitternord genau zum Nordpol. Je weiter du dich davon entfernst und je weiter nördlich du bist, desto größer die Meridiankonvergenz – in Deutschland meist bis etwa 2–3°.'],
+  ['nb10', 'nmag', 'Wo stimmen Gitternord und geografisch Nord genau überein?', ['Auf dem Mittelmeridian der UTM-Zone', 'Am Äquator', 'Überall in Deutschland', 'Nirgends'], 'Die Gitterlinien einer UTM-Zone laufen parallel zu ihrem Mittelmeridian (Zone 32: 9° Ost, Zone 33: 15° Ost). Nur dort zeigt Gitternord genau zum Nordpol. Je weiter du dich davon entfernst und je weiter nördlich du bist, desto größer die Meridiankonvergenz – in Deutschland meist bis etwa 2–3°.'],
   ['nb11', 'nbas', 'In welcher Nordrichtung gibst du die Laser-Target-Line (LTL) an das Lfz?', ['In Grad magnetisch', 'In Grad Gitter', 'In Strich Gitter', 'In Grad rechtweisend'], 'JP 3-09.3 zu den Remarks: „LTL shall be passed if using ground-based laser designators (in degrees magnetic).“ Wie Zeile 2 und das Final Attack Heading geht die Laserlinie in Grad magnetisch an das Lfz.'],
+  ['nb13', 'nbas', 'Im Nadeldiagramm deiner Karte liegt MN rechts von GN. Was bedeutet das für Zeile 2?', ['Ost – die Nadelabweichung vom Kartenwert abziehen', 'Ost – die Nadelabweichung zum Kartenwert addieren', 'West – die Nadelabweichung vom Kartenwert abziehen', 'Nichts – Zeile 2 nimmst du direkt von der Karte'], 'Rechts von Gitternord heißt Ost. Von der Karte (Gitter) zu Zeile 2 (magnetisch) ziehst du eine Ost-Nadelabweichung ab und addierst eine West-Nadelabweichung – LARS: „Left Add, Right Subtract“. Beispiel: Karte 312°, 4° Ost → Zeile 2 308°.'],
+  ['nb14', 'nbas', 'Das Nadeldiagramm am Kartenrand zeigt drei Linien und mehrere Winkel. Welcher ist die Nadelabweichung?', ['Der Winkel zwischen GN und MN', 'Der Winkel zwischen Stern und MN', 'Der Winkel zwischen Stern und GN', 'Immer der größte Winkel im Diagramm'], 'Die Nadelabweichung liegt zwischen Gitternord (GN, Richtung der Gitterlinien) und Magnetisch Nord (MN, halbe Pfeilspitze). Stern bis MN ist die Missweisung, Stern bis GN die Meridiankonvergenz – beide brauchst du für Zeile 2 nicht.'],
   ['nb12', 'nbas', 'Wofür steht der Merksatz LARS?', ['Left Add, Right Subtract: von Gitter nach magnetisch – liegt MN links von GN, addieren, liegt es rechts, abziehen', 'Laser, Altitude, Range, Speed', 'Left Approach, Right Strike', 'Von Gitter nach magnetisch: liegt MN links, abziehen, liegt es rechts, addieren'], 'LARS kommt aus der US-Kartenkunde: Schau im Nadeldiagramm, auf welcher Seite von Gitternord der Pfeil für Magnetisch Nord liegt. Links (West): Nadelabweichung zum Gitterwert addieren. Rechts (Ost): abziehen. Das Ergebnis ist der Wert für den Kompass.']
 ];
 /* ---------- Karten-Zeichner (Militärkarte mit Gitter) ---------- */
@@ -783,11 +786,12 @@ function nordSvg(o){
     s += nTxt(lx, ly + 4, 'Ziel', {c:NC.Z, s:12});
   }
   s += gapPills.join('') + pills.join('');
-  s += `<circle cx="${cx}" cy="${cy}" r="3.2" fill="#1a2326"/>`;
+  s += o.center === 'IP' ? `<g transform="translate(${cx} ${cy})"><circle r="9" fill="#fff" stroke="#1e4fa8" stroke-width="2.4"/><circle r="2.6" fill="#1e4fa8"/></g>` + nTxt(cx - 13, cy + 22, 'IP', {a:'end', c:'#1e4fa8', s:12.5})
+    : `<circle cx="${cx}" cy="${cy}" r="3.2" fill="#1a2326"/>`;
   (o.top || []).forEach((t, i) => s += nTxt(10, 20 + i * 16, t, {a:'start', s:13, c:'#1a2326'}));
   if (o.note) s += nTxt(10, H - 27, 'Winkel zwischen den Nordlinien vergrößert', {a:'start', s:10, w:600, c:'#55615f'});
-  const leg = [['TN', '★ TN geografisch'], ['GN', 'GN Gitter'], ['MN', 'MN magnetisch']].filter(([k]) => L[k] != null);
-  leg.forEach(([k, t], i) => s += nTxt(cx + (i - (leg.length - 1) / 2) * 112, H - 8, t, {c:NC[k], s:11.5}));
+  const leg = (o.legend || [['TN', '★ TN geografisch'], ['GN', 'GN Gitter'], ['MN', 'MN magnetisch']]).filter(([k]) => L[k] != null), sp = leg.length === 2 ? 160 : 112;
+  leg.forEach(([k, t], i) => s += nTxt(cx + (i - (leg.length - 1) / 2) * sp, H - 8, t, {c:NC[k], s:11.5}));
   return s + `</svg>`;
 }
 /* Kartenausschnitt für Zeile 2: Gitterrichtung vom IP zum Ziel, unten das Nadeldiagramm vom Kartenrand */
@@ -824,16 +828,40 @@ function line2Map({g, gm, ip, seed}){
   return s + `</svg>`;
 }
 /* Kartenrand: Nadeldiagramm mit Missweisung, Bezugsjahr und jährlicher Änderung */
-function margSvg(d0, y0, r){
+function margSvg(d0, y0, r, gm = false){
   const W = 360, H = 150, ox = 64, oy = 128;
   const P = (a, l) => [ox + Math.sin(a * Math.PI / 180) * l, oy - Math.cos(a * Math.PI / 180) * l];
   let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kartenrand mit Nadeldiagramm"><rect width="${W}" height="${H}" fill="#fbf8ee"/><rect x="8" y="8" width="${W - 16}" height="${H - 16}" fill="none" stroke="#9aa39f" stroke-dasharray="4 3"/>`;
-  const [tx, ty] = P(0, 96), a = nEx(d0), [mx2, my2] = P(a, 86);
-  s += `<line x1="${ox}" y1="${oy}" x2="${f1(tx)}" y2="${f1(ty)}" stroke="${NC.TN}" stroke-width="2"/>` + nStar(tx, ty, 6);
+  const [tx, ty] = P(0, 96), a = nEx(d0), [mx2, my2] = P(a, 86), K = gm ? 'GN' : 'TN';
+  s += `<line x1="${ox}" y1="${oy}" x2="${f1(tx)}" y2="${f1(ty)}" stroke="${NC[K]}" stroke-width="2"${gm ? ' stroke-dasharray="6 3"' : ''}/>` + (gm ? '' : nStar(tx, ty, 6));
   s += `<line x1="${ox}" y1="${oy}" x2="${f1(mx2)}" y2="${f1(my2)}" stroke="${NC.MN}" stroke-width="2"/>` + nHalfArrow(mx2, my2, a, 11, 5);
-  s += nTxt(tx + (a > 0 ? -8 : 8), ty + 4, 'TN', {a:a > 0 ? 'end' : 'start', s:11}) + nTxt(mx2 + (a > 0 ? 8 : -8), my2 + 10, 'MN', {a:a > 0 ? 'start' : 'end', s:11, c:NC.MN});
-  const lines = [['Nadeldiagramm (Kartenrand)', '#55615f', 11], [`Missweisung ${angTxt(d0)}`, NC.MN, 15], [`Stand ${y0}`, '#1a2326', 13], [`Jährliche Änderung ${fmtNum(Math.abs(r), 1)}° ${ow(r)}`, '#1a2326', 13]];
+  s += nTxt(tx + (a > 0 ? -8 : 8), ty + 4, K, {a:a > 0 ? 'end' : 'start', s:11, c:NC[K]}) + nTxt(mx2 + (a > 0 ? 8 : -8), my2 + 10, 'MN', {a:a > 0 ? 'start' : 'end', s:11, c:NC.MN});
+  const lines = [['Nadeldiagramm (Kartenrand)', '#55615f', 11], [`${gm ? 'Nadelabweichung' : 'Missweisung'} ${angTxt(d0)}`, NC.MN, 15], [`Stand ${y0}`, '#1a2326', 13], [`Jährliche Änderung ${fmtNum(Math.abs(r), 1)}° ${ow(r)}`, '#1a2326', 13]];
   lines.forEach(([t, c, z], i) => s += nTxt(140, 34 + i * 26, t, {a:'start', s:z, c}));
+  return s + `</svg>`;
+}
+/* Nadeldiagramm wie am Kartenrand: Gitternord senkrecht, geografisch Nord (Stern) und Magnetisch Nord daneben.
+   c = Meridiankonvergenz (Gitternord gegenüber geografisch Nord), d = Missweisung, beides Grad, Ost positiv.
+   hl hebt die Nadelabweichung hervor, named schreibt die Namen an die Winkel. Winkel vergrößert dargestellt. */
+function randSvg({c, d, hl = false, named = false}){
+  const W = 360, H = 286, bx = 180, by = 246, grey = '#55615f';
+  const P = (a, l) => [bx + Math.sin(a * Math.PI / 180) * l, by - Math.cos(a * Math.PI / 180) * l];
+  const gm = Math.round((d - c) * 10) / 10, aT = nEx(-c), aM = nEx(gm);
+  const v = x => fmtNum(Math.abs(x), Number.isInteger(x) ? 0 : 1) + '°';
+  const arc = (a1, a2, r, col, w, lab) => { const lo = Math.min(a1, a2), hi = Math.max(a1, a2), [x1, y1] = P(lo, r), [x2, y2] = P(hi, r), [lx, ly] = P((lo + hi) / 2, r);
+    return {p:`<path d="M${f1(x1)} ${f1(y1)}A${r} ${r} 0 0 1 ${f1(x2)} ${f1(y2)}" fill="none" stroke="${col}" stroke-width="${w}"/>`, l:nPill(lx, ly, lab, col)}; };
+  const A = [arc(0, aT, 70, grey, 1.6, (named ? 'Konvergenz ' : '') + v(c)), arc(aT, aM, 150, grey, 1.6, (named ? 'Missweisung ' : '') + v(d)),
+    arc(0, aM, 110, hl ? NC.MN : grey, hl ? 3.4 : 1.6, (named || hl ? 'Nadelabweichung ' : '') + v(gm))];
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nadeldiagramm vom Kartenrand"><rect width="${W}" height="${H}" fill="#fbf8ee"/>`;
+  A.forEach(x => s += x.p);
+  const [gx, gy] = P(0, 196), [tx, ty] = P(aT, 206), [mx, my] = P(aM, 186);
+  s += `<line x1="${bx}" y1="${by}" x2="${f1(gx)}" y2="${f1(gy)}" stroke="${NC.GN}" stroke-width="2.2" stroke-dasharray="7 3"/>` + nTxt(gx, gy - 8, 'GN', {c:NC.GN, s:13});
+  s += `<line x1="${bx}" y1="${by}" x2="${f1(tx)}" y2="${f1(ty)}" stroke="${NC.TN}" stroke-width="2"/>` + nStar(tx, ty, 7);
+  s += `<line x1="${bx}" y1="${by}" x2="${f1(mx)}" y2="${f1(my)}" stroke="${NC.MN}" stroke-width="2.2"/>` + nHalfArrow(mx, my, aM) + nTxt(mx + (aM >= 0 ? 10 : -10), my + 4, 'MN', {a:aM >= 0 ? 'start' : 'end', c:NC.MN, s:13});
+  A.forEach(x => s += x.l);
+  s += nTxt(10, 18, 'Nadeldiagramm (Kartenrand)', {a:'start', s:12});
+  s += nTxt(10, H - 26, 'Winkel vergrößert dargestellt', {a:'start', s:10, w:600, c:grey});
+  s += nTxt(bx, H - 8, '★ geografisch Nord · GN Gitternord · MN Magnetisch Nord', {s:11});
   return s + `</svg>`;
 }
 
@@ -1005,12 +1033,41 @@ const GEN = {
     return {nord:true, prompt:`Du peilst ein Ziel mit dem Kompass an: ${deg3(m)} (magnetisch). Nadelabweichung ${angTxt(gm)}. Welche Gitterrichtung trägst du in die Karte ein?`, fig:fig('?'), figAfter:fig(correct), correct, wrong,
       ex:`Gitter = magnetisch + Nadelabweichung (Ost plus, West minus): ${deg3(m)} ${gm > 0 ? '+' : '−'} ${Math.abs(gm)}° = ${correct}${wrapNote(m + gm)}. Das ist der umgekehrte Weg zu LARS: Liegt Magnetisch Nord rechts (Ost), wird der Gitterwert größer.`};
   }},
-  line2:{area:'ngrid', n:3, make(){
+  line2:{area:'ngrid', n:4, make(){
     const gm = rnd([2, 3, 4, 5, 6, 8, 10, 12]) * rnd([1, 1, -1]), g = ri(4, 71) * 5, ip = rnd(['MAZDA', 'FORD', 'HONDA', 'VOLVO', 'OPEL', 'AUDI']);
     const correct = deg3(g - gm), wrong = [deg3(g + gm), deg3(g), deg3(g - gm + 180)];
     if (!uniq4([correct, ...wrong])) return GEN.line2.make();
     return {prompt:`Auf der Karte misst du vom IP ${ip} zum Ziel ${deg3(g)} (Gitter). Nadelabweichung ${angTxt(gm)}. Welches Heading nennst du in Zeile 2 der 9-Line?`, fig:line2Map({g, gm, ip, seed:ri(1, 9999)}), correct, wrong,
       ex:`JP 3-09.3: „The heading is given in degrees magnetic from the IP to the target …“ Die Karte liefert aber Gitter, also umrechnen: magnetisch = Gitter − Nadelabweichung (Ost abziehen, West addieren): ${deg3(g)} ${gm > 0 ? '−' : '+'} ${Math.abs(gm)}° = ${correct}${wrapNote(g - gm)}. Typische Fehler: den Gitterwert ungerechnet durchgeben (${deg3(g)}), das Vorzeichen vertauschen (${deg3(g + gm)}) oder die Richtung vom Ziel zum IP nehmen (${deg3(g - gm + 180)}).`};
+  }},
+  side:{area:'ngrid', n:2, make(){
+    const gm = rnd([2, 3, 4, 5, 6, 8, 10]) * rnd([1, -1]), east = gm > 0;
+    const O = ['Ost – vom Kartenwert abziehen', 'Ost – zum Kartenwert addieren', 'West – zum Kartenwert addieren', 'West – vom Kartenwert abziehen'];
+    const correct = east ? O[0] : O[2], wrong = O.filter(x => x !== correct);
+    const fig = nordSvg({lines:[{k:'GN', a:0}, {k:'MN', a:nEx(gm)}], gaps:[{from:'GN', to:'MN', label:`${Math.abs(gm)}°`}], top:['Nadeldiagramm deiner Karte'], note:true,
+      legend:[['GN', 'GN = Karte (Gitter)'], ['MN', 'MN = Zeile 2 (magnetisch)']]});
+    return {nord:true, long:true, prompt:'So sieht das Nadeldiagramm deiner Karte aus. Du hast auf der Karte die Richtung vom IP zum Ziel gemessen. Was gilt für Zeile 2?', fig, correct, wrong,
+      ex:`MN liegt ${east ? 'rechts' : 'links'} von GN, also ${east ? 'Ost' : 'West'}. Von der Karte (Gitter) zu Zeile 2 (magnetisch): ${east ? 'Ost abziehen' : 'West addieren'} – LARS, „Left Add, Right Subtract“. Beispiel: Karte 100° → Zeile 2 ${deg3(100 - gm)}.`};
+  }},
+  marg:{area:'nbas', n:3, make(){
+    const c = rnd([1, 1.5, 2, 2.5]) * rnd([1, -1]), d = ri(2, 8) * rnd([1, 1, 1, -1]), gm = Math.round((d - c) * 10) / 10;
+    const A = x => Math.abs(x);
+    if (!gm || A(gm) === A(c) || A(gm) === A(d) || A(d) === A(c)) return GEN.marg.make();
+    const correct = angTxt(gm), wrong = [angTxt(d), angTxt(-gm), angTxt(c)];
+    if (!uniq4([correct, ...wrong])) return GEN.marg.make();
+    const v = x => fmtNum(A(x), Number.isInteger(x) ? 0 : 1) + '°';
+    return {nord:true, prompt:'Das ist das Nadeldiagramm am Rand deiner Karte. Welcher Wert ist die Nadelabweichung, die du für Zeile 2 brauchst?', fig:randSvg({c, d}), figAfter:randSvg({c, d, hl:true}), correct, wrong,
+      ex:`Gesucht ist der Winkel zwischen GN und MN: ${v(gm)}. MN liegt ${gm > 0 ? 'rechts' : 'links'} von GN, also ${correct} – für Zeile 2 ${gm > 0 ? 'vom Kartenwert abziehen' : 'zum Kartenwert addieren'}. Der Winkel zwischen Stern und MN (${v(d)}) ist die Missweisung, der zwischen Stern und GN (${v(c)}) die Meridiankonvergenz – beide brauchst du für Zeile 2 nicht.`};
+  }},
+  gmyear:{area:'nbas', n:2, make(){
+    const Y = new Date().getFullYear(), n = ri(4, 12), y0 = Y - n;
+    const d0 = rnd([1, 1, 1, -1]) * ri(5, 40) / 10, r = rnd([.1, .2]) * rnd([1, 1, 1, -1]);
+    const R1 = v => Math.round(v * 10) / 10, now = R1(d0 + n * r);
+    const correct = angTxt(now), wrong = [angTxt(R1(d0 - n * r)), angTxt(R1(d0 + r)), angTxt(d0)];
+    if (!now || !uniq4([correct, ...wrong])) return GEN.gmyear.make();
+    const sg = v => (v < 0 ? '−' : '+') + fmtNum(Math.abs(v), 1) + '°';
+    return {nord:true, prompt:`Am Kartenrand steht: Nadelabweichung ${angTxt(d0)} (Stand ${y0}), jährliche Änderung ${fmtNum(Math.abs(r), 1)}° ${ow(r)}. Mit welcher Nadelabweichung rechnest du ${Y}?`, fig:margSvg(d0, y0, r, true), correct, wrong,
+      ex:`Der magnetische Pol wandert, deshalb gilt der Wert am Kartenrand nur für das Bezugsjahr. Von ${y0} bis ${Y} sind es ${n} Jahre: ${n} × ${fmtNum(Math.abs(r), 1)}° = ${fmtNum(R1(n * Math.abs(r)), 1)}° nach ${r > 0 ? 'Osten' : 'Westen'}. Mit Vorzeichen (Ost plus, West minus): ${sg(d0)} ${r > 0 ? '+' : '−'} ${fmtNum(R1(n * Math.abs(r)), 1)}° = ${sg(now)}, also ${correct}.${(d0 > 0) !== (now > 0) ? ` Die Nadelabweichung wechselt dabei von ${ow(d0)} nach ${ow(now)} – aus Abziehen wird Addieren.` : ''}`};
   }},
   year:{area:'nmag', n:2, make(){
     const Y = new Date().getFullYear(), n = ri(4, 12), y0 = Y - n;
@@ -1022,7 +1079,7 @@ const GEN = {
     return {nord:true, prompt:`Am Kartenrand steht: Missweisung ${angTxt(d0)} (Stand ${y0}), jährliche Änderung ${fmtNum(Math.abs(r), 1)}° ${ow(r)}. Welche Missweisung gilt ${Y}?`, fig:margSvg(d0, y0, r), correct, wrong,
       ex:`Der magnetische Pol wandert, deshalb nennt die Karte ein Bezugsjahr und die jährliche Änderung. Von ${y0} bis ${Y} sind es ${n} Jahre: ${n} × ${fmtNum(Math.abs(r), 1)}° = ${fmtNum(R1(n * Math.abs(r)), 1)}° nach ${r > 0 ? 'Osten' : 'Westen'}. Mit Vorzeichen (Ost plus, West minus): ${sg(d0)} ${r > 0 ? '+' : '−'} ${fmtNum(R1(n * Math.abs(r)), 1)}° = ${sg(now)}, also ${correct}.${(d0 > 0) !== (now > 0) ? ` Die Missweisung wechselt dabei von ${ow(d0)} nach ${ow(now)}.` : ''}`};
   }},
-  read:{area:'nbas', n:2, make(){
+  read:{area:'nmag', n:2, make(){
     const c = rnd([1, 1.5, 2, 2.5]) * rnd([1, 1, -1]), d = ri(2, 9) * rnd([1, 1, -1]), R1 = v => Math.round(v * 10) / 10, gm = R1(d - c);
     if (!gm) return GEN.read.make();
     const correct = angTxt(gm), wrong = [angTxt(R1(d + c)), angTxt(-gm), angTxt(d)];
@@ -1032,7 +1089,7 @@ const GEN = {
     return {nord:true, prompt:'Lies das Nadeldiagramm: Wie groß ist die Nadelabweichung – der Winkel von Gitternord zu Magnetisch Nord?', fig, correct, wrong,
       ex:`Beide Winkel im Diagramm gehen von geografisch Nord (★) aus: Gitternord ${angTxt(c)}, Magnetisch Nord ${angTxt(d)}. Mit Vorzeichen (Ost plus, West minus): ${sg(d)} − (${sg(c)}) = ${sg(gm)}. Magnetisch Nord liegt also ${correct.replace(/ (Ost|West)$/, '')} ${gm > 0 ? 'rechts (östlich)' : 'links (westlich)'} von Gitternord. ${(d > 0) === (c > 0) ? 'Liegen GN und MN auf derselben Seite von geografisch Nord, ziehst du die Beträge ab.' : 'Liegen GN und MN auf verschiedenen Seiten, addierst du die Beträge.'}`};
   }},
-  mil:{area:'ngrid', n:2, make(){
+  mil:{area:'nmag', n:2, make(){
     const g = ri(1, 63) * 100 + rnd([0, 0, 50]), gm = rnd([20, 30, 40, 50, 60, 70, 80, 90, 110]) * rnd([1, 1, -1]);
     const M = v => fmtNum(((v % 6400) + 6400) % 6400) + ' Strich';
     const correct = M(g - gm), wrong = [M(g + gm), M(g), M(g - 2 * gm)];
@@ -1092,30 +1149,32 @@ function renderLehre(){
       </ul>
     </section>
     <section><h2>3 · Nordrichtungen</h2>
+      <h3>Für Zeile 2: von der Karte zu magnetisch</h3>
+      <figure class="lehre-fig nfig">${nordSvg({lines:[{k:'GN', a:0}, {k:'MN', a:8}], az:60, center:'IP', gaps:[{from:'GN', to:'MN', r:120, label:'8° Ost'}],
+        arcs:[{k:'GN', r:56, label:'Karte 060°'}, {k:'MN', r:94, label:'Zeile 2 052°'}], legend:[['GN', 'GN = Karte (Gitter)'], ['MN', 'MN = Zeile 2 (magnetisch)']], aria:'Karte und Zeile 2: Gitternord und Magnetisch Nord'})}</figure>
+      <p>Für Zeile 2 brauchst du nur <b>zwei Norden</b>. Die Karte ist nach <b>Gitternord (GN)</b> ausgerichtet – was du mit dem Winkelmesser vom IP zum Ziel misst, ist ein Gitterwert. Zeile 2 gibst du in <b>Grad magnetisch (MN)</b> an (JP 3-09.3: „The heading is given in degrees magnetic from the IP to the target …“). Den Winkel dazwischen, die <b>Nadelabweichung</b>, liest du am Kartenrand ab.</p>
+      <figure class="lehre-fig nfig">${randSvg({c:-1.5, d:5, named:true, hl:true})}</figure>
+      <ul>
+        <li><b>Wo:</b> im Nadeldiagramm am Kartenrand. Drei Linien: Stern (geografisch Nord), GN (Gitternord) und MN mit halber Pfeilspitze (Magnetisch Nord).</li>
+        <li><b>Welcher Wert:</b> der Winkel <b>zwischen GN und MN</b>. Nicht der Winkel zwischen Stern und MN – das ist die Missweisung.</li>
+        <li><b>Welche Seite:</b> MN rechts von GN = <b>Ost</b>, links = <b>West</b>.</li>
+        <li><b>Rechnen:</b> Zeile 2 = Karte − Nadelabweichung, also <b>Ost abziehen, West addieren</b> (LARS: „Left Add, Right Subtract“). Beispiel: Karte 312°, 4° Ost → Zeile 2 308°.</li>
+        <li><b>Jahr beachten:</b> Der Wert gilt für das Bezugsjahr. Für heute: Wert + Jahre × jährliche Änderung.</li>
+        <li>In Deutschland ist die Nadelabweichung klein (wenige Grad Ost). Umrechnen musst du trotzdem – in anderen Einsatzgebieten kann sie deutlich größer sein. Ein GPS, das auf magnetisch eingestellt ist, zeigt den Wert direkt.</li>
+      </ul>
+      <div class="row"><button class="btn" data-go="nordlab">Im Bild ausprobieren</button><button class="btn" data-start="nord">Übungsaufgaben Stufe 1</button></div>
+      <h3>Vertiefung: geografisch Nord</h3>
       <figure class="lehre-fig nfig">${nordSvg({lines:[{k:'TN', a:0}, {k:'GN', a:3}, {k:'MN', a:10}], az:70, gaps:[{from:'TN', to:'MN', r:110, label:'10° Ost'}],
         arcs:[{k:'TN', r:44, label:'070°'}, {k:'GN', r:68, label:'067°'}, {k:'MN', r:92, label:'060°'}], top:['Missweisung 10° Ost', 'Meridiankonvergenz 3° Ost'], aria:'Drei Nordrichtungen und eine Richtung zum Ziel mit drei Werten'})}</figure>
-      <p>Es gibt drei „Norden“. Jeder ist ein eigener Nullpunkt – dieselbe Richtung zum Ziel hat deshalb drei Zahlen. Im Bild: 070° rechtweisend, 067° Gitter, 060° magnetisch.</p>
+      <p>Der dritte Norden ist <b>geografisch Nord</b> (TN, rechtweisend, Stern): zum Nordpol, entlang der Längengrade. Du brauchst ihn, wenn ein Gerät rechtweisende Werte liefert. Jeder Norden ist ein eigener Nullpunkt – dieselbe Richtung hat deshalb drei Zahlen, im Bild 070° rechtweisend, 067° Gitter, 060° magnetisch.</p>
       <ul>
-        <li><b>Geografisch Nord</b> (TN, rechtweisend, Stern): zum Nordpol, entlang der Längengrade.</li>
-        <li><b>Gitternord</b> (GN): entlang der senkrechten Gitterlinien der Karte (MGRS). Was du mit dem Winkelmesser auf der Karte misst, ist Gitter.</li>
-        <li><b>Magnetisch Nord</b> (MN, halbe Pfeilspitze): dahin zeigt die Kompassnadel. Der Magnetpol wandert – der Wert ändert sich mit Ort und Jahr.</li>
-      </ul>
-      <p><b>Die Winkel dazwischen</b> heißen Ost oder West, je nachdem, ob der zweite Norden rechts oder links liegt:</p>
-      <ul>
-        <li><b>Missweisung</b> (Deklination): geografisch Nord → Magnetisch Nord.</li>
-        <li><b>Meridiankonvergenz:</b> geografisch Nord → Gitternord. In Deutschland meist höchstens 2–3°.</li>
-        <li><b>Nadelabweichung</b> (G-M-Winkel): Gitternord → Magnetisch Nord. Steht im Nadeldiagramm am Kartenrand, mit Bezugsjahr und jährlicher Änderung. Für heute hochrechnen: Wert + Jahre × Änderung.</li>
-      </ul>
-      <p><b>Umrechnen</b> – Ost zählt plus, West minus:</p>
-      <ul>
-        <li><b>rechtweisend = magnetisch + Missweisung</b>, also magnetisch = rechtweisend − Missweisung.</li>
-        <li><b>Gitter = magnetisch + Nadelabweichung</b>, also magnetisch = Gitter − Nadelabweichung.</li>
+        <li><b>Missweisung</b> (Deklination): geografisch Nord → Magnetisch Nord. <b>Meridiankonvergenz:</b> geografisch Nord → Gitternord, in Deutschland meist höchstens 2–3°. Nadelabweichung = Missweisung − Meridiankonvergenz.</li>
+        <li><b>rechtweisend = magnetisch + Missweisung</b>, also magnetisch = rechtweisend − Missweisung (Ost plus, West minus).</li>
         <li><b>„East is least, West is best“:</b> Liegt Magnetisch Nord östlich, ist der magnetische Wert der kleinere. Im Bild ist der rote Bogen dann kürzer als der schwarze.</li>
-        <li><b>LARS</b> („Left Add, Right Subtract“) von Gitter nach magnetisch: Liegt MN links von GN, addieren – liegt es rechts, abziehen.</li>
         <li>Über 360° hinaus 360° abziehen, unter 0° 360° addieren (in Strich: 6400).</li>
+        <li>Zeile 2, Final Attack Heading und Laser-Target-Line gehen immer in Grad magnetisch an das Lfz – nicht rechtweisend. Bei GPS und Zielgeräten prüfen, auf welchen Norden sie eingestellt sind.</li>
       </ul>
-      <p><b>Welcher Norden wofür:</b> Zeile 2 der 9-Line, Final Attack Heading und Laser-Target-Line gehen in Grad magnetisch an das Lfz (JP 3-09.3: „The heading is given in degrees magnetic from the IP to the target …“). Die Karte liefert Gitter – vor Zeile 2 also umrechnen. Bei GPS und Zielgeräten prüfen, auf welchen Norden sie eingestellt sind.</p>
-      <div class="row"><button class="btn" data-go="nordlab">Im Bild ausprobieren</button><button class="btn" data-start="nord">Übungsaufgaben</button></div>
+      <div class="row"><button class="btn" data-start="nord2">Übungsaufgaben Stufe 2</button></div>
     </section>
     <section><h2>4 · Zeile 8: eigene Truppen</h2>
       <p>In Zeile 8 der 9-Line meldest du, wo die eigenen Truppen stehen – <b>vom Ziel aus gesehen</b>: Himmelsrichtung und Entfernung in Metern, z. B. „Süd 800“. Der häufigste Fehler ist die Gegenrichtung, also die Richtung vom eigenen Standort zum Ziel.</p>
@@ -1161,7 +1220,7 @@ function renderLehre(){
 const AREAS = {
   mgrs:{n:'MGRS ablesen', s:'MGRS'}, prec:{n:'Stellen und Kürzen', s:'Stellen'}, dist:{n:'Entfernung aus Koordinaten', s:'Entf.'}, kgr:{n:'Koordinaten-Grundlagen', s:'Gitter'},
   dir:{n:'Strich und Grad', s:'Strich'}, card:{n:'Richtung und Zeile 8', s:'Zeile 8'},
-  nmag:{n:'Magnetisch ↔ rechtweisend', s:'MN/TN'}, ngrid:{n:'Gitter ↔ magnetisch', s:'GN/MN'}, nbas:{n:'Nordrichtungen-Grundlagen', s:'Nord'},
+  ngrid:{n:'Karte → Zeile 2', s:'Zeile 2'}, nbas:{n:'Kartenrand lesen', s:'Rand'}, nmag:{n:'Geografisch Nord (Stufe 2)', s:'Geo-N'},
   talk:{n:'Talk-on wählen', s:'Wählen'}, follow:{n:'Talk-on folgen', s:'Folgen'}, tfail:{n:'Talk-on-Fehler finden', s:'Fehler'}, tgr:{n:'Talk-on-Grundsätze', s:'Talk'},
   cde:{n:'Begleitschaden-Lagen', s:'Lagen'}, cgr:{n:'Begleitschaden-Grundsätze', s:'Recht'}
 };
@@ -1171,7 +1230,8 @@ const MODES = {
   mix:  {name:'Gemischte Runde', areas:AREA_ORDER},
   koord:{name:'Koordinaten (MGRS)', areas:['mgrs', 'prec', 'dist', 'kgr']},
   richt:{name:'Richtung und Zeile 8', areas:['dir', 'card']},
-  nord: {name:'Nordrichtungen', areas:['nmag', 'ngrid', 'nbas']},
+  nord: {name:'Karte → Zeile 2', areas:['ngrid', 'nbas']},
+  nord2:{name:'Geografisch Nord', areas:['nmag']},
   talk:{name:'Talk-on', areas:['talk', 'follow', 'tfail', 'tgr']},
   cde:  {name:'Begleitschaden', areas:['cde', 'cgr']}
 };
@@ -1310,8 +1370,9 @@ function renderHome(){
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="koord"><span class="mi"><strong>Koordinaten (MGRS)</strong><small>6- und 8-stellig von der Karte ablesen, kürzen, Genauigkeit, Entfernung zwischen zwei Koordinaten</small></span><span class="n">${countArea(MODES.koord.areas)} Fragen</span></button>
     <button class="mode" data-start="richt"><span class="mi"><strong>Richtung und Zeile 8</strong><small>Strich und Grad, Gegenrichtung, Richtung von der Karte, eigene Truppen vom Ziel aus</small></span><span class="n">${countArea(MODES.richt.areas)} Fragen</span></button>
-    <button class="mode" data-start="nord"><span class="mi"><strong>Nordrichtungen</strong><small>Geografisch, Gitter und magnetisch Nord umrechnen – jede Aufgabe mit Skizze, dazu Zeile 2 aus der Karte und der Kartenrand</small></span><span class="n">${countArea(MODES.nord.areas)} Fragen</span></button>
-    <button class="mode" data-go="nordlab"><span class="mi"><strong>Nordrichtungen im Bild</strong><small>Zum Ausprobieren: Missweisung und Zielrichtung verstellen und sehen, wie sich die drei Werte ändern</small></span><span class="n">Ansehen ›</span></button>
+    <button class="mode" data-go="nordlab"><span class="mi"><strong>Nordrichtungen im Bild</strong><small>Zum Ausprobieren, in zwei Stufen: erst nur Karte und Zeile 2, dann alle drei Norden</small></span><span class="n">Ansehen ›</span></button>
+    <button class="mode" data-start="nord"><span class="mi"><strong>Nordrichtungen 1: Karte → Zeile 2</strong><small>Nur Gitternord und Magnetisch Nord: Nadeldiagramm am Kartenrand lesen, Ost abziehen, West addieren, Zeile 2 aus der Karte</small></span><span class="n">${countArea(MODES.nord.areas)} Fragen</span></button>
+    <button class="mode" data-start="nord2"><span class="mi"><strong>Nordrichtungen 2: geografisch Nord</strong><small>Vertiefung: Missweisung, rechtweisende Werte vom GPS, Nadeldiagramm rechnen, Strich</small></span><span class="n">${countArea(MODES.nord2.areas)} Fragen</span></button>
     <button class="mode" data-start="talk"><span class="mi"><strong>Talk-on</strong><small>Nach FIDO, auf Englisch: richtigen Funkspruch wählen, Fehler finden, als Pilot folgen</small></span><span class="n">${countArea(MODES.talk.areas)} Fragen</span></button>
     <button class="mode" data-start="cde"><span class="mi"><strong>Begleitschaden-Lagen</strong><small>Ziel neben Kirche, Schule, Wohnhaus oder eigenen Truppen: Wirkmittel, Zünder, Anflug, Zeitpunkt</small></span><span class="n">${countArea(MODES.cde.areas)} Fragen</span></button>
     <button class="mode" data-go="lehre"><span class="mi"><strong>Kurzlehre</strong><small>MGRS, Strich, Nordrichtungen, Zeile 8, Talk-on und Begleitschaden zum Nachlesen</small></span><span class="n">6 Kapitel</span></button>
@@ -1377,12 +1438,13 @@ function renderEnd(){
     <div class="score">${R.score}<span class="muted" style="font-size:.45em"> / ${n}</span></div>
     <p class="muted">${MODES[R.mode].name} – ${Math.round(100 * R.score / n)} % richtig.</p>
     ${R.missed.length ? `<h2 style="margin-top:22px">Nacharbeiten</h2><ul class="misslist">${R.missed.map(x => `<li><div>${esc(x.prompt)}</div><div class="small"><strong>${esc(x.correct)}</strong> <span class="muted">· ${esc(AREAS[x.area].n)}</span></div></li>`).join('')}</ul>` : '<p>Alles richtig.</p>'}
-    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button>${R.mode === 'nord' ? '<button class="btn" data-go="nordlab">Im Bild ansehen</button>' : ''}<button class="btn" data-go="lehre">Kurzlehre</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
+    <div class="row" style="margin-top:20px"><button class="btn main" data-start="${R.mode}">Neue Runde</button>${R.mode === 'nord' || R.mode === 'nord2' ? '<button class="btn" data-go="nordlab">Im Bild ansehen</button>' : ''}<button class="btn" data-go="lehre">Kurzlehre</button><button class="btn" data-act="home">Zur Übersicht</button></div>`;
 }
 /* ---------- Nordrichtungen im Bild (zum Ausprobieren) ----------
-   LAB.d Missweisung, LAB.c Meridiankonvergenz (Grad, Ost positiv), LAB.mag Richtung zum Ziel magnetisch.
+   Stufe 1: nur Gitternord (Karte) und Magnetisch Nord (Zeile 2) – LAB.gm Nadelabweichung, LAB.gaz Richtung auf der Karte.
+   Stufe 2: alle drei Norden – LAB.d Missweisung, LAB.c Meridiankonvergenz (Grad, Ost positiv), LAB.mag Richtung magnetisch.
    In Strich werden die Einzelwerte erst gerundet und dann verrechnet, damit die Rechnung aufgeht. */
-const LAB = {d:8, c:2, mag:60, unit:'deg', grid:true};
+const LAB = {lv:1, gm:8, gaz:60, d:8, c:2, mag:60, unit:'deg', grid:true};
 function labVals(){
   const mil = LAB.unit === 'mil', k = mil ? 6400 / 360 : 1, full = mil ? 6400 : 360, u = mil ? ' Strich' : '°';
   const md = Math.round(LAB.d * k), mc = LAB.grid ? Math.round(LAB.c * k) : 0, mm = Math.round(LAB.mag * k);
@@ -1390,15 +1452,29 @@ function labVals(){
   const dir = v => mil ? fmtNum(((v % full) + full) % full) + u : deg3(v);
   return {mil, full, u, d:md0, c:mc0, gm, m:mm0, t:mm0 + md0, g:mm0 + gm, dir, ang:v => angTxt(v, u)};
 }
+const nRow = (c, v, t) => `<div style="--c:${c}"><b>${v}</b><span>${t}</span></div>`;
+function updLab1(){
+  const gm = LAB.gm, g = LAB.gaz, m = g - gm;
+  $('#ndial').innerHTML = nordSvg({lines:[{k:'GN', a:0}, {k:'MN', a:gm}], az:g, center:'IP', aria:'Gitternord, Magnetisch Nord und Richtung vom IP zum Ziel',
+    arcs:[{k:'GN', r:56, label:'Karte ' + deg3(g)}, {k:'MN', r:94, label:'Zeile 2 ' + deg3(m)}], gaps:gm ? [{from:'GN', to:'MN', r:120, label:angTxt(gm)}] : [],
+    legend:[['GN', 'GN = Karte (Gitter)'], ['MN', 'MN = Zeile 2 (magnetisch)']]});
+  $('#nread').innerHTML = nRow('var(--n-gn)', deg3(g), 'Karte – mit dem Winkelmesser vom IP zum Ziel gemessen (Gitter)') +
+    nRow('var(--n-mn)', deg3(m), 'Zeile 2 – das sagst du dem Piloten (Grad magnetisch)');
+  const side = gm > 0 ? 'MN liegt rechts von GN → <b>Ost → abziehen</b>. Der rote Bogen beginnt weiter rechts und ist deshalb kürzer als der blaue.'
+    : gm < 0 ? 'MN liegt links von GN → <b>West → addieren</b>. Der rote Bogen beginnt weiter links und ist deshalb länger als der blaue.'
+    : 'Ohne Nadelabweichung sind Karte und Zeile 2 gleich.';
+  $('#nform').innerHTML = `<p><b>Zeile 2 = Karte − Nadelabweichung</b> (Ost abziehen, West addieren)<br><code>${deg3(g)} ${gm >= 0 ? '−' : '+'} ${Math.abs(gm)}° = ${deg3(m)}</code>${wrapNote(m)}</p><p class="small">${side}</p>`;
+  $('#vgm').textContent = angTxt(gm); $('#vg').textContent = deg3(g);
+}
 function updLab(){
+  if (LAB.lv === 1) return updLab1();
   const V = labVals(), tru = mod360(LAB.mag + LAB.d);
   const lines = [{k:'TN', a:0}, {k:'MN', a:LAB.d}]; if (LAB.grid) lines.push({k:'GN', a:LAB.c});
   const arcs = [{k:'TN', r:44, label:V.dir(V.t)}]; if (LAB.grid) arcs.push({k:'GN', r:68, label:V.dir(V.g)}); arcs.push({k:'MN', r:92, label:V.dir(V.m)});
   $('#ndial').innerHTML = nordSvg({lines, az:tru, arcs, gaps:LAB.d ? [{from:'TN', to:'MN', r:110, label:V.ang(V.d)}] : [], aria:'Nordrichtungen mit der Richtung zum Ziel'});
-  const row = (c, v, t) => `<div style="--c:${c}"><b>${v}</b><span>${t}</span></div>`;
-  $('#nread').innerHTML = row('var(--n-tn)', V.dir(V.t), 'rechtweisend – gemessen ab geografisch Nord (★)') +
-    (LAB.grid ? row('var(--n-gn)', V.dir(V.g), 'Gitter – ab Gitternord, so misst du auf der Karte') : '') +
-    row('var(--n-mn)', V.dir(V.m), 'magnetisch – ab Magnetisch Nord, so zeigt der Kompass; so gehen Zeile 2 und Final Attack Heading ans Lfz');
+  $('#nread').innerHTML = nRow('var(--n-tn)', V.dir(V.t), 'rechtweisend – gemessen ab geografisch Nord (★)') +
+    (LAB.grid ? nRow('var(--n-gn)', V.dir(V.g), 'Gitter – ab Gitternord, so misst du auf der Karte') : '') +
+    nRow('var(--n-mn)', V.dir(V.m), 'magnetisch – ab Magnetisch Nord, so zeigt der Kompass; so gehen Zeile 2 und Final Attack Heading ans Lfz');
   const op = v => v < 0 ? '−' : '+', ab = v => fmtNum(Math.abs(v)) + V.u;
   const side = LAB.d > 0 ? 'Magnetisch Nord liegt rechts (östlich) von geografisch Nord: Vom roten Norden aus ist der Weg zum Ziel kürzer – magnetisch ist der kleinere Wert („East is least“).'
     : LAB.d < 0 ? 'Magnetisch Nord liegt links (westlich) von geografisch Nord: Vom roten Norden aus ist der Weg zum Ziel länger – magnetisch ist der größere Wert („West is best“).'
@@ -1411,25 +1487,34 @@ function updLab(){
 function renderNordLab(){
   $('#bar').style.display = '';
   setBar('Nordrichtungen im Bild', {back:'home'});
-  $('#app').innerHTML = `<div class="nlab">
-    <p class="muted" style="margin:0">Jede Nordrichtung ist ein eigener Nullpunkt. Dieselbe Richtung zum Ziel hat deshalb drei Werte – je nachdem, von welchem Norden aus du im Uhrzeigersinn misst. Tippe ins Bild, um das Ziel zu verschieben.</p>
-    <figure class="ndial" id="ndial"></figure>
-    <div class="nread" id="nread" aria-live="polite"></div>
-    <div class="nform" id="nform"></div>
-    <div class="nctl">
+  const one = LAB.lv === 1;
+  const intro = one
+    ? 'Für Zeile 2 brauchst du nur zwei Norden: <b>Gitternord</b> – danach ist die Karte ausgerichtet – und <b>Magnetisch Nord</b> – darin gibst du Zeile 2 an. Der Winkel dazwischen ist die <b>Nadelabweichung</b> vom Kartenrand. Tippe ins Bild, um das Ziel zu verschieben.'
+    : 'Jede Nordrichtung ist ein eigener Nullpunkt. Dieselbe Richtung zum Ziel hat deshalb drei Werte – je nachdem, von welchem Norden aus du im Uhrzeigersinn misst. Tippe ins Bild, um das Ziel zu verschieben.';
+  const ctl = one ? `
+      <label>Nadelabweichung<span class="val" id="vgm"></span><input type="range" id="sgm" min="-15" max="15" step="1" value="${LAB.gm}"><small>Winkel von Gitternord zu Magnetisch Nord, steht am Kartenrand. MN rechts von GN = Ost, links = West. In Deutschland nur wenige Grad Ost – zum Verstehen hier größer einstellbar.</small></label>
+      <label>Karte: IP → Ziel<span class="val" id="vg"></span><input type="range" id="sg" min="0" max="359" step="1" value="${LAB.gaz}"></label>
+      <div class="chips"><span class="small muted">Beispiele:</span><button class="chip" data-ngm="3">Deutschland ≈ 3° Ost</button><button class="chip" data-ngm="10">10° Ost</button><button class="chip" data-ngm="-10">10° West</button></div>` : `
       <label>Missweisung<span class="val" id="vd"></span><input type="range" id="sd" min="-20" max="20" step="1" value="${LAB.d}"><small>Winkel von geografisch Nord zu Magnetisch Nord – rechts davon heißt Ost, links West. In Deutschland derzeit einige Grad Ost.</small></label>
       <label>Kompass zum Ziel<span class="val" id="vm"></span><input type="range" id="sm" min="0" max="359" step="1" value="${LAB.mag}"></label>
       ${LAB.grid ? `<label>Meridiankonvergenz<span class="val" id="vc"></span><input type="range" id="sc" min="-3" max="3" step="1" value="${LAB.c}"><small>Winkel von geografisch Nord zu Gitternord. In Deutschland meist höchstens 2–3°.</small></label>` : ''}
       <div class="chips"><button class="chip" data-ngrid aria-pressed="${LAB.grid}">Gitternord zeigen</button><button class="chip" data-nunit aria-pressed="${LAB.unit === 'mil'}">In Strich</button></div>
-      <div class="chips"><span class="small muted">Beispiele:</span><button class="chip" data-npre="4,2">Deutschland ≈ 4° Ost</button><button class="chip" data-npre="15,0">15° Ost</button><button class="chip" data-npre="-12,0">12° West</button></div>
+      <div class="chips"><span class="small muted">Beispiele:</span><button class="chip" data-npre="4,2">Deutschland ≈ 4° Ost</button><button class="chip" data-npre="15,0">15° Ost</button><button class="chip" data-npre="-12,0">12° West</button></div>`;
+  $('#app').innerHTML = `<div class="nlab">
+    <div class="chips" role="group" aria-label="Stufe"><button class="chip" data-nlv="1" aria-pressed="${one}">1 · Karte → Zeile 2</button><button class="chip" data-nlv="2" aria-pressed="${!one}">2 · Alle drei Norden</button></div>
+    <p class="muted" style="margin:0">${intro}</p>
+    <figure class="ndial" id="ndial"></figure>
+    <div class="nread" id="nread" aria-live="polite"></div>
+    <div class="nform" id="nform"></div>
+    <div class="nctl">${ctl}
     </div>
-    <div class="row"><button class="btn main" data-start="nord">Übungsaufgaben starten</button><button class="btn" data-go="lehre">Kurzlehre</button></div>
+    <div class="row"><button class="btn main" data-start="${one ? 'nord' : 'nord2'}">Übungsaufgaben Stufe ${one ? 1 : 2}</button><button class="btn" data-go="lehre">Kurzlehre</button></div>
   </div>`;
   updLab();
 }
 document.addEventListener('input', e => {
   if (view !== 'nordlab') return;
-  const k = {sd:'d', sm:'mag', sc:'c'}[e.target.id];
+  const k = {sd:'d', sm:'mag', sc:'c', sgm:'gm', sg:'gaz'}[e.target.id];
   if (!k) return;
   LAB[k] = Number(e.target.value); updLab();
 });
@@ -1440,31 +1525,19 @@ document.addEventListener('click', e => {
     const svg = fig.querySelector('svg'); if (!svg) return;
     const b = svg.getBoundingClientRect(), x = (e.clientX - b.left) * NSV.W / b.width - NSV.cx, y = (e.clientY - b.top) * NSV.H / b.height - NSV.cy;
     if (Math.hypot(x, y) < 12) return;
-    const tru = Math.atan2(x, -y) * 180 / Math.PI;
-    LAB.mag = Math.round(mod360(tru - LAB.d)) % 360; $('#sm').value = LAB.mag; updLab(); return;
+    const a = Math.atan2(x, -y) * 180 / Math.PI; // Winkel ab „oben“ der Zeichnung
+    if (LAB.lv === 1){ LAB.gaz = Math.round(mod360(a)) % 360; $('#sg').value = LAB.gaz; }
+    else { LAB.mag = Math.round(mod360(a - LAB.d)) % 360; $('#sm').value = LAB.mag; }
+    updLab(); return;
   }
-  const t = e.target.closest && e.target.closest('[data-npre],[data-ngrid],[data-nunit]');
+  const t = e.target.closest && e.target.closest('[data-npre],[data-ngrid],[data-nunit],[data-nlv],[data-ngm]');
   if (!t) return;
-  if (t.dataset.npre){ const [d, c] = t.dataset.npre.split(',').map(Number); LAB.d = d; LAB.c = c; $('#sd').value = d; if ($('#sc')) $('#sc').value = c; updLab(); }
+  if (t.dataset.nlv){ LAB.lv = Number(t.dataset.nlv); renderNordLab(); }
+  else if (t.dataset.ngm){ LAB.gm = Number(t.dataset.ngm); $('#sgm').value = LAB.gm; updLab(); }
+  else if (t.dataset.npre){ const [d, c] = t.dataset.npre.split(',').map(Number); LAB.d = d; LAB.c = c; $('#sd').value = d; if ($('#sc')) $('#sc').value = c; updLab(); }
   else if (t.hasAttribute('data-ngrid')){ LAB.grid = !LAB.grid; renderNordLab(); }
   else if (t.hasAttribute('data-nunit')){ LAB.unit = LAB.unit === 'mil' ? 'deg' : 'mil'; t.setAttribute('aria-pressed', String(LAB.unit === 'mil')); updLab(); }
 });
-function renderStats(){
-  $('#bar').style.display = '';
-  setBar('Statistik', {back:'home'});
-  const rows = AREA_ORDER.map(a => ({a, acc:famAcc(a), s:S.fam[a] || {c:0, w:0}})).sort((x, y) => (x.acc ?? -1) - (y.acc ?? -1));
-  const flags = Object.entries(S.flags);
-  const flagText = flags.map(([id, v]) => `• [${id}] ${v.t}`).join('\n');
-  $('#app').innerHTML = `
-    <div class="stat-top"><div><b>${S.answered}</b><span class="muted small">Antworten</span></div><div><b>${S.answered ? Math.round(100 * S.correct / S.answered) + ' %' : '–'}</b><span class="muted small">richtig</span></div></div>
-    <h2 style="margin-top:18px">Je Bereich, schwächster zuerst</h2>
-    ${rows.map(({a, acc, s}) => `<div class="srow"><span>${esc(AREAS[a].n)}</span><div class="sbar"><i style="width:${acc === null ? 0 : acc * 100}%;background:${acc === null ? 'var(--line)' : acc >= .8 ? 'var(--ok)' : acc >= .5 ? 'var(--cta)' : 'var(--bad)'}"></i></div><span class="small muted" style="text-align:right">${acc === null ? '–' : Math.round(acc * 100) + ' %'}<br>${s.c + s.w}×</span></div>`).join('')}
-    <h2 style="margin-top:26px">Gemeldete Fragen</h2>
-    ${flags.length ? `<p class="small muted" style="margin:4px 0 8px">Kopiere die Liste und schick sie zur Prüfung.</p><textarea id="flagtxt" readonly>${esc(flagText)}</textarea><div class="row"><button class="btn" data-act="copyflags">Liste kopieren</button><button class="btn" data-act="clearflags">Liste leeren</button></div>` : '<p class="small muted">Keine gemeldeten Fragen. Mit „Frage melden“ markierst du Fragen, die falsch oder unklar sind.</p>'}
-    <h2 style="margin-top:26px">Zurücksetzen</h2>
-    <p class="small muted" style="margin:4px 0 8px">Löscht alle Antworten und Trefferquoten. Gemeldete Fragen bleiben erhalten.</p>
-    <button class="btn" data-act="reset">Statistik zurücksetzen</button>`;
-}
 function render(){
   if (view === 'home') renderHome();
   else if (view === 'quiz') renderQuiz();
