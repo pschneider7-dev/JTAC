@@ -28,6 +28,7 @@
     ['NM (Seemeile)', /\bnm\b|seemeile/i, 'Nautische Meile = 1852 m, Standardmaß für Entfernungen in der Luftfahrt; 10 NM sind gut 18 km.'],
     ['Knoten (kn)', /\bkn\b|knoten/i, 'Seemeilen pro Stunde: 100 kn sind rund 185 km/h, 450 kn rund 830 km/h.'],
     ['Höhe in Fuß (ft)', /\bft\b|\bfuß\b/i, '1 ft = 0,305 m; 1000 ft ≈ 300 m, 10 000 ft ≈ 3 km. Die Luftfahrt gibt Höhen fast immer in Fuß an.'],
+    ['Nordrichtungen (TN, GN, MN)', /missweisung|nadelabweichung|deklination|gitternord|magnetisch nord|meridiankonvergenz|rechtweisend/i, 'Geografisch Nord (TN, rechtweisend) zeigt zum Nordpol, Gitternord (GN) entlang der Gitterlinien der Karte, Magnetisch Nord (MN) dahin, wohin die Kompassnadel zeigt. Missweisung = Winkel TN → MN, Nadelabweichung = GN → MN, jeweils Ost oder West. Rechtweisend = magnetisch + Missweisung, Gitter = magnetisch + Nadelabweichung (Ost plus, West minus). Lfz-Kurse und Zeile 2 der 9-Line sind magnetisch.'],
     ['MSL und AGL', /\bmsl\b|\bagl\b|über nn|über grund/i, 'MSL = Höhe über dem Meeresspiegel, AGL = Höhe über Grund. Im Gebirge liegen Tausende Fuß dazwischen – immer klären, welche gemeint ist.'],
     ['Pfund (lb)', /\blb\b|pfund/i, '1 lb = 0,454 kg. Bomben werden nach Gesamtgewicht benannt: 500 lb ≈ 227 kg, davon ist nur knapp die Hälfte Sprengstoff.'],
     ['Kaliber', /kaliber/i, 'Innendurchmesser des Rohrs in Millimetern, z. B. 125 mm (Panzerkanone) oder 152 mm (Haubitze). Größeres Kaliber heißt schwereres Geschoss und mehr Wirkung.'],
