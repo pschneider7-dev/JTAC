@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Breite und Länge in 3D</title>
+<meta name="theme-color" content="#E4E9E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1517" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="JTAC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../../assets/app.css">
+<style>
+/* Eine Spalte: 3D-Bühne oben, darunter Ansicht, Punkt und Erklärung. Farben: orange = Breite, blau = Länge. */
+:root{
+  --bg:#E4E9E7; --surface:#F4F7F5; --ink:#1A2326; --muted:#55615F; --line:#C3CCC9;
+  --stage-a:#F1F4F2; --stage-b:#D5DEDA;
+  --earth:#CFE0E8; --grid:#7D98A6; --cap:#E6C79C; --lat:#C4501A; --lon:#1F5FA6; --cta:#E0A526;
+  --f-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-data:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1517; --surface:#172022; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+    --stage-a:#1B2629; --stage-b:#0B1012;
+    --earth:#1E3846; --grid:#5E8394; --cap:#7A5636; --lat:#F08A4B; --lon:#79AEE8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#172022; --ink:#E1E7E5; --muted:#93A09D; --line:#2A3639;
+  --stage-a:#1B2629; --stage-b:#0B1012;
+  --earth:#1E3846; --grid:#5E8394; --cap:#7A5636; --lat:#F08A4B; --lon:#79AEE8;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-block:10px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:12px}
+.back{justify-self:start;display:inline-flex;align-items:center;min-height:36px;color:var(--muted);font:600 1.05rem var(--f-display);letter-spacing:.02em;text-decoration:none}
+.back:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+h1{font:700 clamp(2rem,8vw,2.8rem)/1 var(--f-display);margin:0;text-wrap:balance}
+.stage{position:relative;width:100%;aspect-ratio:1/1;max-height:62vh;border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 40%,var(--stage-a),var(--stage-b));border:1px solid var(--line)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lb{position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;font:600 12.5px/1.2 var(--f-body);color:var(--ink);text-shadow:0 0 3px var(--stage-a),0 0 3px var(--stage-a),0 0 6px var(--stage-a)}
+.lb.mut{color:var(--muted);font-weight:500}
+.lb.lat{color:var(--lat)} .lb.lon{color:var(--lon)}
+.lb.big{font:700 17px/1 var(--f-display)}
+.hint{position:absolute;left:10px;top:8px;font-size:.8rem;color:var(--muted);pointer-events:none}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 6px;font-weight:600;line-height:1.2;min-height:48px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.coord{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.coord b{font:500 1.15rem var(--f-data);font-variant-numeric:tabular-nums}
+.coord .n{font:700 1.15rem var(--f-display);margin-right:auto}
+.lat-t{color:var(--lat)} .lon-t{color:var(--lon)}
+.ctl{display:grid;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.ctl label{display:grid;gap:2px;font-weight:600}
+.ctl input[type=range]{width:100%;min-height:34px;margin:0;accent-color:var(--cta)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 12px;font-size:.9rem;font-weight:600;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.text{display:grid;gap:8px}
+.text p{margin:0;max-width:62ch}
+.km{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="../">‹ JTAC-Handwerk</a>
+  <h1>Breite und Länge in 3D</h1>
+  <div class="stage" id="stage">
+    <canvas id="gl" aria-label="3D-Globus: mit einem Finger drehen, mit zwei Fingern zoomen"></canvas>
+    <div class="labels" id="labels"></div>
+    <div class="hint" id="hint">Drehen: ziehen · Zoom: zwei Finger</div>
+  </div>
+  <div class="seg" role="group" aria-label="Ansicht">
+    <button type="button" data-mode="ganz" aria-pressed="true">Ganze Erde</button>
+    <button type="button" data-mode="breite" aria-pressed="false"><span class="lat-t">Breite</span> aufschneiden</button>
+    <button type="button" data-mode="laenge" aria-pressed="false"><span class="lon-t">Länge</span> aufschneiden</button>
+  </div>
+  <div class="coord" aria-live="polite"><span class="n" id="name">Frankfurt</span><b class="lat-t" id="clat"></b><b class="lon-t" id="clon"></b></div>
+  <div class="text" id="text"></div>
+  <div class="ctl">
+    <label for="slat">Breite (Latitude)<input type="range" id="slat" min="-80" max="80" step="0.5"></label>
+    <label for="slon">Länge (Longitude)<input type="range" id="slon" min="-180" max="180" step="0.5"></label>
+    <div class="chips" role="group" aria-label="Beispiele">
+      <button class="chip" type="button" data-p="Frankfurt,50.12,8.68">Frankfurt</button>
+      <button class="chip" type="button" data-p="New York,40.71,-74.01">New York</button>
+      <button class="chip" type="button" data-p="Kapstadt,-33.92,18.42">Kapstadt</button>
+      <button class="chip" type="button" data-p="Spitzbergen,78.22,15.65">Spitzbergen</button>
+      <button class="chip" type="button" data-p="Äquator und Greenwich,0,0">0° / 0°</button>
+    </div>
+  </div>
+</main>
+<script src="../../assets/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+var T = window.THREE, D = Math.PI / 180;
+var stage = document.getElementById('stage'), canvas = document.getElementById('gl'), labelsEl = document.getElementById('labels');
+var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var S = {mode:'ganz', lat:50.12, lon:8.68, name:'Frankfurt'};
+
+/* ---------- Farben aus den Tokens ---------- */
+var C = {};
+function readColors(){ var cs = getComputedStyle(document.documentElement);
+  ['earth','grid','cap','lat','lon','ink','muted','stage-a'].forEach(function(k){ C[k] = new T.Color(cs.getPropertyValue('--' + k).trim() || '#888'); }); }
+readColors();
+
+/* ---------- Szene ---------- */
+var renderer = new T.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.localClippingEnabled = true;
+var scene = new T.Scene(), camera = new T.PerspectiveCamera(32, 1, 0.05, 50);
+scene.add(new T.AmbientLight(0xffffff, 0.62));
+var sun = new T.DirectionalLight(0xffffff, 0.55); camera.add(sun); sun.position.set(-1.2, 1.6, 1); scene.add(camera);
+
+var clip = new T.Plane(new T.Vector3(0, 1, 0), 10);       // wird je nach Ansicht gesetzt; 10 = nichts abgeschnitten
+var clips = [clip];
+var mats = [];
+function mat(kind, color, extra){ var m = kind === 'basic' ? new T.MeshBasicMaterial(Object.assign({color:color}, extra || {})) : new T.MeshLambertMaterial(Object.assign({color:color}, extra || {})); mats.push(m); return m; }
+var earthMat = mat('lambert', C.earth, {clippingPlanes:clips, side:T.DoubleSide});
+var earth = new T.Mesh(new T.SphereGeometry(1, 96, 64), earthMat); scene.add(earth);
+
+/* Punkt auf der Kugel: Greenwich (0°) zeigt nach +Z, Osten nach +X, Norden nach +Y */
+function P(lat, lon, r){ r = r || 1; return new T.Vector3(r * Math.cos(lat * D) * Math.sin(lon * D), r * Math.sin(lat * D), r * Math.cos(lat * D) * Math.cos(lon * D)); }
+
+/* Gradnetz alle 15° */
+(function(){
+  var pts = [], la, lo, k;
+  for(la = -75; la <= 75; la += 15){ if(!la) continue; for(k = 0; k < 120; k++){ pts.push(P(la, k * 3, 1.002), P(la, (k + 1) * 3, 1.002)); } }
+  for(lo = 0; lo < 360; lo += 15){ if(!lo) continue; for(k = -30; k < 30; k++){ pts.push(P(k * 3, lo, 1.002), P((k + 1) * 3, lo, 1.002)); } }
+  var g = new T.BufferGeometry().setFromPoints(pts);
+  var m = new T.LineBasicMaterial({color:C.grid, transparent:true, opacity:0.55, clippingPlanes:clips});
+  scene.add(new T.LineSegments(g, m)); window.__gridMat = m;
+})();
+
+function tube(points, r, material, closed){ return new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points, !!closed), Math.max(8, points.length * 2), r, 8, !!closed), material); }
+function line(a, b, r, material){ return new T.Mesh(new T.TubeGeometry(new T.LineCurve3(a, b), 1, r, 8, false), material); }
+var inkSurf = mat('basic', C.ink, {clippingPlanes:clips});
+var eq = []; for(var i = 0; i <= 120; i++) eq.push(P(0, i * 3, 1.003));
+scene.add(tube(eq, 0.005, inkSurf, true));
+var pm = []; for(i = -30; i <= 30; i++) pm.push(P(i * 3, 0, 1.003));
+scene.add(tube(pm, 0.005, inkSurf, false));
+var axisMat = mat('basic', C.muted);
+scene.add(line(new T.Vector3(0, -1.28, 0), new T.Vector3(0, 1.28, 0), 0.006, axisMat));
+
+/* ---------- vom Punkt abhängige Teile ---------- */
+var dyn = new T.Group(); scene.add(dyn);
+var latMat = mat('basic', C.lat), lonMat = mat('basic', C.lon), inkMat = mat('basic', C.ink);
+var latSurf = mat('basic', C.lat, {clippingPlanes:clips}), lonSurf = mat('basic', C.lon, {clippingPlanes:clips});
+var capMat = mat('lambert', C.cap, {side:T.DoubleSide});
+var triMat = mat('basic', C.lat, {transparent:true, opacity:0.22, side:T.DoubleSide, depthWrite:false});
+var labels = [];
+function label(text, pos, cls, opt){ var el = document.createElement('div'); el.className = 'lb ' + (cls || ''); el.textContent = text; labelsEl.appendChild(el); labels.push({el:el, pos:pos.clone(), surf:!!(opt && opt.surf), modes:(opt && opt.modes) || null}); }
+function clearDyn(){
+  while(dyn.children.length){ var o = dyn.children.pop(); o.traverse(function(x){ if(x.geometry) x.geometry.dispose(); }); }
+  labels.forEach(function(l){ l.el.remove(); }); labels = [];
+}
+function arc(cx, r, a0, a1, fn){ var pts = [], n = Math.max(6, Math.ceil(Math.abs(a1 - a0) / 2)); for(var k = 0; k <= n; k++) pts.push(fn(a0 + (a1 - a0) * k / n, r)); return pts; }
+function fmtDeg(v){ return (Math.round(Math.abs(v) * 10) / 10).toLocaleString('de-DE') + '°'; }
+
+function build(){
+  clearDyn();
+  var la = S.lat, lo = S.lon, p = P(la, lo, 1.004), cl = Math.cos(la * D), sl = Math.sin(la * D);
+  /* Breitenkreis und Meridian des Punkts */
+  var par = []; for(var k = 0; k <= 120; k++) par.push(P(la, k * 3, 1.004));
+  dyn.add(tube(par, 0.008, latSurf, true));
+  var mer = []; for(k = -30; k <= 30; k++) mer.push(P(k * 3, lo, 1.004));
+  dyn.add(tube(mer, 0.008, lonSurf, false));
+  var dot = new T.Mesh(new T.SphereGeometry(0.032, 20, 14), inkMat); dot.position.copy(p); dyn.add(dot);
+
+  /* Schnitt entlang des Meridians: Breitenwinkel am Erdmittelpunkt */
+  var gB = new T.Group(); gB.name = 'breite';
+  var disc = new T.Mesh(new T.CircleGeometry(0.999, 96), capMat); gB.add(disc);
+  var m2 = function(a, r){ return new T.Vector3(r * Math.cos(a * D), r * Math.sin(a * D), 0.004); };   // Ebene des Meridians, lokal: x = Richtung zum Meridian, y = Norden
+  gB.add(line(m2(180, 1), m2(0, 1), 0.007, inkMat));
+  gB.add(line(new T.Vector3(0, 0, 0.004), m2(la, 1), 0.011, latMat));
+  gB.add(tube(arc(0, 0.32, 0, la || 0.001, m2), 0.012, latMat, false));
+  gB.add(tube(arc(0, 1.0, 0, la || 0.001, m2), 0.014, latMat, false));
+  var tri = new T.BufferGeometry().setFromPoints([new T.Vector3(0, 0, 0.003), m2(0, 1), m2(la, 1)]);
+  gB.add(new T.Mesh(tri, triMat));
+  gB.rotation.y = (lo - 90) * D;   // lokale +Z zeigt nach Westen, zur Kamera
+  dyn.add(gB);
+  var toW = function(v){ return v.clone().applyEuler(gB.rotation); };
+  label(fmtDeg(la), toW(m2(la / 2, 0.47)), 'lat big', {modes:['breite']});
+  label('Erdmittelpunkt', toW(new T.Vector3(0, la >= 0 ? -0.1 : 0.1, 0.004)), '', {modes:['breite']});
+  label('Äquator', toW(m2(0, 0.82)).add(new T.Vector3(0, la >= 0 ? -0.07 : 0.07, 0)), 'mut', {modes:['breite']});
+
+  /* Längenwinkel an der Erdachse: Erde am Äquator aufgeschnitten, darüber (bzw. darunter) schwebt die Scheibe des Breitenkreises.
+     Beide Scheiben zeigen denselben Winkel – auf der großen ist der Bogen lang, auf der kleinen kurz. */
+  var gL = new T.Group(); gL.name = 'laenge';
+  var lift = la >= 0 ? 0.003 : -0.003;
+  function slice(y, r, cls, text){
+    var d = new T.Mesh(new T.CircleGeometry(r * 0.999, 96), capMat); d.rotation.x = -Math.PI / 2; d.position.y = y; gL.add(d);
+    var c = new T.Vector3(0, y + lift, 0), ring = function(a, rr){ return new T.Vector3(rr * Math.sin(a * D), y + lift, rr * Math.cos(a * D)); };
+    gL.add(line(c, ring(0, r), 0.008, inkMat));
+    gL.add(line(c, ring(lo, r), 0.011, lonMat));
+    gL.add(tube(arc(0, r, 0, lo || 0.001, ring), 0.017, lonMat, false));
+    label(fmtDeg(lo), ring(lo / 2, r * 0.45), 'lon big', {modes:['laenge']});
+    label(text, ring(lo / 2 + (lo >= 0 ? -28 : 28), r * 0.86), cls, {modes:['laenge']});
+    return ring;
+  }
+  slice(0, 1, 'lon', 'Äquator: 1° = 111 km');
+  var kmHere = Math.round(111.32 * cl);
+  if(Math.abs(la) > 2){
+    slice(sl, cl, 'lat', 'Breitenkreis ' + fmtDeg(la) + (la >= 0 ? ' N' : ' S') + ': 1° ≈ ' + kmHere + ' km');
+    var rim = []; for(k = 0; k <= 120; k++) rim.push(P(la, k * 3, 1.004));
+    gL.add(tube(rim, 0.008, latMat, true));
+  }
+  label('Greenwich 0°', new T.Vector3(0, lift, 1.14), 'mut', {modes:['laenge']});
+  dyn.add(gL);
+
+  /* Beschriftung ganze Erde */
+  label(S.name, p.clone().multiplyScalar(1.12), '', {surf:true});
+  label('Nordpol', new T.Vector3(0, 1.18, 0), 'mut', {modes:['ganz', 'breite']});
+  label('Südpol', new T.Vector3(0, -1.18, 0), 'mut', {modes:['ganz', 'breite']});
+  label('Breitenkreis ' + fmtDeg(la) + (la >= 0 ? ' N' : ' S'), P(la, lo + 62, 1.1), 'lat', {surf:true, modes:['ganz']});
+  label('Meridian ' + fmtDeg(lo) + (lo >= 0 ? ' E' : ' W'), P(Math.max(-60, Math.min(60, la - 28)), lo, 1.1), 'lon', {surf:true, modes:['ganz']});
+  label('Äquator', P(0, lo - 35, 1.08), 'mut', {surf:true, modes:['ganz']});
+  label('Greenwich', P(-35, 0, 1.08), 'mut', {surf:true, modes:['ganz']});
+  applyMode(false);
+}
+
+/* ---------- Ansichten ---------- */
+var TEXT = {
+  ganz:'<p>Das Gradnetz: <b class="lat-t">Breitenkreise</b> laufen waagerecht um die Erde, <b class="lon-t">Meridiane</b> von Pol zu Pol. Der Punkt liegt dort, wo sich sein Breitenkreis und sein Meridian kreuzen.</p>',
+  breite:'<p>Aufgeschnitten entlang des Meridians. Die Ecke des Winkels ist der <b>Erdmittelpunkt</b>: eine Linie zum Äquator, eine zum Punkt. Die Öffnung dazwischen ist die <b class="lat-t">Breite</b> – 0° am Äquator, 90° am Pol.</p><p>Nach Norden läufst du immer auf einem Meridian mit vollem Erdradius. Deshalb ist 1° Breite überall 111 km und 1\' immer eine Seemeile.</p>',
+  laenge:'<p>Am Äquator aufgeschnitten, darüber schwebt die Scheibe des Breitenkreises. Die Ecke liegt jeweils auf der <b>Erdachse</b>: eine Linie zum Nullmeridian (Greenwich), eine zum Punkt. Die Öffnung dazwischen ist die <b class="lon-t">Länge</b>.</p><p>Beide Scheiben zeigen denselben Winkel – wie zwei Tortenstücke. Auf der großen Äquator-Scheibe ist der Bogen lang, auf der kleineren Scheibe des Breitenkreises kurz: <span class="km" id="kmtxt"></span></p>'
+};
+function applyMode(fly){
+  var m = S.mode, lo = S.lon, la = S.lat;
+  dyn.children.forEach(function(o){ if(o.name === 'breite') o.visible = m === 'breite'; if(o.name === 'laenge') o.visible = m === 'laenge'; });
+  if(m === 'breite'){ var e = new T.Vector3(Math.cos(lo * D), 0, -Math.sin(lo * D)); clip.normal.copy(e); clip.constant = 0; }
+  else if(m === 'laenge'){ clip.normal.set(0, la >= 0 ? -1 : 1, 0); clip.constant = 0; }   // Halbkugel des Punkts entfernt
+  else { clip.normal.set(0, 1, 0); clip.constant = 10; }
+  labels.forEach(function(l){ l.el.hidden = !!(l.modes && l.modes.indexOf(m) < 0); });
+  document.querySelectorAll('[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.mode === m)); });
+  document.getElementById('text').innerHTML = TEXT[m];
+  var kt = document.getElementById('kmtxt');
+  if(kt) kt.textContent = '1° Länge = 111 km × cos ' + fmtDeg(la) + ' ≈ ' + Math.round(111.32 * Math.cos(la * D)) + ' km statt 111 km am Äquator.';
+  if(fly){
+    if(m === 'breite') flyTo((lo - 90) * D, 6 * D, 4.5);
+    else if(m === 'laenge') flyTo(lo / 2 * D, (la >= 0 ? 52 : -52) * D, 4.6);
+    else flyTo((lo + 25) * D, 22 * D, 4.4);
+  }
+  invalidate();
+}
+
+/* ---------- Kamera: Kreis um den Erdmittelpunkt ---------- */
+var cam = {az:(S.lon + 25) * D, el:22 * D, r:4.4}, tween = null, RMIN = 2.2, RMAX = 8;
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function place(){ camera.position.set(cam.r * Math.cos(cam.el) * Math.sin(cam.az), cam.r * Math.sin(cam.el), cam.r * Math.cos(cam.el) * Math.cos(cam.az)); camera.lookAt(0, 0, 0); }
+function flyTo(az, el, r){
+  var daz = ((az - cam.az) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+  if(reduce){ cam.az += daz; cam.el = el; cam.r = r; return invalidate(); }
+  tween = {t0:performance.now(), ms:900, az:cam.az, daz:daz, el:cam.el, del:el - cam.el, r:cam.r, dr:r - cam.r}; invalidate();
+}
+var raf = 0, v = new T.Vector3(), camDir = new T.Vector3();
+function invalidate(){ if(!raf) raf = requestAnimationFrame(frame); }
+function ease(k){ return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; }
+function frame(now){
+  raf = 0;
+  if(tween){ var k = clamp((now - tween.t0) / tween.ms, 0, 1), e = ease(k);
+    cam.az = tween.az + tween.daz * e; cam.el = tween.el + tween.del * e; cam.r = tween.r + tween.dr * e;
+    if(k >= 1) tween = null; }
+  place(); renderer.render(scene, camera);
+  var w = stage.clientWidth, h = stage.clientHeight; camDir.copy(camera.position);
+  labels.forEach(function(l){
+    if(l.el.hidden) return;
+    if(l.surf && S.mode === 'ganz'){ v.copy(camDir).sub(l.pos); if(v.dot(l.pos) < 0){ l.el.style.opacity = '0'; return; } }
+    v.copy(l.pos).project(camera);
+    l.el.style.opacity = v.z < 1 ? '1' : '0';
+    l.el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h).toFixed(1) + 'px) translate(-50%,-50%)';
+  });
+  if(tween) invalidate();
+}
+
+/* ---------- Bedienung ---------- */
+var ptrs = new Map(), pinch = 0;
+function hideHint(){ var hn = document.getElementById('hint'); if(hn) hn.hidden = true; }
+canvas.addEventListener('pointerdown', function(ev){ try{ canvas.setPointerCapture(ev.pointerId); }catch(_){} ptrs.set(ev.pointerId, {x:ev.clientX, y:ev.clientY}); tween = null; hideHint();
+  if(ptrs.size === 2){ var a = Array.from(ptrs.values()); pinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); } });
+canvas.addEventListener('pointermove', function(ev){
+  var p = ptrs.get(ev.pointerId); if(!p) return;
+  var dx = ev.clientX - p.x, dy = ev.clientY - p.y; p.x = ev.clientX; p.y = ev.clientY;
+  if(ptrs.size === 1){ cam.az -= dx * 0.008; cam.el = clamp(cam.el + dy * 0.007, -86 * D, 86 * D); }
+  else if(ptrs.size === 2){ var a = Array.from(ptrs.values()), d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); if(pinch > 0 && d > 0) cam.r = clamp(cam.r * pinch / d, RMIN, RMAX); pinch = d; }
+  invalidate(); });
+function lift(ev){ ptrs.delete(ev.pointerId); pinch = 0; }
+canvas.addEventListener('pointerup', lift); canvas.addEventListener('pointercancel', lift);
+canvas.addEventListener('wheel', function(ev){ ev.preventDefault(); hideHint(); cam.r = clamp(cam.r * Math.exp(ev.deltaY * 0.0012), RMIN, RMAX); invalidate(); }, {passive:false});
+
+var slat = document.getElementById('slat'), slon = document.getElementById('slon');
+function dm(val, pos, neg, w){ var a = Math.abs(val), d = Math.floor(a), m = Math.round((a - d) * 60); if(m === 60){ d++; m = 0; }
+  return (val >= 0 ? pos : neg) + ' ' + String(d).padStart(w, '0') + '°' + String(m).padStart(2, '0') + '\''; }
+function showCoord(){ document.getElementById('name').textContent = S.name;
+  document.getElementById('clat').textContent = dm(S.lat, 'N', 'S', 2); document.getElementById('clon').textContent = dm(S.lon, 'E', 'W', 3);
+  document.querySelectorAll('[data-p]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.p.split(',')[0] === S.name)); }); }
+function setPoint(name, la, lo, fly){ S.name = name; S.lat = la; S.lon = lo; slat.value = la; slon.value = lo; showCoord(); build(); if(fly) applyMode(true); }
+slat.addEventListener('input', function(){ S.lat = Number(slat.value); S.name = 'Eigener Punkt'; showCoord(); build(); });
+slon.addEventListener('input', function(){ S.lon = Number(slon.value); S.name = 'Eigener Punkt'; showCoord(); build(); });
+document.addEventListener('click', function(ev){
+  var b = ev.target.closest && ev.target.closest('[data-mode],[data-p]'); if(!b) return;
+  if(b.dataset.mode){ S.mode = b.dataset.mode; applyMode(true); return; }
+  var a = b.dataset.p.split(','); setPoint(a[0], Number(a[1]), Number(a[2]), true);
+});
+
+/* ---------- Größe, Farben, Start ---------- */
+function resize(){ var w = stage.clientWidth, h = stage.clientHeight; if(!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); invalidate(); }
+if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+function retheme(){ readColors(); earthMat.color.copy(C.earth); window.__gridMat.color.copy(C.grid); capMat.color.copy(C.cap); latMat.color.copy(C.lat); latSurf.color.copy(C.lat); triMat.color.copy(C.lat);
+  lonMat.color.copy(C.lon); lonSurf.color.copy(C.lon); inkMat.color.copy(C.ink); inkSurf.color.copy(C.ink); axisMat.color.copy(C.muted); invalidate(); }
+new MutationObserver(retheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+if(window.matchMedia){ var mq = matchMedia('(prefers-color-scheme: dark)'); if(mq.addEventListener) mq.addEventListener('change', retheme); }
+var start = (location.hash || '').slice(1);
+if(start === 'breite' || start === 'laenge') S.mode = start;
+setPoint(S.name, S.lat, S.lon, false); applyMode(true); resize();
+window.__globus = {S:S, setPoint:setPoint, mode:function(m){ S.mode = m; applyMode(false); tween = null; }, cam:cam};   // für Tests
+})();
+</script>
+</body>
+</html>

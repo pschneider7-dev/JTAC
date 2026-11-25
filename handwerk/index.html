@@ -1142,6 +1142,7 @@ function renderLehre(){
         <li><b>Bezugssystem abstimmen:</b> Lfz und GPS nutzen WGS 84. Ältere Karten mit anderem Kartendatum verschieben denselben Punkt um bis über hundert Meter.</li>
       </ul>
       <p class="muted small">Entfernung zwischen zwei Koordinaten: Unterschied Ost und Unterschied Nord bilden, dann Pythagoras. Beispiel: 300 m Ost und 400 m Nord ergeben 500 m, nicht 700 m.</p>
+      <p><b>Lat/Long</b> ist die andere Form: Winkel statt Meter, und die Reihenfolge ist umgekehrt – erst die <b>Breite</b> (Latitude, Nord/Süd), dann die <b>Länge</b> (Longitude, Ost/West), z. B. N 50°07' E 008°41'. 1 Bogenminute Breite ist überall 1 Seemeile; 1 Bogenminute Länge wird zum Pol hin kürzer (bei 50° N etwa 1,2 km). Wo die beiden Winkel liegen, zeigt das <a href="3d/globus.html">3D-Modell „Breite und Länge“</a>.</p>
     </section>
     <section><h2>2 · Strich und Grad</h2>
       <figure class="lehre-fig compass">${compassSvg()}</figure>
@@ -1380,6 +1381,7 @@ function renderHome(){
   <button class="cta" data-start="mix"><span><strong>Gemischte Runde starten</strong><small>${MIX_LEN} Fragen aus allen Bereichen – schwache Bereiche kommen öfter</small></span><span class="go" aria-hidden="true">›</span></button>
   <nav class="modes" aria-label="Trainingsarten">
     <button class="mode" data-start="koord"><span class="mi"><strong>Koordinaten (MGRS)</strong><small>6- und 8-stellig von der Karte ablesen, kürzen, Genauigkeit, Entfernung zwischen zwei Koordinaten</small></span><span class="n">${countArea(MODES.koord.areas)} Fragen</span></button>
+    <a class="mode" href="3d/globus.html" style="color:inherit;text-decoration:none"><span class="mi"><strong>Breite und Länge in 3D</strong><small>Globus drehen und aufschneiden: wo die Winkel von Latitude und Longitude liegen und warum ein Grad Länge zum Pol hin kürzer wird</small></span><span class="n">3D</span></a>
     <button class="mode" data-start="richt"><span class="mi"><strong>Richtung und Zeile 8</strong><small>Strich und Grad, Gegenrichtung, Richtung von der Karte, eigene Truppen vom Ziel aus</small></span><span class="n">${countArea(MODES.richt.areas)} Fragen</span></button>
     <button class="mode" data-go="nordlab"><span class="mi"><strong>Nordrichtungen im Bild</strong><small>Zum Ausprobieren, in zwei Stufen: erst nur Karte und Zeile 2, dann alle drei Norden</small></span><span class="n">Ansehen ›</span></button>
     <button class="mode" data-start="nord"><span class="mi"><strong>Nordrichtungen 1: Karte → Zeile 2</strong><small>Nur Gitternord und Magnetisch Nord: Nadeldiagramm am Kartenrand lesen, Ost abziehen, West addieren, Zeile 2 aus der Karte</small></span><span class="n">${countArea(MODES.nord.areas)} Fragen</span></button>
