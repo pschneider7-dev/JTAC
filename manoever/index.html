@@ -945,6 +945,8 @@ function buildBank(){
 const BANK = buildBank();
 
 function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+/* Fahrzeuge mit geringer Bedeutung für den JTAC kommen seltener dran (Faktor auf das Gewicht) */
+const PRIO = {uaz469: 0.25, uaz452: 0.25};
 function weight(q, prevFam){
   const fa = famAcc(q.fam);
   const weak = fa === null ? 0.45 : 1 - fa;
@@ -957,6 +959,7 @@ function weight(q, prevFam){
   if (q.kind === 'duel') w *= 1.6;
   if (q.kind === 'part') w *= 0.45;
   if (q.kind === 'mil') w *= 0.35;
+  if (PRIO[q.fam] !== undefined) w *= PRIO[q.fam];
   return w;
 }
 function pickRound(mode){
