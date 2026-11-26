@@ -32,6 +32,8 @@ Web-App (PWA) mit zwölf Trainern für CAS aus JTAC-Sicht. Installierbar auf dem
 
 Der Fortschritt liegt im `localStorage` des Geräts, je Trainer unter einem eigenen Schlüssel (`manoevertrainer.v1`, `jtacdrill.v1` usw.).
 
+Welche Fahrzeuge im Manöver- und im Flugabwehr-Trainer wie oft drankommen, steuert je Trainer die Tabelle `PRIO` (Relevanz für den JTAC, Faktor auf das Gewicht; 1 = normal). Dazu kommt wie bisher: Was oft falsch beantwortet wird, kommt öfter.
+
 ## Lokal testen
 
 ```sh

@@ -710,6 +710,14 @@ function buildBank(){
 const BANK = buildBank();
 
 function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
+/* Relevanz für den JTAC: Faktor auf das Gewicht jeder Frage (1 = normal). Hoch: Bedrohungen im Tiefflug
+   (MANPADS, ZU-23-2, Kanonen-Raketen-Systeme, SHORAD) und Buk. Niedriger: Langstreckensysteme, Radare und
+   Gefechtsstände, die man selten selbst sieht, sowie Altsysteme. Fehlt ein System in der Liste, gilt 1. */
+const PRIO = {
+  iglas: 2, igla: 1.8, verba: 1.8, zu23: 1.6, pantsir: 1.8, tor: 1.8, tunguska: 1.6, strela10: 1.6, osa: 1.4,
+  shilka: 1.2, buk: 1.8, gibka: 1, kub: 0.8, strela1: 0.6, sa26: 0.4,
+  s300p: 1, s400: 1, s300v: 0.8, s350: 0.6, ppru: 0.7, nebo: 0.5, kasta: 0.5
+};
 function weight(q, prevFam){
   const fa = famAcc(q.fam);
   const weak = fa === null ? 0.45 : 1 - fa;
@@ -721,6 +729,7 @@ function weight(q, prevFam){
   if (q.kind === 'var' || q.kind === 'cat' || q.kind === 'elem') w *= 0.8;
   if (q.kind === 'part') w *= 0.5;
   if (q.kind === 'duel') w *= 1.6;
+  if (PRIO[q.fam] !== undefined) w *= PRIO[q.fam];
   return w;
 }
 function poolFor(mode){

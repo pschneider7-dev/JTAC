@@ -945,8 +945,18 @@ function buildBank(){
 const BANK = buildBank();
 
 function famAcc(id){ const s = S.fam[id]; if (!s || (s.c + s.w) === 0) return null; return s.c / (s.c + s.w); }
-/* Fahrzeuge mit geringer Bedeutung für den JTAC kommen seltener dran (Faktor auf das Gewicht) */
-const PRIO = {uaz469: 0.25, uaz452: 0.25};
+/* Relevanz für den JTAC: Faktor auf das Gewicht jeder Frage (1 = normal). Hoch: im Krieg häufig gesehene
+   Fahrzeuge und Bedrohungen für Lfz (KPz, SPz, BTR-80/82, MT-LB oft mit ZU-23-2). Niedrig: Exoten, Prototypen,
+   Nutzfahrzeuge. Fehlt ein Fahrzeug in der Liste, gilt 1. */
+const PRIO = {
+  t72: 2, t90: 1.8, t80: 1.8, t64: 1.2, t62: 1, t14: 0.4, bmpt: 0.8,
+  bmp2: 2, bmp1: 1.4, bmp3: 1.6, bmd2: 1.2, bmd4: 1.2, bmd3: 0.6,
+  btr: 2, btr70: 0.8, btr60: 0.5, btr90: 0.3, mtlb: 1.8, btrd: 0.8, btrmdm: 0.7,
+  brdm2: 1.2, tigr: 1, typhoon: 0.8, shturm: 0.9, kornet: 1,
+  ural: 0.6, kamaz: 0.6, atz: 0.6, gaz66: 0.4, uaz469: 0.25, uaz452: 0.25,
+  r149: 0.8, bmp1ksh: 0.7, pmp: 1, mtu: 0.6, ur77: 0.6, pts: 0.5, imr2: 0.5, brem1: 0.5, gmz3: 0.5, bat2: 0.4,
+  brm1k: 0.7, brm3k: 0.6, rkhm: 0.3
+};
 function weight(q, prevFam){
   const fa = famAcc(q.fam);
   const weak = fa === null ? 0.45 : 1 - fa;
